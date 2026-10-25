@@ -1,0 +1,3587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mechazilla — Booster Catch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+/* SpaceX's own webcast/site typography is a condensed grotesque (D-DIN /
+   Blender Pro family). Barlow Condensed is the closest widely-available
+   match; plain Barlow carries the small amount of running text. */
+:root {
+  --font-cond: "Barlow Condensed", "Oswald", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #05070d;
+  color: #eaf1ff;
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 8px;
+}
+
+#stage {
+  position: relative;
+  width: min(96vw, 960px);
+  aspect-ratio: 960 / 600;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #1b2436, 0 20px 60px rgba(0,0,0,0.6);
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #05070d;
+}
+
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 18px;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
+
+#level-label {
+  font-family: var(--font-cond);
+  font-size: 24px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+#level-sub {
+  font-family: var(--font-cond);
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  opacity: 0.55;
+  margin-top: 1px;
+}
+
+#hud-right {
+  display: flex;
+  gap: 22px;
+  text-align: right;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--font-cond);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.5;
+}
+
+#overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+#overlay.hidden {
+  display: none;
+}
+
+#overlay-panel {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(3,5,9,0) 0%, rgba(3,5,9,0.86) 16%, rgba(3,5,9,0.86) 84%, rgba(3,5,9,0) 100%);
+  padding: 30px 30px;
+  text-align: center;
+}
+
+#overlay-title {
+  margin: 0 0 12px;
+  font-size: 44px;
+  font-family: var(--font-cond);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffffff;
+  line-height: 1;
+}
+
+#overlay-message {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-family: var(--font-cond);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  line-height: 1.6;
+}
+
+#overlay-message:empty {
+  display: none;
+}
+
+#overlay-stats {
+  font-size: 15px;
+  font-family: var(--font-cond);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffffff;
+  opacity: 0.75;
+  margin-bottom: 16px;
+  line-height: 1.9;
+}
+
+#overlay-stats:empty {
+  display: none;
+}
+
+#overlay-controls {
+  padding-top: 4px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  opacity: 0.85;
+  line-height: 1.9;
+  text-align: center;
+}
+
+#overlay-controls.hidden {
+  display: none;
+}
+
+#overlay-cta {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  padding-top: 16px;
+  margin-top: 4px;
+}
+
+#control-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+#control-icons .key-arrow {
+  font-size: 18px;
+  min-width: 34px;
+  padding: 6px 10px;
+}
+
+#control-rocket-icon {
+  font-size: 15px;
+  color: #ffffff;
+  opacity: 0.8;
+}
+
+.control-hint {
+  margin: 0 0 6px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-cond);
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-size: 12.5px;
+  opacity: 0.6;
+}
+
+#overlay-controls p:last-child {
+  margin-bottom: 0;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 3px 7px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  font-family: var(--font-cond);
+  color: #ffffff;
+}
+
+#overlay-button {
+  appearance: none;
+  border: none;
+  background: none;
+  color: #ffffff;
+  font-family: var(--font-cond);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+#overlay-button u {
+  text-decoration-color: rgba(255,255,255,0.9);
+  text-underline-offset: 4px;
+}
+
+#overlay-button:hover {
+  filter: brightness(1.2);
+}
+
+#overlay-button:active {
+  transform: translateY(1px);
+}
+
+#banner {
+  position: absolute;
+  top: 62px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-cond);
+  font-size: 19px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+#banner.hidden {
+  display: none;
+}
+
+#banner.success {
+  color: #6ee8a0;
+  text-shadow: 0 0 16px rgba(110,232,160,0.7);
+}
+
+#banner.fail {
+  color: #ff8a7a;
+  text-shadow: 0 0 16px rgba(255,90,70,0.6);
+}
+
+#hud-toggles {
+  position: absolute;
+  left: 18px;
+  top: 74px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+#hud-toggles button {
+  appearance: none;
+  background: rgba(6, 9, 15, 0.72);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #ffffff;
+  font-family: var(--font-cond);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  padding: 4px 9px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+#hud-toggles button:hover { opacity: 1; }
+
+/* "Off" state for either toggle reads dimmed rather than alarming — these are
+   preferences, not failures. */
+#hud-toggles button.off {
+  color: #8f9bab;
+  border-color: rgba(255,255,255,0.12);
+}
+
+#guidance-button:not(.off) {
+  color: #9dffc8;
+  border-color: rgba(120, 255, 170, 0.45);
+}
+
+#engine-button:not(.off) {
+  color: #ffd28a;
+  border-color: rgba(255, 190, 100, 0.5);
+}
+
+/* Live catch go/no-go panel. Mirrors the real vehicle's own tolerance check:
+   every criterion has to read GO at the moment the pins meet the rail. */
+#capture-panel {
+  position: absolute;
+  top: 78px;
+  right: 18px;
+  width: 208px;
+  padding: 9px 11px 8px;
+  background: rgba(6, 9, 15, 0.82);
+  border: 1px solid rgba(255,255,255,0.16);
+  font-family: var(--font-cond);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  transition: border-color 0.15s ease;
+}
+
+#capture-panel.hidden { display: none; }
+
+#capture-panel.all-go {
+  border-color: rgba(120, 255, 170, 0.75);
+  box-shadow: 0 0 18px rgba(120, 255, 170, 0.22);
+}
+
+#capture-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 5px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.16);
+}
+
+#capture-head-label {
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  opacity: 0.5;
+}
+
+#capture-verdict {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #ff6b6b;
+}
+
+#capture-panel.all-go #capture-verdict { color: #78ffaa; }
+
+.cap-row {
+  display: grid;
+  grid-template-columns: 62px 1fr 46px;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 5px;
+}
+
+.cap-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  opacity: 0.55;
+}
+
+/* Bar with a centre datum: the fill grows from the middle toward whichever
+   side you're erring on, so both the size and the direction of the error read
+   at a glance. */
+.cap-bar {
+  position: relative;
+  height: 5px;
+  background: rgba(255,255,255,0.11);
+  overflow: hidden;
+}
+
+.cap-bar::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255,255,255,0.4);
+}
+
+.cap-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: #78ffaa;
+  transition: left 0.05s linear, width 0.05s linear, background 0.15s ease;
+}
+
+.cap-row.no-go .cap-fill { background: #ff6b6b; }
+.cap-row.no-go .cap-label { opacity: 0.85; }
+
+.cap-value {
+  font-size: 11.5px;
+  font-weight: 500;
+  text-align: right;
+  color: #78ffaa;
+}
+
+.cap-row.no-go .cap-value { color: #ff6b6b; }
+
+#capture-foot {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  font-size: 9.5px;
+  letter-spacing: 0.11em;
+  opacity: 0.4;
+  text-align: center;
+}
+
+/* Bottom telemetry strip, laid out like a SpaceX launch webcast: engine
+   cluster and stage readouts on the left, mission clock centred, flight
+   status on the right. */
+#telemetry-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 10px 18px 12px;
+  background: linear-gradient(180deg, rgba(5,7,13,0) 0%, rgba(5,7,13,0.85) 42%, rgba(3,4,8,0.96) 100%);
+  pointer-events: none;
+  font-family: var(--font-cond);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.85);
+}
+
+#telemetry-left-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+#engines-display {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  margin-bottom: 1px;
+}
+
+.eng-dot {
+  fill: none;
+  stroke: rgba(215, 225, 238, 0.32);
+  stroke-width: 1.6;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+/* Only the 3 gimbaling centre Raptors relight for the landing burn — the
+   other 30 stay dark, exactly as they do on a real booster return. */
+#engines-display.engines-lit .eng-center {
+  fill: #ffffff;
+  stroke: #ffffff;
+  filter: drop-shadow(0 0 3px rgba(255, 220, 170, 0.95));
+}
+
+#telemetry-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+#stage-label {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  opacity: 0.45;
+  margin-bottom: 3px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+}
+
+.telem-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
+.telem-label {
+  opacity: 0.45;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  min-width: 58px;
+}
+
+.fuel-row {
+  margin-top: 3px;
+  align-items: center;
+}
+
+.fuel-bar {
+  width: 96px;
+  height: 4px;
+  background: rgba(255,255,255,0.14);
+  overflow: hidden;
+}
+
+#telemetry-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 2px;
+}
+
+#mission-timer {
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  opacity: 0.92;
+}
+
+.fuel-fill {
+  height: 100%;
+  background: #ffffff;
+  width: 100%;
+  transition: background 0.2s ease;
+}
+
+.fuel-fill.low { background: #ff6b6b; }
+
+#fuel-readout {
+  float: right;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+
+#fuel-readout.low {
+  color: #ff6b6b;
+  opacity: 1;
+}
+
+#telemetry-status {
+  font-size: 21px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  padding-bottom: 3px;
+  color: #ffffff;
+  text-align: right;
+  max-width: 260px;
+}
+
+#credits {
+  font-family: var(--font-cond);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  opacity: 0.35;
+  max-width: 960px;
+  text-align: center;
+  padding: 0 12px;
+}
+
+/* Touch flight controls -- hidden by default, shown only on coarse-pointer
+   (touch) devices, so desktop/mouse play is completely unaffected. */
+#touch-controls {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  #touch-controls {
+    display: block;
+  }
+
+  /* Hidden while any overlay (start screen, chamber-complete, game-over) is
+     showing -- it sits in the same bottom area as the overlay's own button
+     and would otherwise visually collide with it and steal taps. */
+  #touch-controls.overlay-open {
+    display: none;
+  }
+
+  #touch-rotate {
+    position: absolute;
+    left: 18px;
+    bottom: 18px;
+    z-index: 40;
+    display: flex;
+    gap: 14px;
+  }
+
+  #touch-thrust {
+    position: absolute;
+    right: 18px;
+    bottom: 18px;
+    z-index: 40;
+  }
+
+  .touch-btn {
+    appearance: none;
+    border: none;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(20, 28, 44, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #eaf1ff;
+    font-size: 26px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    user-select: none;
+    backdrop-filter: blur(4px);
+  }
+
+  .touch-btn:active,
+  .touch-btn.pressed {
+    background: rgba(77, 141, 255, 0.55);
+    border-color: rgba(77, 141, 255, 0.85);
+  }
+}
+
+</style>
+</head>
+<body>
+<a href="../../index.html" title="Back to Arcade" style="position:fixed;top:10px;left:10px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:rgba(0,0,0,0.6);color:#fff;font:14px/1 system-ui,-apple-system,sans-serif;border-radius:50%;text-decoration:none;opacity:0.4;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">&larr;</a>
+  <div id="stage">
+    <canvas id="game" width="960" height="600"></canvas>
+
+    <div id="hud">
+      <div id="hud-left">
+        <div id="level-label">Level 1</div>
+        <div id="level-sub">Guide the booster into the tower arms</div>
+      </div>
+      <div id="hud-right">
+        <div class="stat"><span class="stat-label">Attempt</span><span id="attempt-count">1</span></div>
+        <div class="stat"><span class="stat-label">Time</span><span id="level-timer">0.0s</span></div>
+      </div>
+    </div>
+
+    <div id="overlay" class="hidden">
+      <div id="overlay-panel">
+        <h1 id="overlay-title">Mechazilla</h1>
+        <p id="overlay-message">Catch the booster with the tower arms.</p>
+        <div id="overlay-stats"></div>
+        <div id="overlay-controls">
+          <div id="control-icons">
+            <kbd class="key-arrow">&larr;</kbd>
+            <span id="control-rocket-icon" aria-hidden="true">&#9650;</span>
+            <kbd class="key-arrow">&rarr;</kbd>
+          </div>
+          <p class="control-hint">USE LEFT AND RIGHT ARROW KEYS TO STEER</p>
+          <p class="control-hint">THE ENGINE HOLDS ITS OWN SLOW DESCENT</p>
+          <p class="control-hint"><kbd>E</kbd> MANUAL THROTTLE &nbsp; <kbd>&uarr;</kbd> / <kbd>W</kbd> TO THRUST</p>
+          <p class="control-hint"><kbd>R</kbd> RESET &nbsp; <kbd>G</kbd> GUIDANCE &nbsp; <kbd>M</kbd> SOUND</p>
+        </div>
+        <div id="overlay-cta">
+          <button id="overlay-button">PRESS <u>SPACE</u> TO START</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="hud-toggles">
+      <button id="engine-button" type="button">ENGINE AUTO</button>
+      <button id="guidance-button" type="button">GUIDANCE ON</button>
+      <button id="mute-button" type="button">SOUND ON</button>
+    </div>
+
+    <div id="banner" class="hidden"></div>
+
+    <div id="capture-panel" class="hidden">
+      <div id="capture-head">
+        <span id="capture-head-label">CATCH CRITERIA</span>
+        <span id="capture-verdict">NO-GO</span>
+      </div>
+      <div id="capture-rows"></div>
+      <div id="capture-foot">ALL FOUR GREEN AT THE RAIL = CAUGHT</div>
+    </div>
+
+    <div id="telemetry-bar">
+      <div id="telemetry-left-group">
+        <svg id="engines-display" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="eng-dot eng-outer" cx="50.0" cy="8.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="63.0" cy="10.1" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="74.7" cy="16.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="84.0" cy="25.3" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="89.9" cy="37.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="92.0" cy="50.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="89.9" cy="63.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="84.0" cy="74.7" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="74.7" cy="84.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="63.0" cy="89.9" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="50.0" cy="92.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="37.0" cy="89.9" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="25.3" cy="84.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="16.0" cy="74.7" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="10.1" cy="63.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="8.0" cy="50.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="10.1" cy="37.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="16.0" cy="25.3" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="25.3" cy="16.0" r="2.6"/>
+          <circle class="eng-dot eng-outer" cx="37.0" cy="10.1" r="2.6"/>
+          <circle class="eng-dot eng-inner" cx="50.0" cy="23.0" r="3.2"/>
+          <circle class="eng-dot eng-inner" cx="65.9" cy="28.2" r="3.2"/>
+          <circle class="eng-dot eng-inner" cx="75.7" cy="41.7" r="3.2"/>
+          <circle class="eng-dot eng-inner" cx="75.7" cy="58.3" r="3.2"/>
+          <circle class="eng-dot eng-inner" cx="65.9" cy="71.8" r="3.2"/>
+          <circle class="eng-dot eng-inner" cx="50.0" cy="77.0" r="3.2"/>
+          <circle class="eng-dot eng-inner" cx="34.1" cy="71.8" r="3.2"/>
+          <circle class="eng-dot eng-inner" cx="24.3" cy="58.3" r="3.2"/>
+          <circle class="eng-dot eng-inner" cx="24.3" cy="41.7" r="3.2"/>
+          <circle class="eng-dot eng-inner" cx="34.1" cy="28.2" r="3.2"/>
+          <circle class="eng-dot eng-center" cx="50.0" cy="43.0" r="4.6"/>
+          <circle class="eng-dot eng-center" cx="56.1" cy="53.5" r="4.6"/>
+          <circle class="eng-dot eng-center" cx="43.9" cy="53.5" r="4.6"/>
+        </svg>
+        <div id="telemetry-left">
+          <div id="stage-label">SUPER HEAVY &middot; BOOSTER<span id="fuel-readout">100%</span></div>
+          <div class="telem-row"><span class="telem-label">SPEED</span><span id="speed-readout">0 KM/H</span></div>
+          <div class="telem-row"><span class="telem-label">ALTITUDE</span><span id="altitude-readout">0 M</span></div>
+          <div class="telem-row fuel-row">
+            <span class="telem-label">LOX</span>
+            <div class="fuel-bar"><div id="lox-fill" class="fuel-fill"></div></div>
+          </div>
+          <div class="telem-row fuel-row">
+            <span class="telem-label">CH4</span>
+            <div class="fuel-bar"><div id="ch4-fill" class="fuel-fill"></div></div>
+          </div>
+        </div>
+      </div>
+      <div id="telemetry-center">
+        <div id="mission-timer">T+ 00:00:00</div>
+      </div>
+      <div id="telemetry-status"></div>
+    </div>
+
+    <div id="touch-controls">
+      <div id="touch-rotate">
+        <button type="button" class="touch-btn" id="touch-left" aria-label="Rotate left">&larr;</button>
+        <button type="button" class="touch-btn" id="touch-right" aria-label="Rotate right">&rarr;</button>
+      </div>
+      <button type="button" class="touch-btn" id="touch-thrust" aria-label="Thrust">&#9650;</button>
+    </div>
+  </div>
+
+  <footer id="credits">
+    Original fan-made tribute inspired by the public concept of SpaceX's booster-catch tower ("Mechazilla"). Not affiliated with SpaceX or mechazilla.io.
+  </footer>
+
+  <script>
+"use strict";
+
+/* ------------------------------------------------------------------ *
+ *  Mechazilla — Booster Catch
+ *  Original fan-made physics game: guide a falling booster into a
+ *  catch tower's arms, inspired by the public "Mechazilla" concept.
+ * ------------------------------------------------------------------ */
+
+// ---------- Logical world constants ----------
+const W = 960;
+const H = 600;
+const GROUND_Y = 560;
+const FIXED_DT = 1 / 120;      // physics substep
+const MAX_FRAME_DT = 0.25;     // clamp huge frame gaps (tab switch etc.)
+
+const ROCKET_HALF_W = 7;
+const ROCKET_HALF_H = 34;
+const MAST_RAIL_GAP = 15;        // visual half-width between the tower's rails
+const MAST_COLLIDE_HALF_W = 11;  // solid width of the tower's rail column (kept
+                                  // narrower than the visual rails so the wider
+                                  // look doesn't eat into the tighter levels'
+                                  // catch-tolerance margin around the pole)
+const MAST_TOP_OFFSET = 170;     // how far above the arm height the mast starts (matches drawTower)
+
+// ---------- Catch geometry ----------
+// Single source of truth for where a catch can happen. Both the renderer and
+// the physics read this, so the highlighted rail you see on screen is exactly
+// the span that catches you — previously the two disagreed, which is what made
+// the mechanic unreadable.
+// Grid fin box, in booster-local coordinates. The real booster hangs from its
+// grid fins once caught, so the fin underside is what comes to rest on the
+// rail — shared here so drawGridFin() and the settle agree exactly.
+const GRIDFIN_TOP = -ROCKET_HALF_H + 3;
+const GRIDFIN_H = 13;
+const GRIDFIN_BOTTOM = GRIDFIN_TOP + GRIDFIN_H;
+
+// Arm beam section, shared by the renderer and the settle maths.
+const ARM_BEAM_H = 4.5;   // half-height of the boom
+const RAIL_RAISE = 2.2;   // raised catch rail proud of the boom's top face
+
+const ARM_CATCH_OFFSET = 86;          // centre of the catch rail, left of the mast
+const ARM_CATCH_OFFSET_COMPACT = 64;  // the shorter arm fitted from flight ten
+const ARM_BEAM_H_COMPACT = 3.2;       // and its slimmer beam section
+const ARM_ROOT_OFFSET = 20;   // where the boom leaves the carriage
+const MAST_SAFE_MARGIN = 26;  // keep the rail's inner end clear of the mast
+const PIN_DROP = 10;          // load pins, measured down from the booster's top
+const CAPTURE_BAND = 16;      // vertical depth of the capture window
+
+// The real booster is caught by load pins near its grid fins, so the contact
+// point is up near the top of the vehicle, not at its centre.
+function pinOffsetY() {
+  return -ROCKET_HALF_H + PIN_DROP;
+}
+
+function catchGeometry(lvl) {
+  const railY = lvl.catchY;
+  const reach = lvl.compactArm ? ARM_CATCH_OFFSET_COMPACT : ARM_CATCH_OFFSET;
+  const centerX = lvl.towerX - reach;
+  const halfW = Math.min(lvl.catchToleranceX, reach - MAST_SAFE_MARGIN);
+  return {
+    railY,
+    // Top face of the catch rail — what the grid fins actually come to rest on.
+    beamH: lvl.compactArm ? ARM_BEAM_H_COMPACT : ARM_BEAM_H,
+    railTopY: railY - (lvl.compactArm ? ARM_BEAM_H_COMPACT : ARM_BEAM_H) - RAIL_RAISE,
+    centerX,
+    halfW,
+    innerX: centerX + halfW,           // end nearest the tower
+    outerX: centerX - halfW,           // arm tip
+    boomInnerX: lvl.towerX - ARM_ROOT_OFFSET,
+  };
+}
+
+// Where the booster settles once secured: hanging vertically with its grid
+// fins laid across the top of the rail.
+function settledRestY(g) {
+  return g.railTopY - GRIDFIN_BOTTOM;
+}
+
+// The world is taller than one screen — the booster now spawns well above
+// the old fixed frame, and the camera scrolls down to follow it in.
+const SPAWN_ALTITUDE_BOOST = 480;
+// Hard ceiling the booster can never be thrust above. It has to clear the
+// highest possible release — an inverted spawn on a late flight, which starts
+// INVERTED_EXTRA_ALTITUDE above an already-high drop — or the physics would
+// clamp those spawns straight back down and eat the recovery room they need.
+const WORLD_TOP_Y = -1150;
+const WORLD_LEFT_X = -480;       // world extends this far left/right of the
+const WORLD_RIGHT_X = W + 480;   // original 960-wide frame, for side scrolling
+const CAMERA_FOLLOW_RATE = 5;    // higher = camera catches up to the rocket faster
+const CAMERA_ANCHOR = 0.42;      // keep the rocket this far down the screen while falling
+const CAMERA_ANCHOR_X = 0.5;     // keep the rocket this far across the screen sideways
+
+// Seconds of continuous full burn in a full propellant load. Only counts down
+// while the engines are actually lit, so coasting is free. The engines have no
+// throttle here — every correction is a full burn — so the budget has to leave
+// room for the lateral work a scattered spawn demands, while still running dry
+// if you simply hold thrust all the way down.
+const FUEL_BURN_SECONDS = 15;
+
+const MAIN_THRUST = 520;       // px/s^2 along rocket axis
+const ROT_ACCEL = 4.4;         // rad/s^2
+const ANGULAR_DAMPING = 1.6;   // 1/s
+const MAX_OMEGA = 3.8;         // rad/s
+
+// ---------- Level definitions ----------
+// A 20-flight campaign. The tolerances, weather and spawn scatter all ramp
+// along one difficulty curve so the progression stays smooth; the per-level
+// table below only carries each flight's name and its own flavour — the wind
+// it flies through and how far the booster can be thrown off at release.
+//
+// spawnScatter multiplies the base spawn spreads, so later flights hand you a
+// genuinely different problem every attempt rather than the same drop.
+//
+// `wind` is a 0..1 share of your usable lateral authority (see windAccel
+// below), never a raw acceleration — that keeps late levels hard but flyable.
+const WIND_AUTHORITY_SHARE = 0.40;
+
+// +1 blows toward the tower, -1 away from it. Mixed up so consecutive gusty
+// flights don't all pose the identical "don't get blown into the mast" problem.
+const WIND_DIRS = [1, -1, -1, 1, -1, 1, 1, -1, -1, 1, -1, 1];
+
+// The hazard isn't symmetric: drifting away from the tower just costs you the
+// approach, while drifting into it destroys the booster outright — and the rail
+// sits only ARM_CATCH_OFFSET from a lethal mast. So a wind blowing toward the
+// tower is scaled back to keep those flights demanding rather than punishing.
+const TOWARD_TOWER_WIND_SCALE = 0.75;
+
+// Wind ramps monotonically so the weather never spikes mid-campaign; the
+// per-level variety comes from which way it blows and from the spawn scatter.
+// The campaign is in two tiers. Flights 1-7 are the training tier: calm air,
+// tight spawns, generous tolerances — somewhere to learn the catch without
+// being punished. From flight 8 the real campaign starts and climbs steeply.
+const EASY_TIER_COUNT = 7;
+
+const LEVEL_FLAVOUR = [
+  // ---- Training tier ----
+  { name: "First Catch",     wind: 0.00, scatter: 0.30 },
+  { name: "Steady Hands",    wind: 0.00, scatter: 0.42 },
+  { name: "First Breeze",    wind: 0.08, scatter: 0.52 },
+  { name: "Crosswind",       wind: 0.14, scatter: 0.60 },
+  { name: "High Drop",       wind: 0.16, scatter: 0.68 },
+  { name: "Gusting",         wind: 0.22, scatter: 0.74 },
+  { name: "Tight Arms",      wind: 0.26, scatter: 0.82 },
+  // ---- The campaign proper ----
+  { name: "Heavy Air",       wind: 0.48, scatter: 1.15 },
+  { name: "Storm Line",      wind: 0.54, scatter: 1.25 },
+  { name: "Perfect Catch",   wind: 0.60, scatter: 1.40 },
+  { name: "Night Shift",     wind: 0.65, scatter: 1.50 },
+  { name: "Shear Line",      wind: 0.70, scatter: 1.45 },
+  { name: "Squall",          wind: 0.75, scatter: 1.55 },
+  { name: "Narrow Margin",   wind: 0.78, scatter: 1.75 },
+  { name: "Hard Rain",       wind: 0.82, scatter: 1.70 },
+  { name: "Crosscut",        wind: 0.86, scatter: 1.85 },
+  { name: "Knife Edge",      wind: 0.89, scatter: 2.00 },
+  { name: "Final Approach",  wind: 0.93, scatter: 1.95 },
+  { name: "Threading It",    wind: 0.96, scatter: 2.20 },
+  { name: "Flight Twenty",   wind: 1.00, scatter: 2.35 },
+];
+
+// Difficulty position 0..1, piecewise so the training tier stays flat and low
+// and the step up at flight 8 is felt rather than blended away.
+function difficultyEase(i, total) {
+  if (i < EASY_TIER_COUNT) {
+    const t = i / (EASY_TIER_COUNT - 1);          // 0..1 across flights 1-7
+    return t * 0.16;                              // 0.00 .. 0.16
+  }
+  const t = (i - EASY_TIER_COUNT) / (total - 1 - EASY_TIER_COUNT);  // 0..1 across 8-20
+  return 0.30 + (t * t * 0.45 + t * 0.55) * 0.70;                   // 0.30 .. 1.00
+}
+
+// Per-flight release attitude, in radians. Cycles through lefts, rights and
+// uprights so consecutive levels never feel like the same drop.
+const SPAWN_ANGLE_BIAS = [
+  0.00, -0.22, 0.30, -0.38, 0.16, 0.45, -0.30, 0.52, -0.46, 0.24,
+  -0.55, 0.40, -0.18, 0.60, -0.62, 0.34, -0.42, 0.66, -0.50, 0.28,
+];
+
+// Each level flies under its own neon sky. Built from one hue so the whole
+// palette stays coherent: a near-black top, a saturated mid, and a hot neon
+// band along the horizon in a shifted hue for a two-tone look.
+function neonSky(i) {
+  const hue = (28 + i * 41) % 360;          // wide spread, no repeats over 20
+  const glowHue = (hue + 46) % 360;
+  return {
+    top:     `hsl(${hue}, 58%, 4%)`,
+    mid:     `hsl(${hue}, 66%, 10%)`,
+    glow:    `hsl(${glowHue}, 78%, 19%)`,
+    horizon: `hsl(${glowHue}, 92%, 30%)`,
+    star:    `hsl(${glowHue}, 40%, 88%)`,
+    hue,
+    glowHue,
+  };
+}
+
+const LEVELS = LEVEL_FLAVOUR.map((f, i) => {
+  const ease = difficultyEase(i, LEVEL_FLAVOUR.length);
+  const lerp = (a, b) => a + (b - a) * ease;
+  const windDir = WIND_DIRS[i % WIND_DIRS.length];
+  const dirScale = windDir > 0 ? TOWARD_TOWER_WIND_SCALE : 1;
+  return {
+    name: `Level ${i + 1} — ${f.name}`,
+    // Release point: the table's centre, scattered at spawn time.
+    startX: 400 + ((i * 37) % 110),
+    startY: 40 - ease * 32,
+    startVX: ((i % 3) - 1) * 12,
+    startVY: lerp(35, 62),
+    gravity: lerp(235, 288),
+    // Wind is expressed as a fraction of the lateral authority you actually
+    // have while still upright enough to be caught. Holding station against a
+    // crosswind costs a tilt of asin(wind / MAIN_THRUST), so if the wind ever
+    // exceeded sin(catchAngleTol) * MAIN_THRUST the level would be unwinnable:
+    // you could stay in the corridor or arrive upright, never both. Deriving it
+    // this way keeps every flight flyable no matter how tight the tolerances
+    // get, and makes `wind` mean "how much of your control the weather eats".
+    windAccel: f.wind * Math.sin(lerp(0.33, 0.11)) * MAIN_THRUST * WIND_AUTHORITY_SHARE * dirScale,
+    windFreq: f.wind === 0 ? 0 : 0.55 + f.wind * 0.75,
+    // Alternate which way the weather pushes. A wind that always blew toward
+    // the tower would make every gusty level the same problem — drift into the
+    // mast and die — so half the flights blow you away from it instead.
+    windDir,
+    spawnScatter: f.scatter,
+    // Each flight releases the booster with its own attitude bias, so no two
+    // levels hand you the same entry — one drops you nose-left, the next
+    // nose-right — with the usual scatter layered on top.
+    spawnAngleBias: SPAWN_ANGLE_BIAS[i % SPAWN_ANGLE_BIAS.length],
+    // From the tenth flight the tower swaps to the compact arm: a shorter,
+    // slimmer chopstick with less reach.
+    compactArm: i >= 9,
+    // Flights fifteen and up can release the booster fully inverted.
+    allowInverted: i >= 14,
+    sky: neonSky(i),
+    towerX: 700,
+    catchY: 420,
+    // Catch tolerances — these drive both the physics and the width of the
+    // rail you can see, so the target visibly shrinks as the campaign goes on.
+    catchToleranceX: lerp(52, 15),
+    catchAngleTol: lerp(0.33, 0.11),
+    catchSpeedTol: lerp(165, 88),
+    catchOmegaTol: lerp(2.4, 1.05),
+  };
+});
+
+// ---------- DOM ----------
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const levelLabelEl = document.getElementById("level-label");
+const levelSubEl = document.getElementById("level-sub");
+const attemptCountEl = document.getElementById("attempt-count");
+const levelTimerEl = document.getElementById("level-timer");
+
+const overlayEl = document.getElementById("overlay");
+const overlayTitleEl = document.getElementById("overlay-title");
+const overlayMessageEl = document.getElementById("overlay-message");
+const overlayStatsEl = document.getElementById("overlay-stats");
+const overlayControlsEl = document.getElementById("overlay-controls");
+const overlayButtonEl = document.getElementById("overlay-button");
+
+const bannerEl = document.getElementById("banner");
+const touchControlsEl = document.getElementById("touch-controls");
+
+const speedReadoutEl = document.getElementById("speed-readout");
+const altitudeReadoutEl = document.getElementById("altitude-readout");
+const loxFillEl = document.getElementById("lox-fill");
+const ch4FillEl = document.getElementById("ch4-fill");
+const fuelReadoutEl = document.getElementById("fuel-readout");
+const telemetryStatusEl = document.getElementById("telemetry-status");
+const enginesDisplayEl = document.getElementById("engines-display");
+const missionTimerEl = document.getElementById("mission-timer");
+const muteButtonEl = document.getElementById("mute-button");
+const guidanceButtonEl = document.getElementById("guidance-button");
+const engineButtonEl = document.getElementById("engine-button");
+const capturePanelEl = document.getElementById("capture-panel");
+const captureVerdictEl = document.getElementById("capture-verdict");
+const captureRowsEl = document.getElementById("capture-rows");
+
+// Built once; updateCapturePanel() only mutates the bits that change so the
+// panel can run every frame without churning the DOM.
+const captureRowEls = (function buildCaptureRows() {
+  const keys = ["align", "speed", "attitude", "roll"];
+  const map = {};
+  for (const key of keys) {
+    const row = document.createElement("div");
+    row.className = "cap-row";
+    const label = document.createElement("span");
+    label.className = "cap-label";
+    const bar = document.createElement("div");
+    bar.className = "cap-bar";
+    const fill = document.createElement("div");
+    fill.className = "cap-fill";
+    bar.appendChild(fill);
+    const value = document.createElement("span");
+    value.className = "cap-value";
+    row.append(label, bar, value);
+    captureRowsEl.appendChild(row);
+    map[key] = { row, label, fill, value };
+  }
+  return map;
+})();
+
+// ---------- Input ----------
+const keys = { up: false, left: false, right: false };
+
+function setKey(code, isDown) {
+  switch (code) {
+    case "ArrowUp": case "KeyW": keys.up = isDown; break;
+    case "ArrowLeft": case "KeyA": keys.left = isDown; break;
+    case "ArrowRight": case "KeyD": keys.right = isDown; break;
+  }
+}
+
+const CONTROL_CODES = new Set([
+  "ArrowUp", "ArrowLeft", "ArrowRight", "ArrowDown",
+  "KeyW", "KeyA", "KeyD", "KeyR", "Space",
+]);
+
+window.addEventListener("keydown", (e) => {
+  if (CONTROL_CODES.has(e.code)) e.preventDefault();
+  Sound.unlock();   // browsers only allow audio to start from a real gesture
+  setKey(e.code, true);
+
+  if (e.code === "Space" && !e.repeat) {
+    handlePrimaryAction();
+  }
+  if (e.code === "KeyR" && !e.repeat) {
+    handleResetAction();
+  }
+  if (e.code === "KeyM" && !e.repeat) {
+    setMuteButton(Sound.toggleMute());
+  }
+  if (e.code === "KeyG" && !e.repeat) {
+    toggleGuidance();
+  }
+  if (e.code === "KeyE" && !e.repeat) {
+    toggleAutoEngine();
+  }
+});
+
+window.addEventListener("keyup", (e) => {
+  if (CONTROL_CODES.has(e.code)) e.preventDefault();
+  setKey(e.code, false);
+});
+
+overlayButtonEl.addEventListener("click", () => {
+  Sound.unlock();
+  handlePrimaryAction();
+});
+
+muteButtonEl.addEventListener("click", () => {
+  Sound.unlock();
+  setMuteButton(Sound.toggleMute());
+});
+
+function setMuteButton(isMuted) {
+  muteButtonEl.textContent = isMuted ? "SOUND OFF" : "SOUND ON";
+  muteButtonEl.classList.toggle("off", isMuted);
+}
+
+// The lit approach corridor standing over the catch rail is a training aid —
+// invaluable while you're learning the catch, but something you may want out of
+// the way once you can fly it by eye.
+guidanceButtonEl.addEventListener("click", () => {
+  Sound.unlock();
+  Sound.uiClick();
+  toggleGuidance();
+});
+
+function toggleGuidance() {
+  state.showGuidance = !state.showGuidance;
+  guidanceButtonEl.textContent = state.showGuidance ? "GUIDANCE ON" : "GUIDANCE OFF";
+  guidanceButtonEl.classList.toggle("off", !state.showGuidance);
+}
+
+// Auto engine: the throttle flies itself and you only steer, the way
+// mechazilla.io plays. Manual gives you the throttle back.
+engineButtonEl.addEventListener("click", () => {
+  Sound.unlock();
+  Sound.uiClick();
+  toggleAutoEngine();
+});
+
+function toggleAutoEngine() {
+  state.autoEngine = !state.autoEngine;
+  engineButtonEl.textContent = state.autoEngine ? "ENGINE AUTO" : "ENGINE MANUAL";
+  engineButtonEl.classList.toggle("off", !state.autoEngine);
+}
+
+// Prevent page scroll when the canvas / stage is touched on mobile,
+// and keep keyboard focus reliable. Also cut the engine so it doesn't drone
+// on in a background tab.
+window.addEventListener("blur", () => {
+  keys.up = keys.left = keys.right = false;
+  Sound.stopEngine();
+});
+
+// ---------- Touch flight controls ----------
+// Same hold-to-activate semantics as the keyboard: pointerdown sets the flag,
+// pointerup/cancel/leave clears it. Pointer capture keeps tracking the same
+// finger even if it slides off the button's box, matching how a real D-pad
+// button behaves; losing capture (call cut, app switch) also releases it so
+// a stuck "held" button can't strand the rocket mid-burn.
+function bindTouchButton(el, onDown, onUp) {
+  if (!el) return;
+  const release = (e) => {
+    el.classList.remove("pressed");
+    onUp();
+    try {
+      if (e && el.hasPointerCapture && el.hasPointerCapture(e.pointerId)) {
+        el.releasePointerCapture(e.pointerId);
+      }
+    } catch (err) { /* ignore -- capture may already be gone */ }
+  };
+  el.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    Sound.unlock();
+    el.classList.add("pressed");
+    // Capture is a nice-to-have (keeps tracking a finger that slides off the
+    // button); a rare NotFoundError here must never block onDown(), or the
+    // control would silently do nothing while still looking pressed.
+    try {
+      if (el.setPointerCapture) el.setPointerCapture(e.pointerId);
+    } catch (err) { /* ignore -- see comment above */ }
+    onDown();
+  });
+  el.addEventListener("pointerup", release);
+  el.addEventListener("pointercancel", release);
+  el.addEventListener("lostpointercapture", release);
+  el.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+
+bindTouchButton(document.getElementById("touch-left"), () => { keys.left = true; }, () => { keys.left = false; });
+bindTouchButton(document.getElementById("touch-right"), () => { keys.right = true; }, () => { keys.right = false; });
+bindTouchButton(document.getElementById("touch-thrust"), () => { keys.up = true; }, () => { keys.up = false; });
+
+// ---------- Audio ----------
+// Everything is synthesised through Web Audio rather than loaded from files,
+// so the game stays a single self-contained folder with nothing to fetch.
+// Browsers block audio until a user gesture, so the context is created lazily
+// on the first key press or click.
+const Sound = (function buildSound() {
+  let ctx = null;
+  let master = null;
+  let noiseBuf = null;
+  let engine = null;
+  let muted = false;
+
+  function makeNoise(seconds) {
+    const len = Math.floor(ctx.sampleRate * seconds);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    // Brown-ish noise: integrated white noise has more low-end weight, which
+    // reads as a rocket rumble rather than as hiss.
+    let last = 0;
+    for (let i = 0; i < len; i++) {
+      const white = Math.random() * 2 - 1;
+      last = (last + 0.02 * white) / 1.02;
+      data[i] = last * 3.5;
+    }
+    return buf;
+  }
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = muted ? 0 : 0.85;
+    master.connect(ctx.destination);
+    noiseBuf = makeNoise(2);
+    return ctx;
+  }
+
+  // Called from the first real user gesture.
+  function unlock() {
+    if (!ensure()) return;
+    if (ctx.state === "suspended") ctx.resume();
+  }
+
+  function now() { return ctx.currentTime; }
+
+  function noiseSource(loop) {
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuf;
+    src.loop = !!loop;
+    return src;
+  }
+
+  // ---- Continuous engine rumble -----------------------------------------
+  function startEngine() {
+    if (!ensure() || engine) return;
+    const g = ctx.createGain();
+    g.gain.value = 0;
+    g.connect(master);
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 420;
+    lp.Q.value = 0.7;
+    lp.connect(g);
+
+    const rumble = noiseSource(true);
+    rumble.connect(lp);
+    rumble.start();
+
+    // A low tone under the noise gives the plume some pitch and body.
+    const osc = ctx.createOscillator();
+    osc.type = "sawtooth";
+    osc.frequency.value = 46;
+    const oscGain = ctx.createGain();
+    oscGain.gain.value = 0.18;
+    osc.connect(oscGain).connect(lp);
+    osc.start();
+
+    engine = { g, lp, rumble, osc };
+  }
+
+  // level 0..1 — how hard the engine is running.
+  function setEngine(level) {
+    if (!engine) { if (level > 0) startEngine(); else return; }
+    if (!engine) return;
+    const target = Math.max(0, Math.min(1, level)) * 0.3;
+    engine.g.gain.setTargetAtTime(target, now(), 0.05);
+    engine.lp.frequency.setTargetAtTime(320 + level * 340, now(), 0.08);
+  }
+
+  function stopEngine() {
+    if (!engine) return;
+    engine.g.gain.setTargetAtTime(0, now(), 0.04);
+  }
+
+  // ---- One-shots ---------------------------------------------------------
+  function blip(freq, dur, type, vol, delay) {
+    if (!ensure()) return;
+    const t = now() + (delay || 0);
+    const osc = ctx.createOscillator();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, t);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol == null ? 0.25 : vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g).connect(master);
+    osc.start(t);
+    osc.stop(t + dur + 0.05);
+  }
+
+  function explosion() {
+    if (!ensure()) return;
+    const t = now();
+    const src = noiseSource(false);
+    const lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.setValueAtTime(2200, t);
+    lp.frequency.exponentialRampToValueAtTime(160, t + 1.1);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.85, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+    src.connect(lp).connect(g).connect(master);
+    src.start(t);
+    src.stop(t + 1.5);
+
+    // Low thump underneath the debris noise.
+    const osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(120, t);
+    osc.frequency.exponentialRampToValueAtTime(32, t + 0.5);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0.0001, t);
+    og.gain.exponentialRampToValueAtTime(0.7, t + 0.02);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    osc.connect(og).connect(master);
+    osc.start(t);
+    osc.stop(t + 0.8);
+  }
+
+  function clunk() {
+    if (!ensure()) return;
+    const t = now();
+    const src = noiseSource(false);
+    const bp = ctx.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.value = 1400;
+    bp.Q.value = 2.2;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.6, t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    src.connect(bp).connect(g).connect(master);
+    src.start(t);
+    src.stop(t + 0.3);
+  }
+
+  return {
+    unlock,
+    setEngine,
+    stopEngine,
+    isMuted: () => muted,
+    // Read-only view of the audio graph. Browsers silently keep the context
+    // "suspended" until a real gesture, which is the usual cause of "why is
+    // there no sound" — this makes that state inspectable.
+    status: () => ({
+      contextState: ctx ? ctx.state : "not-created",
+      engineRunning: !!engine,
+      engineGain: engine ? +engine.g.gain.value.toFixed(3) : 0,
+      masterGain: master ? +master.gain.value.toFixed(3) : 0,
+      muted,
+    }),
+    toggleMute() {
+      muted = !muted;
+      if (master) master.gain.setTargetAtTime(muted ? 0 : 0.85, now(), 0.02);
+      return muted;
+    },
+    // Metallic grab, then a rising two-note confirmation.
+    caught() {
+      clunk();
+      blip(523.25, 0.30, "sine", 0.3, 0.06);
+      blip(783.99, 0.45, "sine", 0.3, 0.20);
+    },
+    crashed() { explosion(); },
+    // Soft rising chime the moment every criterion goes green.
+    goChime() { blip(880, 0.14, "sine", 0.12); },
+    // Flat low tone when the catch window is lost again.
+    noGoChime() { blip(300, 0.13, "sine", 0.09); },
+    // Descending two-tone when the tanks run dry and the engines cut.
+    fuelOut() {
+      blip(420, 0.22, "square", 0.16);
+      blip(240, 0.42, "square", 0.16, 0.18);
+    },
+    launch() {
+      blip(330, 0.16, "square", 0.14);
+      blip(494, 0.22, "square", 0.14, 0.11);
+    },
+    uiClick() { blip(660, 0.07, "square", 0.10); },
+    levelUp() {
+      blip(523.25, 0.16, "triangle", 0.22);
+      blip(659.25, 0.16, "triangle", 0.22, 0.13);
+      blip(783.99, 0.34, "triangle", 0.24, 0.26);
+    },
+    victory() {
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
+        blip(f, 0.5, "triangle", 0.24, i * 0.16));
+    },
+  };
+})();
+
+// ---------- Game state ----------
+const PHASE = {
+  INTRO: "intro",
+  FALLING: "falling",
+  SUCCESS: "success",
+  CRASH: "crash",
+  COMPLETE: "complete",
+};
+
+const state = {
+  phase: PHASE.INTRO,
+  levelIndex: 0,
+  clock: 0,           // global elapsed seconds, never resets (drives wind)
+  phaseTimer: 0,       // seconds since entering current phase
+  awaitingInput: false,
+
+  levelAttempts: 0,
+  levelTime: 0,
+  levelResults: [],    // {attempts, time} per completed level
+
+  rocket: { x: 0, y: 0, vx: 0, vy: 0, angle: 0, omega: 0, thrusting: false },
+  cameraX: 0,
+  cameraY: 0,
+
+  crashReason: "",
+  caughtOffset: 0,
+  fuel: 1,                 // 1 = full tanks, 0 = dry
+  fuelOutAnnounced: false,
+  settleFromY: 0,          // catch settle animation
+  settleFromAngle: 0,
+  settleToY: 0,
+  settleT: 1,
+  shake: 0,
+  flash: 0,
+
+  flybyMessage: "",     // transient "missed the arms" banner while still flying
+  flybyTimer: 0,
+  lastAllGo: false,     // edge-detects the go/no-go chime
+  showGuidance: true,   // lit approach corridor over the catch rail
+  autoEngine: true,     // engine holds its own slow descent; player just steers
+  spawnedInverted: false,
+
+  towerDestroyed: false,
+  towerDebris: [],       // {x, y, vx, vy, angle, omega, w, h, color, settled}
+
+  shipDestroyed: false,
+  shipDebris: [],
+
+  particles: [],
+};
+
+function currentLevel() {
+  return LEVELS[state.levelIndex];
+}
+
+function normalizeAngle(a) {
+  a = (a + Math.PI) % (Math.PI * 2);
+  if (a < 0) a += Math.PI * 2;
+  return a - Math.PI;
+}
+
+// ---------- Level / attempt lifecycle ----------
+function enterLevel(index) {
+  state.levelIndex = index;
+  state.levelAttempts = 0;
+  state.levelTime = 0;
+  beginAttempt();
+}
+
+// Every attempt is a fresh problem: the release point, the entry velocity and
+// the booster's attitude are all scattered around the level's tuned centre,
+// scaled by that level's spawnScatter. No two drops play the same, and later
+// flights hand you a genuinely wilder starting state.
+const SPAWN_X_SPREAD = 155;
+const SPAWN_Y_SPREAD = 60;
+const SPAWN_ANGLE_SPREAD = 0.62;
+const SPAWN_VX_SPREAD = 46;
+const SPAWN_VY_SPREAD = 20;
+const SPAWN_OMEGA_SPREAD = 0.95;
+const INVERTED_SPAWN_CHANCE = 0.35;   // flights 15+ only
+// An inverted release is only fair if there's room to roll upright and *then*
+// fly a normal approach. Rolling 180° eats most of a standard drop on its own —
+// and thrusting while inverted drives you down harder — so these releases come
+// in much higher and gentler to buy back that time.
+const INVERTED_EXTRA_ALTITUDE = 430;
+const INVERTED_ENTRY_VY = 0.45;       // fraction of the level's usual entry speed
+
+// Uniform random in [-1, 1], but biased toward the middle so extreme starts
+// stay rare rather than being as likely as a gentle one.
+function scatter() {
+  return (Math.random() + Math.random() - 1);
+}
+
+// Where the camera wants to be so the rocket sits CAMERA_ANCHOR of the way
+// down the screen, clamped so it never scrolls past showing the ground.
+function cameraTargetFor(rocketY) {
+  return clamp(rocketY - H * CAMERA_ANCHOR, WORLD_TOP_Y - H * CAMERA_ANCHOR, 0);
+}
+
+// Same idea sideways — keep the rocket roughly centered as it drifts left
+// or right, clamped so the camera never scrolls past the edges of the world.
+function cameraTargetXFor(rocketX) {
+  return clamp(rocketX - W * CAMERA_ANCHOR_X, WORLD_LEFT_X, WORLD_RIGHT_X - W);
+}
+
+function beginAttempt() {
+  const lvl = currentLevel();
+  state.levelAttempts += 1;
+  const s = lvl.spawnScatter || 1;
+  state.rocket.x = clamp(lvl.startX + scatter() * SPAWN_X_SPREAD * s, 90, W - 90);
+  state.rocket.y = lvl.startY - SPAWN_ALTITUDE_BOOST + scatter() * SPAWN_Y_SPREAD * s;
+  state.cameraY = cameraTargetFor(state.rocket.y);
+  state.cameraX = cameraTargetXFor(state.rocket.x);
+  state.rocket.vx = lvl.startVX + scatter() * SPAWN_VX_SPREAD * s;
+  state.rocket.vy = Math.max(10, lvl.startVY + scatter() * SPAWN_VY_SPREAD * s);
+  // Release attitude: this level's own bias, plus scatter. From flight fifteen
+  // the booster can also come off the stage fully inverted — you have to roll
+  // it back through 180° before the landing burn does you any good, which is
+  // why it only appears once there's plenty of altitude to recover in.
+  let angle = lvl.spawnAngleBias + scatter() * SPAWN_ANGLE_SPREAD * s;
+  state.spawnedInverted = false;
+  if (lvl.allowInverted && Math.random() < INVERTED_SPAWN_CHANCE) {
+    state.spawnedInverted = true;
+    const flip = Math.random() < 0.5 ? Math.PI : -Math.PI;
+    angle = normalizeAngle(flip + scatter() * 0.5);
+    state.rocket.y -= INVERTED_EXTRA_ALTITUDE;
+    state.rocket.vy *= INVERTED_ENTRY_VY;
+    state.cameraY = cameraTargetFor(state.rocket.y);
+  }
+  state.rocket.angle = angle;
+  state.rocket.omega = scatter() * SPAWN_OMEGA_SPREAD * s;
+  state.rocket.thrusting = false;
+  state.phase = PHASE.FALLING;
+  state.phaseTimer = 0;
+  state.awaitingInput = false;
+  state.crashReason = "";
+  state.flybyMessage = "";
+  state.flybyTimer = 0;
+  state.towerDestroyed = false;
+  state.towerDebris.length = 0;
+  state.shipDestroyed = false;
+  state.shipDebris.length = 0;
+  state.particles.length = 0;
+  state.fuel = 1;
+  state.fuelOutAnnounced = false;
+  state.lastAllGo = false;
+  hideOverlay();
+  hideBanner();
+  updateHud();
+  Sound.launch();
+}
+
+function flyBy(reason) {
+  state.flybyMessage = reason;
+  state.flybyTimer = 1.1;
+  showBanner(reason, "fail");
+}
+
+// Break the tower apart into tumbling debris on a tower-related crash.
+function destroyTower(impactX, impactY) {
+  if (state.towerDestroyed) return;
+  state.towerDestroyed = true;
+
+  const lvl = currentLevel();
+  const mastX = lvl.towerX;
+  const armY = lvl.catchY;
+  const topY = armY - MAST_TOP_OFFSET;
+  const railGap = MAST_RAIL_GAP;
+
+  // Mostly steel-grey rail/brace tones, with a few red-cap fragments mixed
+  // in, matching the tower's actual paint scheme.
+  const pieceColors = ["#3c4756", "#57687f", "#4a5568", "#2a323d", "#6b2c2c"];
+  const jitter = (base, spread) => base + (Math.random() - 0.5) * spread;
+
+  const addPiece = (x, y, w, h, color, kind) => {
+    const dx = x - impactX;
+    const dy = y - impactY;
+    const dist = Math.max(30, Math.hypot(dx, dy));
+    const falloff = clamp(160 / dist, 0.35, 2.2);
+    const outward = dx / dist;
+    // Bigger pieces are heavier — they lumber and topple rather than spray.
+    const massFactor = clamp(70 / (w * h), 0.12, 1.5);
+    state.towerDebris.push({
+      x, y, w, h, color,
+      kind: kind || "plate",
+      vx: (outward * (60 + Math.random() * 90) * falloff + (Math.random() - 0.5) * 40) * massFactor,
+      vy: (-((60 + Math.random() * 110) * falloff) - dy * 0.15) * massFactor,
+      angle: kind === "truss" ? (Math.random() - 0.5) * 0.5 : Math.random() * Math.PI * 2,
+      omega: (Math.random() - 0.5) * 8 * massFactor,
+      restTilt: (Math.random() - 0.5) * 0.3,
+      settled: false,
+    });
+  };
+
+  // ---- Sectional collapse -------------------------------------------------
+  // The tower comes apart at its bay joints, not into uniform confetti. Each
+  // failure picks a fresh mix of section sizes, so one collapse drops a couple
+  // of huge multi-bay trunks while the next shatters into short stubs.
+  const SECTION_SIZES = [
+    { bays: 4, chance: 0.20 },   // huge trunk
+    { bays: 3, chance: 0.20 },
+    { bays: 2, chance: 0.30 },
+    { bays: 1, chance: 0.30 },   // single bay
+  ];
+  const bayH = 17;               // matches the lattice bay spacing in drawTower
+  const pickBays = () => {
+    let roll = Math.random();
+    for (const s of SECTION_SIZES) {
+      roll -= s.chance;
+      if (roll <= 0) return s.bays;
+    }
+    return 1;
+  };
+
+  let y = topY;
+  while (y < GROUND_Y) {
+    const bays = pickBays();
+    const h = Math.min(bays * bayH, GROUND_Y - y);
+    if (h < 4) break;
+    const isAccent = y < topY + 34;   // the red-capped top section
+    // Whole lattice sections keep their truss look as they tumble.
+    addPiece(mastX, y + h / 2, railGap * 2, h,
+      isAccent ? "#6b2c2c" : pieceColors[Math.floor(Math.random() * pieceColors.length)],
+      "truss");
+
+    // A section shedding loose members as it goes: the bigger the section,
+    // the more spall it throws off.
+    const spall = 1 + Math.floor(Math.random() * bays * 2);
+    for (let s = 0; s < spall; s++) {
+      addPiece(
+        mastX + jitter(0, railGap * 2.2),
+        jitter(y + h / 2, h * 0.8),
+        jitter(5, 3), jitter(9, 6),
+        pieceColors[Math.floor(Math.random() * pieceColors.length)]);
+    }
+    y += h;
+  }
+
+  // The arm breaks off in a few substantial chunks plus its catch rail.
+  addPiece(mastX - 34, armY, 30, 6, "#8b98c0");
+  addPiece(mastX - 68, armY - 2, 26, 5, "#aab3c0");
+  addPiece(mastX - 100, armY, 18, 4, "#5c636f");
+  addPiece(mastX - 18, armY + 4, 12, 5, "#d6dbe2");
+  // Beacon and lightning rods.
+  addPiece(mastX, topY + 4, 6, 6, "#ff6b6b");
+  addPiece(mastX + 4, topY - 12, 2, 22, "#4a505a");
+  addPiece(mastX - 5, topY - 8, 2, 16, "#4a505a");
+}
+
+function updateDebrisList(list, dt) {
+  for (let i = list.length - 1; i >= 0; i--) {
+    const p = list[i];
+    if (p.settled) continue;
+    p.vy += 480 * dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.angle += p.omega * dt;
+
+    // A long section coming to rest lies down on its side, so its vertical
+    // extent depends on how far it has toppled — a tall piece still standing
+    // sits high, the same piece flat on the ground sits low.
+    const c = Math.abs(Math.cos(p.angle));
+    const s = Math.abs(Math.sin(p.angle));
+    const halfExtent = (p.h / 2) * c + (p.w / 2) * s;
+    const floorY = GROUND_Y - halfExtent;
+
+    if (p.y >= floorY) {
+      p.y = floorY;
+      p.vy = 0;
+      if (p.kind === "truss") {
+        // Heavy structure: it doesn't skitter, it topples flat and stays put.
+        // A tall section can't balance on its cut end, so it's driven to the
+        // nearest *horizontal* rather than to whichever right angle is closest.
+        p.vx *= 0.35;
+        p.omega *= 0.4;
+        const half = Math.PI / 2;
+        let target;
+        if (p.h > p.w * 1.05) {
+          // Anything taller than it is wide comes down on its side — a cut
+          // lattice section can't balance on its broken end.
+          target = (Math.round((p.angle - half) / Math.PI) * Math.PI) + half;
+        } else {
+          target = Math.round(p.angle / half) * half;
+        }
+        // A small resting tilt per piece, so the pile doesn't look like it was
+        // laid out on a grid.
+        target += p.restTilt;
+        p.angle += (target - p.angle) * Math.min(1, dt * 5);
+        if (Math.abs(p.vx) < 6 && Math.abs(target - p.angle) < 0.02) {
+          p.angle = target;
+          p.settled = true;
+        }
+      } else {
+        p.vx *= 0.6;
+        p.omega *= 0.5;
+        if (Math.abs(p.vx) < 4 && Math.abs(p.omega) < 0.05) p.settled = true;
+      }
+    }
+  }
+}
+
+function updateTowerDebris(dt) {
+  updateDebrisList(state.towerDebris, dt);
+}
+
+function updateShipDebris(dt) {
+  updateDebrisList(state.shipDebris, dt);
+}
+
+function updateCamera(dt) {
+  const targetY = cameraTargetFor(state.rocket.y);
+  const t = Math.min(1, dt * CAMERA_FOLLOW_RATE);
+  state.cameraY += (targetY - state.cameraY) * t;
+
+  // Sideways follow only kicks in once a real attempt is underway — the
+  // intro idle animation keeps its fixed framing at cameraX = 0.
+  if (state.phase !== PHASE.INTRO) {
+    const targetX = cameraTargetXFor(state.rocket.x);
+    state.cameraX += (targetX - state.cameraX) * t;
+  }
+}
+
+// After a catch the booster swings upright and lowers the last few pixels
+// until its grid fins are lying across the top of the rail, the way the real
+// one settles onto the arms once the chopsticks take its weight.
+const SETTLE_SECONDS = 0.55;
+function updateCatchSettle(dt) {
+  if (state.settleT >= 1) return;
+  state.settleT = Math.min(1, state.settleT + dt / SETTLE_SECONDS);
+  // Ease out, so it drops onto the arms and comes to rest rather than sliding.
+  const e = 1 - Math.pow(1 - state.settleT, 3);
+  const r = state.rocket;
+  r.y = state.settleFromY + (state.settleToY - state.settleFromY) * e;
+  r.angle = state.settleFromAngle * (1 - e);
+  r.omega = 0;
+}
+
+// Idle animation for the intro screen — engine always lit, drifting slowly
+// down past the arm and looping, matching mechazilla.io's attract-mode look.
+const INTRO_DRIFT_SPEED = 9; // px/s
+function updateIntroIdle(dt) {
+  const lvl = LEVELS[0];
+  const r = state.rocket;
+  r.x = lvl.towerX + 14;
+  r.angle = 0.04;
+  r.omega = 0;
+  r.vx = 0;
+  r.vy = 0;
+  r.thrusting = true;
+  const startY = lvl.catchY - 50;
+  const endY = lvl.catchY + 50;
+  if (r.y < startY || r.y > endY) r.y = startY;
+  r.y += INTRO_DRIFT_SPEED * dt;
+}
+
+// Break the booster apart into tumbling debris on any failed attempt.
+function destroyShip() {
+  if (state.shipDestroyed) return;
+  state.shipDestroyed = true;
+
+  const r = state.rocket;
+  const cos = Math.cos(r.angle);
+  const sin = Math.sin(r.angle);
+  const carryVx = r.vx * 0.5;
+  const carryVy = r.vy * 0.5;
+
+  const addPiece = (lx, ly, w, h, color) => {
+    const wx = r.x + lx * cos - ly * sin;
+    const wy = r.y + lx * sin + ly * cos;
+    const dist = Math.max(8, Math.hypot(lx, ly));
+    const olx = lx / dist;
+    const oly = ly / dist;
+    const owx = olx * cos - oly * sin;
+    const owy = olx * sin + oly * cos;
+    const burst = 70 + Math.random() * 110;
+    const massFactor = clamp(50 / (w * h), 0.3, 1.6);
+    state.shipDebris.push({
+      x: wx, y: wy, w, h, color,
+      vx: (carryVx + owx * burst + (Math.random() - 0.5) * 40) * massFactor,
+      vy: (carryVy + owy * burst - 40 + (Math.random() - 0.5) * 40) * massFactor,
+      angle: r.angle + (Math.random() - 0.5) * 1.4,
+      omega: (Math.random() - 0.5) * 10 * massFactor,
+      settled: false,
+    });
+  };
+
+  // Body barrel, split into stacked segments and left/right halves so it
+  // reads as a hull breaking apart rather than one block flying off.
+  const segCount = 5;
+  const segH = (ROCKET_HALF_H * 2) / segCount;
+  for (let i = 0; i < segCount; i++) {
+    const ly = -ROCKET_HALF_H + segH * i + segH / 2;
+    addPiece(-ROCKET_HALF_W / 2, ly, ROCKET_HALF_W, segH - 2, "#cdd3dd");
+    addPiece(ROCKET_HALF_W / 2, ly, ROCKET_HALF_W, segH - 2, "#9ba2b3");
+  }
+  // Dark thermal/avionics band.
+  addPiece(0, -ROCKET_HALF_H * 0.66 + 3, ROCKET_HALF_W * 1.6, 6, "#1e2129");
+  // Grid fins, one from each side.
+  addPiece(-ROCKET_HALF_W - 3, -ROCKET_HALF_H * 0.42 + 6, 6, 13, "#7a869e");
+  addPiece(ROCKET_HALF_W + 3, -ROCKET_HALF_H * 0.42 + 6, 6, 13, "#7a869e");
+  // Interstage cap.
+  addPiece(0, -ROCKET_HALF_H - 3, ROCKET_HALF_W * 1.8, 5, "#c9cfd9");
+  // Engine skirt.
+  addPiece(0, ROCKET_HALF_H - 5, ROCKET_HALF_W * 2 + 2, 8, "#3d4452");
+}
+
+function endAttempt(success, reason) {
+  state.flybyTimer = 0;
+  Sound.stopEngine();
+  if (success) {
+    state.phase = PHASE.SUCCESS;
+    state.flash = 1;
+    state.levelResults[state.levelIndex] = {
+      attempts: state.levelAttempts,
+      time: state.levelTime,
+    };
+    showBanner("CAUGHT!", "success");
+    Sound.caught();
+  } else {
+    state.phase = PHASE.CRASH;
+    state.crashReason = reason;
+    state.shake = 1;
+    showBanner(reason, "fail");
+    destroyShip();
+    spawnCrashEffect(state.rocket.x, state.rocket.y);
+    Sound.crashed();
+  }
+  state.phaseTimer = 0;
+  state.awaitingInput = false;
+}
+
+function handlePrimaryAction() {
+  if (state.phase === PHASE.INTRO) {
+    enterLevel(0);
+    return;
+  }
+  if (state.phase === PHASE.SUCCESS && state.awaitingInput) {
+    const next = state.levelIndex + 1;
+    if (next >= LEVELS.length) {
+      showCompleteOverlay();
+    } else {
+      enterLevel(next);
+    }
+    return;
+  }
+  if (state.phase === PHASE.CRASH && state.awaitingInput) {
+    beginAttempt();
+    return;
+  }
+  if (state.phase === PHASE.COMPLETE) {
+    restartGame();
+    return;
+  }
+}
+
+function handleResetAction() {
+  if (state.phase === PHASE.FALLING || state.phase === PHASE.CRASH) {
+    beginAttempt();
+  }
+}
+
+function restartGame() {
+  state.levelResults = [];
+  enterLevel(0);
+}
+
+// ---------- Auto engine ----------
+// Assist mode: the engine manages its own throttle to hold a slow, steady sink
+// rate, leaving the player to do nothing but steer. It deliberately will not
+// fire while the booster is pointing away from vertical — thrusting inverted
+// drives you into the ground — so an upside-down release still has to be
+// rolled upright by hand before the engine will help.
+const AUTO_DESCENT_RATE = 62;      // px/s target sink rate
+const AUTO_UPRIGHT_COS = 0.5;      // how near vertical before it will light
+
+function autoThrottleWants() {
+  const r = state.rocket;
+  if (Math.cos(r.angle) < AUTO_UPRIGHT_COS) return false;
+  return r.vy > AUTO_DESCENT_RATE;
+}
+
+// ---------- Physics ----------
+function stepPhysics(dt) {
+  const r = state.rocket;
+  const lvl = currentLevel();
+  const prevY = r.y;
+
+  // Propellant: the Raptors only draw from the tanks when they're actually
+  // firing, and once the tanks are dry the engines cut out for good. Steering
+  // is cold-gas thrusters on the real vehicle, so it stays available.
+  const wantThrust = keys.up || (state.autoEngine && autoThrottleWants());
+  r.thrusting = wantThrust && state.fuel > 0;
+  if (r.thrusting) {
+    state.fuel = Math.max(0, state.fuel - dt / FUEL_BURN_SECONDS);
+    if (state.fuel === 0) {
+      r.thrusting = false;
+      if (!state.fuelOutAnnounced) {
+        state.fuelOutAnnounced = true;
+        flyBy("PROPELLANT DEPLETED — ENGINES OUT");
+        Sound.fuelOut();
+      }
+    }
+  }
+
+  // Angular control
+  let angularAccel = 0;
+  if (keys.left) angularAccel -= ROT_ACCEL;
+  if (keys.right) angularAccel += ROT_ACCEL;
+  r.omega += angularAccel * dt;
+  r.omega -= r.omega * ANGULAR_DAMPING * dt;
+  r.omega = clamp(r.omega, -MAX_OMEGA, MAX_OMEGA);
+  r.angle = normalizeAngle(r.angle + r.omega * dt);
+
+  // Linear forces
+  let ax = 0;
+  let ay = lvl.gravity;
+
+  if (r.thrusting) {
+    ax += Math.sin(r.angle) * MAIN_THRUST;
+    ay += -Math.cos(r.angle) * MAIN_THRUST;
+  }
+
+  if (lvl.windAccel > 0) {
+    const gust = 0.55 + 0.45 * Math.sin(state.clock * lvl.windFreq);
+    ax += lvl.windAccel * gust * (lvl.windDir || 1);
+  }
+
+  r.vx += ax * dt;
+  r.vy += ay * dt;
+  r.x += r.vx * dt;
+  r.y += r.vy * dt;
+
+  // Soft containment: the sides hold the booster within the wider scrolling
+  // world, and the top is a hard ceiling at the edge of the world. Only the
+  // ground can actually end a run.
+  const minX = WORLD_LEFT_X + ROCKET_HALF_W + 4;
+  const maxX = WORLD_RIGHT_X - ROCKET_HALF_W - 4;
+  if (r.x < minX) { r.x = minX; if (r.vx < 0) r.vx = 0; }
+  else if (r.x > maxX) { r.x = maxX; if (r.vx > 0) r.vx = 0; }
+  if (r.y < WORLD_TOP_Y) { r.y = WORLD_TOP_Y; if (r.vy < 0) r.vy = 0; }
+
+  spawnExhaustParticles(dt);
+
+  // ----- Catch check -----
+  // The booster is caught when its load pins come down onto the catch rail —
+  // the highlighted span of the arm. That span is the same geometry the
+  // renderer draws, so the target on screen is exactly the target being tested.
+  const status = catchStatus();
+  const g = status.geometry;
+  const prevPinY = prevY + pinOffsetY() * Math.cos(r.angle);
+  const crossedDown = prevPinY < g.railY && status.pin.y >= g.railY;
+  const crossedUp = prevPinY > g.railY && status.pin.y <= g.railY;
+
+  if (crossedDown && status.overRail) {
+    if (status.allGo) {
+      // Freeze at the moment of contact, then let the SUCCESS phase settle the
+      // booster down until its grid fins lie across the top of the rail.
+      r.vx = 0; r.vy = 0; r.omega = 0;
+      state.caughtOffset = status.pin.x - g.centerX;
+      state.settleFromY = r.y;
+      state.settleFromAngle = r.angle;
+      state.settleToY = settledRestY(g);
+      state.settleT = 0;
+      endAttempt(true, "");
+    } else {
+      // Name the specific parameter that blew, the way a real abort call would.
+      const failed = status.criteria.filter((c) => !c.go);
+      const reasons = {
+        align: "OFF-CENTRE — MISSED THE CATCH RAIL",
+        speed: "COMING IN TOO FAST",
+        attitude: "TILTED TOO FAR OVER",
+        roll: "ROLLING TOO FAST",
+      };
+      destroyTower(status.pin.x, status.pin.y);
+      endAttempt(false, reasons[failed[0].key]);
+    }
+    return;
+  } else if (crossedDown && status.overBoom) {
+    // The inboard stretch of the arm is structure, not a catch surface —
+    // coming down on it wrecks the booster instead of letting it through.
+    r.y = g.railY - pinOffsetY() * Math.cos(r.angle);
+    destroyTower(status.pin.x, status.pin.y);
+    endAttempt(false, "CAME DOWN ON THE ARM, INBOARD OF THE RAIL");
+    return;
+  } else if (crossedDown) {
+    flyBy("PAST THE ARM TIP — MISSED THE RAIL");
+  } else if (crossedUp && (status.overRail || status.overBoom)) {
+    r.y = g.railY - pinOffsetY() * Math.cos(r.angle);
+    if (r.vy < 0) r.vy = 0;
+    destroyTower(status.pin.x, status.pin.y);
+    endAttempt(false, "STRUCK THE ARM FROM BELOW");
+    return;
+  }
+
+  // Solid mast — the tower's body blocks flight outright anywhere along its
+  // height. Tested against the booster's full length rather than just its
+  // centre point, so it can't clip the top of the tower by having its centre
+  // still above the structure while its lower half is already inside it.
+  const mastHalfW = MAST_COLLIDE_HALF_W + ROCKET_HALF_W;
+  const mastTopY = lvl.catchY - MAST_TOP_OFFSET;
+  const boosterBottom = r.y + ROCKET_HALF_H;
+  const boosterTop = r.y - ROCKET_HALF_H;
+  if (boosterBottom > mastTopY && boosterTop < GROUND_Y &&
+      Math.abs(r.x - lvl.towerX) < mastHalfW) {
+    r.x = r.x < lvl.towerX ? lvl.towerX - mastHalfW : lvl.towerX + mastHalfW;
+    destroyTower(r.x, r.y);
+    endAttempt(false, "HIT THE TOWER");
+    return;
+  }
+
+  // Ground strike — the other way to lose the booster.
+  if (r.y + ROCKET_HALF_H >= GROUND_Y) {
+    r.y = GROUND_Y - ROCKET_HALF_H;
+    endAttempt(false, "CRASHED INTO THE GROUND");
+  }
+}
+
+function clamp(v, lo, hi) {
+  return v < lo ? lo : v > hi ? hi : v;
+}
+
+// World position of the booster's catch pins, accounting for its tilt.
+function pinPosition() {
+  const r = state.rocket;
+  const off = pinOffsetY();
+  return {
+    x: r.x - off * Math.sin(r.angle),
+    y: r.y + off * Math.cos(r.angle),
+  };
+}
+
+// Live go/no-go evaluation, mirroring the real vehicle's own tolerance check —
+// if anything is out of spec the booster diverts rather than attempting the
+// catch. The HUD and the capture test both read this, so the readout on screen
+// is literally the condition being tested.
+function catchStatus() {
+  const lvl = currentLevel();
+  const r = state.rocket;
+  const g = catchGeometry(lvl);
+  const pin = pinPosition();
+
+  const offset = pin.x - g.centerX;
+  const speed = Math.hypot(r.vx, r.vy);
+  const tilt = Math.abs(r.angle);
+  const spin = Math.abs(r.omega);
+
+  const criteria = [
+    { key: "align", label: "ALIGNMENT", value: Math.abs(offset), limit: g.halfW,
+      ratio: Math.abs(offset) / g.halfW, signed: offset / g.halfW,
+      readout: Math.round(offset) + " M" },
+    { key: "speed", label: "CLOSING RATE", value: speed, limit: lvl.catchSpeedTol,
+      ratio: speed / lvl.catchSpeedTol, signed: null,
+      readout: Math.round(speed * 3.6) + " KM/H" },
+    { key: "attitude", label: "ATTITUDE", value: tilt, limit: lvl.catchAngleTol,
+      ratio: tilt / lvl.catchAngleTol, signed: r.angle / lvl.catchAngleTol,
+      readout: (r.angle * 180 / Math.PI).toFixed(1) + "°" },
+    { key: "roll", label: "ROLL RATE", value: spin, limit: lvl.catchOmegaTol,
+      ratio: spin / lvl.catchOmegaTol, signed: r.omega / lvl.catchOmegaTol,
+      readout: (r.omega).toFixed(2) + " R/S" },
+  ];
+  for (const c of criteria) c.go = c.ratio <= 1;
+
+  return {
+    geometry: g,
+    pin,
+    criteria,
+    allGo: criteria.every((c) => c.go),
+    // "Over the rail" ignores alignment tolerance: it just asks whether the
+    // pins are above the catchable span at all.
+    overRail: pin.x >= g.outerX && pin.x <= g.innerX,
+    // The stretch of boom between the rail's inner end and the tower. It's
+    // drawn as solid steel, so it has to behave like solid steel rather than
+    // letting the booster fall straight through it.
+    overBoom: pin.x > g.innerX && pin.x < lvl.towerX + MAST_RAIL_GAP,
+    heightAboveRail: g.railY - pin.y,
+  };
+}
+
+function spawnExhaustParticles(dt) {
+  const r = state.rocket;
+  if (!r.thrusting) return;
+  const count = 2;
+  for (let i = 0; i < count; i++) {
+    const spread = (Math.random() - 0.5) * 0.5;
+    const dirAngle = r.angle + Math.PI + spread;
+    const speed = 90 + Math.random() * 60;
+    const tailX = r.x - Math.sin(r.angle) * ROCKET_HALF_H;
+    const tailY = r.y + Math.cos(r.angle) * ROCKET_HALF_H;
+    state.particles.push({
+      x: tailX,
+      y: tailY,
+      vx: Math.sin(dirAngle) * speed + r.vx * 0.3,
+      vy: -Math.cos(dirAngle) * speed + r.vy * 0.3,
+      life: 0.35 + Math.random() * 0.15,
+      age: 0,
+    });
+  }
+  if (state.particles.length > 220) {
+    state.particles.splice(0, state.particles.length - 220);
+  }
+}
+
+// Fire-and-smoke burst at the moment of a crash.
+function spawnCrashEffect(x, y) {
+  for (let i = 0; i < 26; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 60 + Math.random() * 190;
+    state.particles.push({
+      type: "fire",
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 60,
+      life: 0.3 + Math.random() * 0.35,
+      age: 0,
+    });
+  }
+  for (let i = 0; i < 20; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 15 + Math.random() * 45;
+    const size = 4 + Math.random() * 5;
+    state.particles.push({
+      type: "smoke",
+      x: x + (Math.random() - 0.5) * 10,
+      y: y + (Math.random() - 0.5) * 10,
+      vx: Math.cos(angle) * speed,
+      vy: -25 - Math.random() * 45,
+      life: 1.3 + Math.random() * 1.5,
+      age: 0,
+      size,
+      maxSize: size + 16 + Math.random() * 22,
+    });
+  }
+  // Bright white spark burst — the "LANDING FAILED!" explosion on
+  // mechazilla.io reads mostly as a shower of white sparks/debris glints.
+  for (let i = 0; i < 24; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 120 + Math.random() * 260;
+    state.particles.push({
+      type: "spark",
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0.2 + Math.random() * 0.3,
+      age: 0,
+    });
+  }
+}
+
+function updateParticles(dt) {
+  for (let i = state.particles.length - 1; i >= 0; i--) {
+    const p = state.particles[i];
+    p.age += dt;
+    if (p.age >= p.life) {
+      state.particles.splice(i, 1);
+      continue;
+    }
+    if (p.type === "fire") {
+      p.vy += 220 * dt;       // embers arc and fall
+      p.vx *= 1 - Math.min(1, 2.2 * dt);
+    } else if (p.type === "smoke") {
+      p.vx *= 1 - Math.min(1, 1.4 * dt); // drag scrubs lateral drift
+      p.vy *= 1 - Math.min(1, 0.6 * dt); // rise slows as it billows out
+    } else if (p.type === "spark") {
+      p.vy += 260 * dt;       // sparks fall fast, no lingering drift
+      p.vx *= 1 - Math.min(1, 1.8 * dt);
+    }
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+  }
+}
+
+// ---------- Main update ----------
+let lastTime = performance.now();
+
+function frame(now) {
+  let frameDt = (now - lastTime) / 1000;
+  lastTime = now;
+  frameDt = Math.min(frameDt, MAX_FRAME_DT);
+
+  state.clock += frameDt;
+
+  if (state.phase === PHASE.FALLING) {
+    let remaining = frameDt;
+    while (remaining > 0) {
+      const step = Math.min(FIXED_DT, remaining);
+      stepPhysics(step);
+      state.levelTime += step;
+      remaining -= step;
+      if (state.phase !== PHASE.FALLING) break;
+    }
+  } else if (state.phase === PHASE.INTRO) {
+    updateIntroIdle(frameDt);
+  } else if (state.phase === PHASE.SUCCESS) {
+    updateCatchSettle(frameDt);
+  }
+
+  // Engine rumble follows the throttle: full while thrusting, idle mutter on
+  // the intro screen, silent otherwise.
+  if (state.phase === PHASE.FALLING) {
+    Sound.setEngine(state.rocket.thrusting ? 1 : 0);
+  } else if (state.phase === PHASE.INTRO) {
+    Sound.setEngine(0.35);
+  }
+  updateParticles(frameDt);
+  updateGroundSmoke(frameDt);
+  if (state.towerDestroyed) updateTowerDebris(frameDt);
+  if (state.shipDestroyed) updateShipDebris(frameDt);
+  updateCamera(frameDt);
+
+  if (state.flybyTimer > 0) {
+    state.flybyTimer = Math.max(0, state.flybyTimer - frameDt);
+    if (state.flybyTimer === 0 && state.phase === PHASE.FALLING) {
+      hideBanner();
+    }
+  }
+
+  state.phaseTimer += frameDt;
+
+  if (state.phase === PHASE.SUCCESS) {
+    if (state.phaseTimer > 0.9 && !state.awaitingInput) {
+      state.awaitingInput = true;
+      showSuccessOverlay();
+    }
+  }
+
+  if (state.phase === PHASE.CRASH) {
+    if (state.phaseTimer > 0.7 && !state.awaitingInput) {
+      state.awaitingInput = true;
+      showCrashOverlay();
+    }
+  }
+
+  state.shake = Math.max(0, state.shake - frameDt * 2.2);
+  state.flash = Math.max(0, state.flash - frameDt * 1.6);
+
+  updateHud();
+  render();
+  requestAnimationFrame(frame);
+}
+
+// ---------- HUD / overlay ----------
+function updateHud() {
+  const lvl = currentLevel();
+  levelLabelEl.textContent = lvl.name;
+  levelSubEl.textContent = state.phase !== PHASE.FALLING ? ""
+    : state.autoEngine
+      ? "Engine holds the descent — just steer onto the catch rail"
+      : state.showGuidance
+        ? "Fly down the lit corridor onto the catch rail"
+        : "Set the booster's catch pins onto the catch rail";
+  attemptCountEl.textContent = state.levelAttempts;
+  levelTimerEl.textContent = formatTime(state.levelTime);
+
+  // Flight telemetry. 1px ~= 1m of altitude (scaled up a bit for bigger,
+  // more dramatic-looking numbers), and speed converts px/s to km/h.
+  const r = state.rocket;
+  const speedKmh = Math.round(Math.hypot(r.vx, r.vy) * 3.6);
+  const altitudeM = Math.max(0, Math.round((GROUND_Y - r.y) * 3));
+  speedReadoutEl.textContent = speedKmh + " KM/H";
+  altitudeReadoutEl.textContent = altitudeM + " M";
+
+  // Real remaining propellant. LOX and CH4 are consumed at a fixed mixture
+  // ratio, so the two tanks drain in lockstep.
+  const fuelPct = state.fuel * 100;
+  loxFillEl.style.width = fuelPct + "%";
+  ch4FillEl.style.width = fuelPct + "%";
+  const low = state.fuel <= 0.25;
+  loxFillEl.classList.toggle("low", low);
+  ch4FillEl.classList.toggle("low", low);
+  fuelReadoutEl.textContent = Math.round(fuelPct) + "%";
+  fuelReadoutEl.classList.toggle("low", low);
+
+  enginesDisplayEl.classList.toggle("engines-lit", !!r.thrusting);
+
+  // Mission clock, in the T+HH:MM:SS form SpaceX puts on their webcasts.
+  missionTimerEl.textContent = "T+ " + formatMissionClock(state.levelTime);
+
+  updateCapturePanel();
+}
+
+function updateCapturePanel() {
+  if (state.phase !== PHASE.FALLING) {
+    capturePanelEl.classList.add("hidden");
+    return;
+  }
+  capturePanelEl.classList.remove("hidden");
+
+  const status = catchStatus();
+  capturePanelEl.classList.toggle("all-go", status.allGo);
+  captureVerdictEl.textContent = status.allGo ? "GO" : "NO-GO";
+
+  // Audible cue the instant the catch window opens or closes, so the player
+  // doesn't have to be watching the panel to know where they stand.
+  if (status.allGo !== state.lastAllGo) {
+    if (status.allGo) Sound.goChime(); else Sound.noGoChime();
+    state.lastAllGo = status.allGo;
+  }
+
+  for (const c of status.criteria) {
+    const el = captureRowEls[c.key];
+    el.row.classList.toggle("no-go", !c.go);
+    el.label.textContent = c.label;
+    el.value.textContent = c.readout;
+
+    // Signed criteria fill outward from the centre datum so the player can see
+    // which way they're off; unsigned ones fill symmetrically.
+    if (c.signed === null) {
+      const w = Math.min(1, c.ratio) * 50;
+      el.fill.style.left = (50 - w) + "%";
+      el.fill.style.width = (w * 2) + "%";
+    } else {
+      const s = clamp(c.signed, -1.35, 1.35);
+      const half = Math.min(Math.abs(s), 1) * 50;
+      el.fill.style.left = (s < 0 ? 50 - half : 50) + "%";
+      el.fill.style.width = half + "%";
+    }
+  }
+
+  const statusText = {
+    [PHASE.INTRO]: "",
+    [PHASE.FALLING]: "GO!",
+    [PHASE.SUCCESS]: "CAUGHT!",
+    [PHASE.CRASH]: state.crashReason,
+    [PHASE.COMPLETE]: "",
+  }[state.phase] || "";
+  telemetryStatusEl.textContent = statusText;
+}
+
+function formatTime(seconds) {
+  return seconds.toFixed(1) + "s";
+}
+
+// T+HH:MM:SS, the format on SpaceX's launch webcasts.
+function formatMissionClock(seconds) {
+  const total = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+function formatDuration(seconds) {
+  const total = Math.round(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const parts = [];
+  if (h > 0) parts.push(`${h} hour${h === 1 ? "" : "s"}`);
+  if (m > 0 || h > 0) parts.push(`${m} minute${m === 1 ? "" : "s"}`);
+  parts.push(`${s} second${s === 1 ? "" : "s"}`);
+  if (parts.length === 1) return parts[0];
+  return parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1];
+}
+
+function showBanner(text, kind) {
+  bannerEl.textContent = text;
+  bannerEl.className = kind;
+}
+
+function hideBanner() {
+  bannerEl.className = "hidden";
+}
+
+function hideOverlay() {
+  overlayEl.classList.add("hidden");
+  if (touchControlsEl) touchControlsEl.classList.remove("overlay-open");
+}
+
+function showOverlay({ title, message, stats, buttonText, showControls }) {
+  overlayTitleEl.textContent = title;
+  overlayMessageEl.textContent = message;
+  overlayStatsEl.innerHTML = stats || "";
+  overlayButtonEl.innerHTML = buttonText.replace(/SPACE/, "<u>SPACE</u>");
+  overlayControlsEl.classList.toggle("hidden", !showControls);
+  overlayEl.classList.remove("hidden");
+  // The overlay's own "PRESS SPACE TO START" / retry button sits in the same
+  // bottom area as the touch D-pad -- without this the two would visually
+  // collide and the on-screen buttons would eat taps meant for the overlay.
+  if (touchControlsEl) touchControlsEl.classList.add("overlay-open");
+}
+
+function showIntroOverlay() {
+  showOverlay({
+    title: "MECHAZILLA",
+    message: "FLY THE BOOSTER DOWN THE LIT CORRIDOR AND SET ITS CATCH PINS ONTO THE TOWER'S CATCH RAIL",
+    stats: "THE CORRIDOR IS GREEN WHEN THE CATCH IS GO<br>ALL FOUR CRITERIA MUST READ GO AT THE RAIL",
+    buttonText: "PRESS SPACE TO START",
+    showControls: true,
+  });
+}
+
+function showSuccessOverlay() {
+  const lvl = currentLevel();
+  const isLast = state.levelIndex === LEVELS.length - 1;
+  const attempts = state.levelAttempts;
+  showOverlay({
+    title: `${lvl.name.split("—")[0].trim().toUpperCase()} COMPLETED!`,
+    message: "",
+    stats: `${attempts} ATTEMPT${attempts === 1 ? "" : "S"}<br>TIME: ${formatDuration(state.levelTime).toUpperCase()}`,
+    buttonText: isLast ? "PRESS SPACE TO FINISH" : "PRESS SPACE TO CONTINUE",
+    showControls: false,
+  });
+  Sound.levelUp();
+}
+
+function showCrashOverlay() {
+  const lvl = currentLevel();
+  showOverlay({
+    title: `${lvl.name.split("—")[0].trim().toUpperCase()} FAILED!`,
+    message: state.crashReason,
+    stats: "",
+    buttonText: "PRESS SPACE TO RETRY",
+    showControls: false,
+  });
+}
+
+function showCompleteOverlay() {
+  state.phase = PHASE.COMPLETE;
+  const totalAttempts = state.levelResults.reduce((sum, r) => sum + (r ? r.attempts : 0), 0);
+  const totalTime = state.levelResults.reduce((sum, r) => sum + (r ? r.time : 0), 0);
+  showOverlay({
+    title: "ALL BOOSTERS CAUGHT!",
+    message: `ALL ${LEVELS.length} FLIGHTS RECOVERED`,
+    stats: `${totalAttempts} TOTAL ATTEMPTS<br>TOTAL TIME: ${formatDuration(totalTime).toUpperCase()}`,
+    buttonText: "PRESS SPACE TO PLAY AGAIN",
+    showControls: false,
+  });
+  hideBanner();
+  Sound.stopEngine();
+  Sound.victory();
+}
+
+// ---------- Rendering ----------
+function render() {
+  ctx.save();
+
+  if (state.shake > 0) {
+    const mag = state.shake * 6;
+    ctx.translate((Math.random() - 0.5) * mag, (Math.random() - 0.5) * mag);
+  }
+
+  // World-space content scrolls with the camera; everything after the
+  // matching restore() below (the flash overlay) stays fixed on screen.
+  ctx.save();
+  ctx.translate(-state.cameraX, -state.cameraY);
+  drawSky();
+  drawGround();
+  drawLaunchMount(currentLevel().towerX);
+  drawTower();
+  drawGroundSmoke();   // drifts in front of the pad structures
+  drawParticles();
+  if (state.shipDestroyed) drawDebrisList(state.shipDebris);
+  else drawRocket();
+  ctx.restore();
+
+  // Subtle screen-space vignette for a bit of depth/3D framing.
+  const vignette = ctx.createRadialGradient(W / 2, H * 0.55, H * 0.25, W / 2, H * 0.55, H * 0.85);
+  vignette.addColorStop(0, "rgba(0,0,0,0)");
+  vignette.addColorStop(1, "rgba(0,0,0,0.35)");
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, W, H);
+
+  if (state.flash > 0) {
+    ctx.fillStyle = `rgba(120, 220, 160, ${state.flash * 0.25})`;
+    ctx.fillRect(-20, -20, W + 40, H + 40);
+  }
+
+  ctx.restore();
+}
+
+// Precomputed once so the sky looks the same every time you scroll past a
+// given point, rather than re-rolling stars into view each frame.
+const WORLD_WIDTH = WORLD_RIGHT_X - WORLD_LEFT_X;
+const STARFIELD = (function buildStarfield() {
+  const top = WORLD_TOP_Y - 100;
+  const span = GROUND_Y - 20 - top;
+  const stars = [];
+  const count = 440;
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: WORLD_LEFT_X + ((i * 137.5) % WORLD_WIDTH),
+      y: top + ((i * 71.3) % span),
+      size: (i % 3 === 0) ? 1.6 : 1,
+      alpha: 0.25 + ((i * 53) % 100) / 160,
+    });
+  }
+  return stars;
+})();
+
+function drawSky() {
+  const sky = currentLevel().sky;
+  const grad = ctx.createLinearGradient(0, WORLD_TOP_Y, 0, GROUND_Y);
+  grad.addColorStop(0.00, sky.top);
+  grad.addColorStop(0.55, sky.mid);
+  grad.addColorStop(0.86, sky.glow);
+  grad.addColorStop(1.00, sky.horizon);
+  ctx.fillStyle = grad;
+  ctx.fillRect(state.cameraX, state.cameraY, W, H);
+
+  // Stars pick up a little of the sky's colour instead of staying pure white,
+  // so each level reads as one palette rather than white dots on a tint.
+  ctx.fillStyle = sky.star;
+  for (const s of STARFIELD) {
+    ctx.globalAlpha = s.alpha;
+    ctx.fillRect(s.x, s.y, s.size, s.size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Rolling cloud-sea floor instead of a flat line — precomputed once so the
+// bumps stay put as the camera scrolls rather than re-rolling every frame.
+const FOG_BUMPS = (function buildFog() {
+  const bumps = [];
+  const n = 100;
+  const span = WORLD_WIDTH + 120;
+  for (let i = 0; i < n; i++) {
+    bumps.push({
+      x: WORLD_LEFT_X + ((i * 41.3) % span) - 60,
+      r: 16 + ((i * 29) % 24),
+      yOff: ((i * 17) % 12) - 4,
+      layer: i % 3,
+    });
+  }
+  return bumps;
+})();
+
+// Distant hardware along the horizon, Starbase-style: propellant tanks, the
+// chilled-methane farm and a couple of support structures. Precomputed so it
+// stays put as the camera pans.
+const SITE_STRUCTURES = (function buildSite() {
+  const out = [];
+  const seedAt = (i) => ((i * 9301 + 49297) % 233280) / 233280;
+  for (let i = 0; i < 26; i++) {
+    const x = WORLD_LEFT_X + 40 + i * ((WORLD_WIDTH - 80) / 26);
+    const kind = i % 5 === 0 ? "tower" : "tank";
+    // Starbase's cryo tanks are tall vertical cylinders, so keep them clearly
+    // taller than they are wide — squat ones read as igloos at this scale.
+    out.push({
+      x,
+      kind,
+      w: kind === "tank" ? 5 + seedAt(i) * 4 : 3,
+      h: kind === "tank" ? 20 + seedAt(i + 7) * 16 : 30 + seedAt(i + 3) * 16,
+    });
+  }
+  return out;
+})();
+
+// ---------- Ground smoke ----------
+// A permanent bank of vented propellant and steam rolling across the pad. It
+// lives on its own list so it survives level restarts and never competes with
+// the crash-effect particle budget.
+const groundSmoke = [];
+const GROUND_SMOKE_COUNT = 46;
+
+function seedGroundSmoke() {
+  groundSmoke.length = 0;
+  for (let i = 0; i < GROUND_SMOKE_COUNT; i++) {
+    groundSmoke.push(newSmokePuff(true));
+  }
+}
+
+function newSmokePuff(seeded) {
+  const lvl = LEVELS[0];
+  return {
+    // Clustered around the pad, thinning out across the rest of the site.
+    x: lvl.towerX - 120 + (Math.random() - 0.5) * (seeded ? 900 : 760),
+    y: GROUND_Y - 4 - Math.random() * 26,
+    r: 16 + Math.random() * 44,
+    drift: 4 + Math.random() * 12,
+    rise: 2 + Math.random() * 7,
+    life: seeded ? Math.random() : 0,
+    span: 9 + Math.random() * 11,
+    hue: Math.random(),
+  };
+}
+
+function updateGroundSmoke(dt) {
+  for (let i = 0; i < groundSmoke.length; i++) {
+    const p = groundSmoke[i];
+    p.life += dt / p.span;
+    if (p.life >= 1) { groundSmoke[i] = newSmokePuff(false); continue; }
+    p.x += p.drift * dt;
+    p.y -= p.rise * dt;
+    p.r += 5 * dt;
+  }
+}
+
+function drawGroundSmoke() {
+  ctx.save();
+  for (const p of groundSmoke) {
+    if (p.x < state.cameraX - 160 || p.x > state.cameraX + W + 160) continue;
+    // Fade in and out so puffs never pop into or out of existence.
+    const fade = Math.sin(Math.PI * clamp(p.life, 0, 1));
+    if (fade <= 0.01) continue;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+    // Smoke picks up the pad's coloured lighting: warm sodium low down,
+    // cooler blue-violet where the tower floods catch it.
+    const warm = p.hue;
+    const cr = Math.round(120 + warm * 90);
+    const cg = Math.round(120 + warm * 55);
+    const cb = Math.round(150 - warm * 30);
+    g.addColorStop(0, `rgba(${cr},${cg},${cb},${0.17 * fade})`);
+    g.addColorStop(0.55, `rgba(${cr},${cg},${cb},${0.08 * fade})`);
+    g.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y, p.r, p.r * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawGround() {
+  const horizonY = GROUND_Y - 6;
+
+  // Warm sodium-vapour glow off the launch site's floodlights, hugging the
+  // horizon the way pad lighting does at night.
+  const haze = ctx.createLinearGradient(0, horizonY - 60, 0, horizonY + 4);
+  haze.addColorStop(0, "rgba(90,130,175,0)");
+  haze.addColorStop(0.65, "rgba(110,150,190,0.13)");
+  haze.addColorStop(1, "rgba(190,175,150,0.28)");
+  ctx.fillStyle = haze;
+  ctx.fillRect(state.cameraX, horizonY - 60, W, 64);
+
+  // Distant site hardware, silhouetted against that glow.
+  ctx.fillStyle = "rgba(16,21,29,0.88)";
+  for (const s of SITE_STRUCTURES) {
+    if (s.x < state.cameraX - 60 || s.x > state.cameraX + W + 60) continue;
+    if (s.kind === "tank") {
+      // Cryo tanks read as capsules: a cylinder with a domed top.
+      ctx.beginPath();
+      ctx.moveTo(s.x - s.w / 2, horizonY);
+      ctx.lineTo(s.x - s.w / 2, horizonY - s.h + s.w / 2);
+      ctx.arc(s.x, horizonY - s.h + s.w / 2, s.w / 2, Math.PI, 0);
+      ctx.lineTo(s.x + s.w / 2, horizonY);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.fillRect(s.x - s.w / 2, horizonY - s.h, s.w, s.h);
+      ctx.fillRect(s.x - s.w * 1.4, horizonY - s.h * 0.55, s.w * 2.8, 1.4);
+    }
+  }
+
+  // Flat coastal pad apron running to the horizon.
+  const groundGrad = ctx.createLinearGradient(0, horizonY, 0, H);
+  groundGrad.addColorStop(0, "#2a2f37");
+  groundGrad.addColorStop(0.35, "#1b1f26");
+  groundGrad.addColorStop(1, "#0b0d11");
+  ctx.fillStyle = groundGrad;
+  ctx.fillRect(state.cameraX, horizonY, W, H - horizonY);
+
+  // Bright line right on the horizon where the apron catches the sky.
+  ctx.fillStyle = "rgba(180,195,215,0.3)";
+  ctx.fillRect(state.cameraX, horizonY, W, 1);
+
+  // Low ground haze — very wide, very flat overlapping bands so it reads as
+  // a continuous layer of mist over the apron rather than a row of domes.
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  for (const b of FOG_BUMPS) {
+    if (b.x < state.cameraX - 220 || b.x > state.cameraX + W + 220) continue;
+    const cy = horizonY + 4 + b.yOff * 0.35;
+    const rx = b.r * 5.5;
+    const ry = b.r * 0.22;
+    const g = ctx.createRadialGradient(b.x, cy, 0, b.x, cy, rx);
+    const a = 0.035 + b.layer * 0.012;
+    g.addColorStop(0, `rgba(150,170,200,${a})`);
+    g.addColorStop(1, "rgba(150,170,200,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(b.x, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// The Orbital Launch Mount — the ring the booster launches from, sitting on
+// its six legs beside the tower. Drawn separately so it layers in front of
+// the ground but behind the tower.
+function drawLaunchMount(mastX) {
+  const olmX = mastX - 118;
+  const deckY = GROUND_Y - 26;
+
+  // Legs.
+  ctx.strokeStyle = "#272c34";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (const lx of [-20, -8, 8, 20]) {
+    ctx.moveTo(olmX + lx, deckY + 4);
+    ctx.lineTo(olmX + lx * 1.25, GROUND_Y);
+  }
+  ctx.stroke();
+
+  // Deck slab.
+  const deckGrad = ctx.createLinearGradient(0, deckY - 5, 0, deckY + 5);
+  deckGrad.addColorStop(0, "#565c66");
+  deckGrad.addColorStop(0.5, "#373c45");
+  deckGrad.addColorStop(1, "#1d2128");
+  ctx.fillStyle = deckGrad;
+  ctx.fillRect(olmX - 27, deckY - 5, 54, 10);
+  ctx.fillStyle = "rgba(255,255,255,0.18)";
+  ctx.fillRect(olmX - 27, deckY - 5, 54, 1);
+
+  // Launch ring standing proud of the deck, with its hold-down clamps.
+  ctx.fillStyle = "#454b55";
+  ctx.fillRect(olmX - 17, deckY - 11, 34, 6);
+  ctx.fillStyle = "#20242b";
+  for (let cx = olmX - 14; cx <= olmX + 13; cx += 5.5) {
+    ctx.fillRect(cx, deckY - 11, 2, 6);
+  }
+  ctx.fillStyle = "rgba(255,255,255,0.22)";
+  ctx.fillRect(olmX - 17, deckY - 11, 34, 0.9);
+}
+
+function drawTower() {
+  const lvl = currentLevel();
+  const mastX = lvl.towerX;
+  const armY = lvl.catchY;
+
+  if (state.towerDestroyed) {
+    drawDebrisList(state.towerDebris);
+    return;
+  }
+
+  const railGap = MAST_RAIL_GAP;
+  const topY = armY - MAST_TOP_OFFSET;
+
+  // Soft shadow footprint where the tower meets the fog, for a bit of depth.
+  const footShadow = ctx.createRadialGradient(mastX, GROUND_Y, 0, mastX, GROUND_Y, 46);
+  footShadow.addColorStop(0, "rgba(0,0,0,0.4)");
+  footShadow.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = footShadow;
+  ctx.beginPath();
+  ctx.ellipse(mastX, GROUND_Y, 46, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ---- Lightning rods ----------------------------------------------------
+  // Three slender masts spike off the top of the real tower.
+  ctx.strokeStyle = "#4a505a";
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(mastX, topY); ctx.lineTo(mastX, topY - 30);
+  ctx.moveTo(mastX - railGap * 0.6, topY); ctx.lineTo(mastX - railGap * 0.6, topY - 20);
+  ctx.moveTo(mastX + railGap * 0.6, topY); ctx.lineTo(mastX + railGap * 0.6, topY - 20);
+  ctx.stroke();
+
+  // ---- Lattice tower -----------------------------------------------------
+  // The Mechazilla tower is a square steel box-truss: four heavy corner
+  // columns with X-braced bays between them. In profile the near and far
+  // faces overlap, so the far pair is drawn darker and inset for depth.
+  const farInset = 4.5;
+
+  // Far face first, dimmed so it reads as being behind.
+  ctx.strokeStyle = "#22262c";
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(mastX - railGap + farInset, topY);
+  ctx.lineTo(mastX - railGap + farInset, GROUND_Y);
+  ctx.moveTo(mastX + railGap - farInset, topY);
+  ctx.lineTo(mastX + railGap - farInset, GROUND_Y);
+  ctx.stroke();
+
+  const bay = 17;
+  ctx.strokeStyle = "#1c2025";
+  ctx.lineWidth = 0.9;
+  for (let y = topY; y < GROUND_Y; y += bay) {
+    const yn = Math.min(y + bay, GROUND_Y);
+    ctx.beginPath();
+    ctx.moveTo(mastX - railGap + farInset, y);
+    ctx.lineTo(mastX + railGap - farInset, y);
+    ctx.moveTo(mastX - railGap + farInset, y);
+    ctx.lineTo(mastX + railGap - farInset, yn);
+    ctx.moveTo(mastX + railGap - farInset, y);
+    ctx.lineTo(mastX - railGap + farInset, yn);
+    ctx.stroke();
+  }
+
+  // Near face: the two front corner columns, drawn as shaded box sections
+  // rather than flat lines so the steel has some thickness to it.
+  for (const side of [-1, 1]) {
+    const cx = mastX + side * railGap;
+    const colGrad = ctx.createLinearGradient(cx - 2, 0, cx + 2, 0);
+    colGrad.addColorStop(0, "#2c3138");
+    colGrad.addColorStop(0.35, "#69707b");
+    colGrad.addColorStop(0.7, "#454b53");
+    colGrad.addColorStop(1, "#1e2126");
+    ctx.fillStyle = colGrad;
+    ctx.fillRect(cx - 2, topY, 4, GROUND_Y - topY);
+  }
+
+  // Near-face X-bracing and floor beams.
+  ctx.strokeStyle = "#575e68";
+  ctx.lineWidth = 1.3;
+  for (let y = topY; y < GROUND_Y; y += bay) {
+    const yn = Math.min(y + bay, GROUND_Y);
+    ctx.beginPath();
+    ctx.moveTo(mastX - railGap, y);
+    ctx.lineTo(mastX + railGap, y);
+    ctx.stroke();
+    ctx.strokeStyle = "#3f454e";
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(mastX - railGap, y);
+    ctx.lineTo(mastX + railGap, yn);
+    ctx.moveTo(mastX + railGap, y);
+    ctx.lineTo(mastX - railGap, yn);
+    ctx.stroke();
+    ctx.strokeStyle = "#575e68";
+    ctx.lineWidth = 1.3;
+  }
+
+  // Vertical guide rails the chopstick carriage rides on.
+  ctx.strokeStyle = "#828a95";
+  ctx.lineWidth = 0.9;
+  ctx.beginPath();
+  ctx.moveTo(mastX - railGap * 0.42, topY + 8);
+  ctx.lineTo(mastX - railGap * 0.42, GROUND_Y - 6);
+  ctx.moveTo(mastX + railGap * 0.42, topY + 8);
+  ctx.lineTo(mastX + railGap * 0.42, GROUND_Y - 6);
+  ctx.stroke();
+
+  // ---- Service lighting ---------------------------------------------------
+  // Coloured floods climbing the tower: cyan working lights up the near face,
+  // amber navigation markers on alternate levels, violet wash near the top.
+  // Each throws a soft pool of its own colour onto the structure.
+  const TOWER_LIGHTS = [
+    { t: 0.10, c: [150, 90, 255] },
+    { t: 0.26, c: [90, 200, 255] },
+    { t: 0.42, c: [255, 170, 60] },
+    { t: 0.58, c: [90, 200, 255] },
+    { t: 0.74, c: [255, 170, 60] },
+    { t: 0.90, c: [90, 220, 200] },
+  ];
+  for (const L of TOWER_LIGHTS) {
+    const ly = topY + (GROUND_Y - topY) * L.t;
+    const [lr, lg, lb] = L.c;
+    // Slow individual flicker so the tower feels alive rather than painted.
+    const pulse = 0.72 + 0.28 * Math.sin(state.clock * 1.6 + L.t * 11);
+    const glow = ctx.createRadialGradient(mastX, ly, 0, mastX, ly, 34);
+    glow.addColorStop(0, `rgba(${lr},${lg},${lb},${0.3 * pulse})`);
+    glow.addColorStop(1, `rgba(${lr},${lg},${lb},0)`);
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(mastX, ly, 34, 0, Math.PI * 2);
+    ctx.fill();
+    // The lamp head itself, on alternating sides of the mast.
+    const side = L.t * 10 % 2 < 1 ? -1 : 1;
+    ctx.shadowColor = `rgba(${lr},${lg},${lb},0.95)`;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = `rgba(${Math.min(255, lr + 60)},${Math.min(255, lg + 60)},${Math.min(255, lb + 60)},${pulse})`;
+    ctx.beginPath();
+    ctx.arc(mastX + side * railGap, ly, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // ---- Base --------------------------------------------------------------
+  // Concrete plinth the tower is anchored to.
+  const baseGrad = ctx.createLinearGradient(0, GROUND_Y - 16, 0, GROUND_Y);
+  baseGrad.addColorStop(0, "#4a4d52");
+  baseGrad.addColorStop(1, "#232529");
+  ctx.fillStyle = baseGrad;
+  ctx.fillRect(mastX - railGap - 7, GROUND_Y - 16, (railGap + 7) * 2, 16);
+  ctx.fillStyle = "rgba(255,255,255,0.12)";
+  ctx.fillRect(mastX - railGap - 7, GROUND_Y - 16, (railGap + 7) * 2, 1);
+
+  // ---- Aviation warning beacon -------------------------------------------
+  // Steady red obstruction light on the tallest rod; flips to green as a
+  // success cue once the booster is caught.
+  const beaconY = topY - 30;
+  const beaconLit = state.phase === PHASE.SUCCESS || state.phase === PHASE.COMPLETE;
+  const beaconGlow = ctx.createRadialGradient(mastX, beaconY, 0, mastX, beaconY, beaconLit ? 22 : 13);
+  beaconGlow.addColorStop(0, beaconLit ? "rgba(120,255,170,0.85)" : "rgba(255,60,60,0.75)");
+  beaconGlow.addColorStop(1, beaconLit ? "rgba(120,255,170,0)" : "rgba(255,60,60,0)");
+  ctx.fillStyle = beaconGlow;
+  ctx.beginPath();
+  ctx.arc(mastX, beaconY, beaconLit ? 22 : 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowColor = beaconLit ? "rgba(150,255,200,0.95)" : "rgba(255,80,80,0.95)";
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = beaconLit ? "#c8ffe6" : "#ff6b6b";
+  ctx.beginPath();
+  ctx.arc(mastX, beaconY, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Approach corridor: a lit column standing over the catch rail so the
+  // target is obvious from anywhere on the way down.
+  if (state.phase === PHASE.FALLING && state.showGuidance) {
+    drawApproachCorridor();
+  }
+
+  drawLandingArm(mastX, armY);
+}
+
+// A vertical "light curtain" rising off the catch rail. It tracks the live
+// go/no-go state — green when everything is in spec, amber when only the
+// alignment is good, red when you're off the rail — so the player can read
+// the catch condition continuously instead of discovering it on contact.
+function drawApproachCorridor() {
+  const status = catchStatus();
+  const g = status.geometry;
+  const top = g.railY - 300;
+
+  const tint = !status.overRail ? [255, 90, 80]
+             : status.allGo ? [120, 255, 170]
+             : [255, 190, 70];
+  const [cr, cg, cb] = tint;
+
+  // Side walls of the corridor.
+  const wall = ctx.createLinearGradient(0, top, 0, g.railY);
+  wall.addColorStop(0, `rgba(${cr},${cg},${cb},0)`);
+  wall.addColorStop(1, `rgba(${cr},${cg},${cb},0.5)`);
+  ctx.strokeStyle = wall;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(g.outerX, top); ctx.lineTo(g.outerX, g.railY);
+  ctx.moveTo(g.innerX, top); ctx.lineTo(g.innerX, g.railY);
+  ctx.stroke();
+
+  // Soft fill between them.
+  const fill = ctx.createLinearGradient(0, top, 0, g.railY);
+  fill.addColorStop(0, `rgba(${cr},${cg},${cb},0)`);
+  fill.addColorStop(1, `rgba(${cr},${cg},${cb},0.13)`);
+  ctx.fillStyle = fill;
+  ctx.fillRect(g.outerX, top, g.innerX - g.outerX, g.railY - top);
+
+  // Centreline the booster should track down.
+  ctx.strokeStyle = `rgba(${cr},${cg},${cb},0.4)`;
+  ctx.lineWidth = 0.8;
+  ctx.setLineDash([4, 6]);
+  ctx.beginPath();
+  ctx.moveTo(g.centerX, top);
+  ctx.lineTo(g.centerX, g.railY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Live marker showing where the pins are currently tracking, projected down
+  // onto the rail — a landing-shadow so lateral error is unmissable.
+  const px = clamp(status.pin.x, g.outerX - 40, g.innerX + 40);
+  ctx.strokeStyle = `rgba(${cr},${cg},${cb},0.95)`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(px, g.railY - 9);
+  ctx.lineTo(px, g.railY - 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(px - 4, g.railY - 11);
+  ctx.lineTo(px, g.railY - 6);
+  ctx.lineTo(px + 4, g.railY - 11);
+  ctx.closePath();
+  ctx.fillStyle = `rgba(${cr},${cg},${cb},0.95)`;
+  ctx.fill();
+}
+
+function drawLandingArm(mastX, armY) {
+  const lvl = currentLevel();
+  // The compact arm fitted from flight ten: slimmer beam, smaller carriage.
+  const compact = !!lvl.compactArm;
+  const beamH = compact ? ARM_BEAM_H_COMPACT : ARM_BEAM_H;
+  const scale = compact ? 0.74 : 1;
+  const caught = state.phase === PHASE.SUCCESS || state.phase === PHASE.COMPLETE;
+
+  ctx.save();
+  ctx.translate(mastX, armY);
+
+  // ---- Carriage ----------------------------------------------------------
+  // The frame that rides the tower rails and swings the arms. Open structural
+  // steel rather than a solid block, so the lattice still reads through it.
+  const carW = (MAST_RAIL_GAP * 2 - 2) * (compact ? 0.82 : 1);
+  const carTop = -6.5 * scale;
+  const carH = 13 * scale;
+  ctx.strokeStyle = "#7d848f";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-carW / 2, carTop, carW, carH);
+  // Cross-members inside the frame.
+  ctx.strokeStyle = "#4d535c";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-carW / 2, carTop);
+  ctx.lineTo(carW / 2, carTop + carH);
+  ctx.moveTo(carW / 2, carTop);
+  ctx.lineTo(-carW / 2, carTop + carH);
+  ctx.stroke();
+  // Roller housings gripping the vertical rails.
+  ctx.fillStyle = "#9aa2ad";
+  for (const rx of [-MAST_RAIL_GAP * 0.42, MAST_RAIL_GAP * 0.42]) {
+    ctx.fillRect(rx - 1.2, carTop - 1.5, 2.4, 3);
+    ctx.fillRect(rx - 1.2, carTop + carH - 1.5, 2.4, 3);
+  }
+
+  // ---- Chopstick arm -----------------------------------------------------
+  // Geometry comes from catchGeometry(), so the rail drawn here is literally
+  // the span the physics tests against.
+  const g = catchGeometry(lvl);
+  const rootX = -carW / 2;
+  const tipX = g.outerX - mastX;      // arm tip, in arm-local coords
+  const railIn = g.innerX - mastX;    // inner end of the catch rail
+  const railOut = tipX;
+
+  // Underside shadow face gives the beam depth.
+  ctx.fillStyle = "#272b31";
+  ctx.beginPath();
+  ctx.moveTo(rootX, beamH);
+  ctx.lineTo(tipX, beamH - 1);
+  ctx.lineTo(tipX, beamH + 1.3);
+  ctx.lineTo(rootX, beamH + 2.3);
+  ctx.closePath();
+  ctx.fill();
+
+  // Main beam body.
+  const grad = ctx.createLinearGradient(0, -beamH, 0, beamH);
+  grad.addColorStop(0, "#e2e7ed");
+  grad.addColorStop(0.4, "#b3bac4");
+  grad.addColorStop(1, "#6c737d");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(rootX, -beamH);
+  ctx.lineTo(tipX, -beamH + 1);
+  ctx.lineTo(tipX, beamH - 1);
+  ctx.lineTo(rootX, beamH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Truss webbing along the side of the beam.
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(rootX, -beamH);
+  ctx.lineTo(tipX, -beamH + 1);
+  ctx.lineTo(tipX, beamH - 1);
+  ctx.lineTo(rootX, beamH);
+  ctx.closePath();
+  ctx.clip();
+  ctx.strokeStyle = "rgba(60,66,74,0.5)";
+  ctx.lineWidth = 0.7;
+  let up = true;
+  for (let gx = tipX + 3; gx < rootX; gx += 6) {
+    ctx.beginPath();
+    if (up) { ctx.moveTo(gx, -beamH); ctx.lineTo(gx + 6, beamH); }
+    else { ctx.moveTo(gx, beamH); ctx.lineTo(gx + 6, -beamH); }
+    ctx.stroke();
+    up = !up;
+  }
+  ctx.restore();
+
+  // ---- Catch rail --------------------------------------------------------
+  // The section that actually catches, called out as a raised machined rail so
+  // it reads as a distinct target rather than as more of the same beam.
+  const live = state.phase === PHASE.FALLING ? catchStatus() : null;
+  const railTint = caught ? [140, 255, 200]
+                 : live && live.overRail && live.allGo ? [140, 255, 200]
+                 : live && live.overRail ? [255, 205, 110]
+                 : [232, 238, 245];
+  const [rr, rg, rb] = railTint;
+
+  ctx.fillStyle = `rgb(${rr},${rg},${rb})`;
+  ctx.fillRect(railOut, -beamH - 2.2, railIn - railOut, 2.4);
+  // Serrated grip teeth along the rail's top face.
+  ctx.fillStyle = "rgba(30,36,44,0.55)";
+  for (let tx = railOut + 2; tx < railIn - 1; tx += 5) {
+    ctx.fillRect(tx, -beamH - 2.2, 1.3, 2.4);
+  }
+  // End stops marking exactly where the catchable span begins and ends.
+  ctx.fillStyle = `rgb(${rr},${rg},${rb})`;
+  ctx.fillRect(railOut - 1.1, -beamH - 5, 1.9, 5.8);
+  ctx.fillRect(railIn - 0.8, -beamH - 5, 1.9, 5.8);
+
+  if (live && live.overRail) {
+    ctx.shadowColor = `rgba(${rr},${rg},${rb},0.9)`;
+    ctx.shadowBlur = 9;
+    ctx.fillRect(railOut, -beamH - 2.2, railIn - railOut, 0.9);
+    ctx.shadowBlur = 0;
+  }
+
+  // Tip roller.
+  ctx.fillStyle = "#3b4149";
+  ctx.beginPath();
+  ctx.arc(tipX + 2, 0, 2.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = caught ? "#bdf5da" : "#9aa2ad";
+  ctx.beginPath();
+  ctx.arc(tipX + 2, 0, 1.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (caught) {
+    const mid = (railIn + railOut) / 2;
+    const tipGlow = ctx.createRadialGradient(mid, 0, 0, mid, 0, 34);
+    tipGlow.addColorStop(0, "rgba(140,255,200,0.4)");
+    tipGlow.addColorStop(1, "rgba(140,255,200,0)");
+    ctx.fillStyle = tipGlow;
+    ctx.beginPath();
+    ctx.arc(mid, 0, 34, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawDebrisList(list) {
+  ctx.shadowBlur = 0; // never inherit a stray glow left over from other draw calls
+  for (const p of list) {
+    const hw = p.w / 2;
+    const hh = p.h / 2;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.angle);
+
+    if (p.kind === "truss") {
+      drawTrussChunk(p, hw, hh);
+    } else {
+      // Extruded side face, offset down-right, so each fragment reads as a
+      // solid block of steel with thickness rather than a flat card.
+      const depth = Math.max(1, Math.min(3, (p.w + p.h) * 0.07));
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(-hw + depth, -hh + depth, p.w, p.h);
+
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-hw, -hh, p.w, p.h);
+
+      const sheen = ctx.createLinearGradient(-hw, -hh, hw, hh);
+      sheen.addColorStop(0, "rgba(255,255,255,0.34)");
+      sheen.addColorStop(0.45, "rgba(255,255,255,0)");
+      sheen.addColorStop(1, "rgba(0,0,0,0.42)");
+      ctx.fillStyle = sheen;
+      ctx.fillRect(-hw, -hh, p.w, p.h);
+
+      ctx.strokeStyle = "rgba(0,0,0,0.55)";
+      ctx.lineWidth = 0.6;
+      ctx.strokeRect(-hw, -hh, p.w, p.h);
+    }
+
+    ctx.restore();
+  }
+}
+
+// A whole lattice section of the tower, tumbling as one rigid piece. Drawn as
+// two shaded corner columns with X-bracing between them, plus a receding far
+// face, so a large chunk still reads as structure rather than as a slab.
+function drawTrussChunk(p, hw, hh) {
+  const depth = Math.min(5, p.w * 0.28);
+
+  // Far face, inset and darkened.
+  ctx.strokeStyle = "rgba(12,15,20,0.9)";
+  ctx.lineWidth = 1.4;
+  ctx.strokeRect(-hw + depth, -hh + depth * 0.5, p.w - depth * 2, p.h - depth);
+
+  // Near corner columns, shaded across their width for roundness.
+  const colW = Math.max(2, p.w * 0.13);
+  for (const side of [-1, 1]) {
+    const cx = side * (hw - colW / 2);
+    const gcol = ctx.createLinearGradient(cx - colW / 2, 0, cx + colW / 2, 0);
+    gcol.addColorStop(0, "rgba(0,0,0,0.55)");
+    gcol.addColorStop(0.4, p.color);
+    gcol.addColorStop(1, "rgba(0,0,0,0.5)");
+    ctx.fillStyle = gcol;
+    ctx.fillRect(cx - colW / 2, -hh, colW, p.h);
+  }
+
+  // X-bracing between the columns, bay by bay.
+  const bay = 17;
+  ctx.strokeStyle = "rgba(150,165,185,0.55)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let y = -hh; y < hh - 2; y += bay) {
+    const yn = Math.min(y + bay, hh);
+    ctx.moveTo(-hw + colW, y);
+    ctx.lineTo(hw - colW, y);
+    ctx.moveTo(-hw + colW, y);
+    ctx.lineTo(hw - colW, yn);
+    ctx.moveTo(hw - colW, y);
+    ctx.lineTo(-hw + colW, yn);
+  }
+  ctx.moveTo(-hw + colW, hh);
+  ctx.lineTo(hw - colW, hh);
+  ctx.stroke();
+
+  // Torn ends, so the break reads as a fracture rather than a clean cut.
+  ctx.strokeStyle = "rgba(230,240,255,0.35)";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(-hw, -hh); ctx.lineTo(-hw + colW * 1.6, -hh + 2.5);
+  ctx.moveTo(hw, hh); ctx.lineTo(hw - colW * 1.6, hh - 2.5);
+  ctx.stroke();
+}
+
+function drawParticles() {
+  // Smoke first so fire and debris read on top of it.
+  for (const p of state.particles) {
+    if (p.type !== "smoke") continue;
+    const t = p.age / p.life;
+    const size = p.size + (p.maxSize - p.size) * t;
+    const alpha = (1 - t) * 0.45;
+    const grey = 55 + Math.round(45 * t);
+    ctx.fillStyle = `rgba(${grey},${grey},${grey + 5},${alpha})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (const p of state.particles) {
+    if (p.type === "smoke") continue;
+    const t = p.age / p.life;
+    const alpha = 1 - t;
+    const heat = 1 - t;
+    if (p.type === "fire") {
+      const size = 6.5 * (1 - t * 0.55) + 1;
+      const r = 255;
+      const g = Math.round(110 + 120 * heat);
+      const b = Math.round(50 * heat * heat);
+      ctx.fillStyle = `rgba(${r},${g},${b},${alpha * 0.92})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+      ctx.fill();
+      continue;
+    }
+    if (p.type === "spark") {
+      // Bright white glints — a small glowing dash, not a soft circle.
+      ctx.shadowColor = "rgba(255,255,255,0.9)";
+      ctx.shadowBlur = 6;
+      ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - p.vx * 0.03, p.y - p.vy * 0.03);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      continue;
+    }
+    // Engine exhaust (default/untyped particles).
+    const size = 5 * (1 - t) + 1;
+    const r = 255;
+    const g = Math.round(160 + 90 * heat);
+    const b = Math.round(60 * heat);
+    ctx.fillStyle = `rgba(${r},${g},${b},${alpha * 0.85})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Bare 301 stainless steel, lit from the upper left the way the real booster
+// looks on the pad: dark at the silhouette edges, a bright specular band just
+// left of centre, mid-tone on the shadow side. Reused for the body, the hot-
+// stage ring and the skirt so the whole stack reads as one turned cylinder.
+function stainlessGradient(x0, x1) {
+  const g = ctx.createLinearGradient(x0, 0, x1, 0);
+  g.addColorStop(0.00, "#5b6068");
+  g.addColorStop(0.14, "#9ba3ad");
+  g.addColorStop(0.30, "#eef2f6");
+  g.addColorStop(0.42, "#ced5dd");
+  g.addColorStop(0.62, "#98a0ab");
+  g.addColorStop(0.84, "#6d747e");
+  g.addColorStop(1.00, "#41464e");
+  return g;
+}
+
+function drawRocket() {
+  const r = state.rocket;
+  const HW = ROCKET_HALF_W;
+  const HH = ROCKET_HALF_H;
+  ctx.save();
+  ctx.translate(r.x, r.y);
+  ctx.rotate(r.angle);
+
+  // ---- Raptor landing burn ----------------------------------------------
+  // Sea-level Raptors run methalox: a brilliant white throat, an orange-gold
+  // plume, and a stack of mach diamonds down the centreline.
+  if (r.thrusting && (state.phase === PHASE.FALLING || state.phase === PHASE.INTRO)) {
+    const len = 26 + Math.random() * 10;
+    const baseY = HH - 1;
+
+    // Wide coloured bloom around the plume: a violet-blue outer halo from the
+    // shock-heated air, fading through orange into the core.
+    const halo = ctx.createRadialGradient(0, baseY + len * 0.35, 2, 0, baseY + len * 0.35, len * 1.5);
+    halo.addColorStop(0.00, "rgba(255,220,150,0.34)");
+    halo.addColorStop(0.35, "rgba(255,120,40,0.20)");
+    halo.addColorStop(0.65, "rgba(150,90,255,0.13)");
+    halo.addColorStop(1.00, "rgba(90,140,255,0)");
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(0, baseY + len * 0.35, len * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowColor = "rgba(255,170,80,0.95)";
+    ctx.shadowBlur = 22;
+
+    // Outer plume, widening then tapering as it expands into the airstream.
+    ctx.beginPath();
+    ctx.moveTo(-6.5, baseY);
+    ctx.quadraticCurveTo(-7.5, baseY + len * 0.42, 0, baseY + len);
+    ctx.quadraticCurveTo(7.5, baseY + len * 0.42, 6.5, baseY);
+    ctx.closePath();
+    const outerGrad = ctx.createLinearGradient(0, baseY, 0, baseY + len);
+    outerGrad.addColorStop(0.00, "#fff6e2");
+    outerGrad.addColorStop(0.22, "#ffc861");
+    outerGrad.addColorStop(0.60, "#ff8c2e");
+    outerGrad.addColorStop(1.00, "rgba(214,74,20,0)");
+    ctx.fillStyle = outerGrad;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // White-hot inner cone straight off the nozzles.
+    ctx.beginPath();
+    ctx.moveTo(-3, baseY);
+    ctx.quadraticCurveTo(-3.2, baseY + len * 0.34, 0, baseY + len * 0.62);
+    ctx.quadraticCurveTo(3.2, baseY + len * 0.34, 3, baseY);
+    ctx.closePath();
+    const coreGrad = ctx.createLinearGradient(0, baseY, 0, baseY + len * 0.62);
+    coreGrad.addColorStop(0, "#ffffff");
+    coreGrad.addColorStop(0.5, "#ffeec4");
+    coreGrad.addColorStop(1, "rgba(255,205,120,0)");
+    ctx.fillStyle = coreGrad;
+    ctx.fill();
+
+    // Mach diamonds — the shock train that makes a real Raptar plume read
+    // as supersonic rather than as a painted triangle.
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    for (let i = 0; i < 3; i++) {
+      const dy = baseY + 5 + i * 6.5;
+      const dw = 2.1 - i * 0.45;
+      ctx.beginPath();
+      ctx.moveTo(0, dy - 2.2);
+      ctx.lineTo(dw, dy);
+      ctx.lineTo(0, dy + 2.2);
+      ctx.lineTo(-dw, dy);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // ---- Engine skirt ------------------------------------------------------
+  // Scorched from the ascent burn, darker than the tank section above it.
+  const skirtTop = HH - 9;
+  const skirtGrad = ctx.createLinearGradient(-HW - 1.5, 0, HW + 1.5, 0);
+  skirtGrad.addColorStop(0.00, "#26282d");
+  skirtGrad.addColorStop(0.28, "#5a5f67");
+  skirtGrad.addColorStop(0.48, "#43474e");
+  skirtGrad.addColorStop(1.00, "#1d1f23");
+  ctx.fillStyle = skirtGrad;
+  roundRect(ctx, -HW - 1.5, skirtTop, (HW + 1.5) * 2, 9, 1.5);
+  ctx.fill();
+
+  // The 33 Raptors, read end-on: 20 outer, 10 middle, 3 gimbaling centre.
+  // At this scale they resolve as a dark ring of bells rather than 33 dots,
+  // so the rows are spaced to give that same banded silhouette.
+  ctx.fillStyle = "#0a0b0d";
+  const engineRows = [
+    { y: HH - 2.0, r: 1.15, xs: [-6.2, -4.4, -2.6, -0.9, 0.9, 2.6, 4.4, 6.2] },
+    { y: HH - 4.2, r: 1.0,  xs: [-4.8, -2.9, -1.0, 1.0, 2.9, 4.8] },
+    { y: HH - 6.2, r: 0.9,  xs: [-1.9, 0, 1.9] },
+  ];
+  for (const row of engineRows) {
+    for (const ex of row.xs) {
+      ctx.beginPath();
+      ctx.arc(ex, row.y, row.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  // Faint warm glow inside the three centre bells when they're lit.
+  if (r.thrusting) {
+    ctx.fillStyle = "rgba(255,190,120,0.75)";
+    for (const ex of [-1.9, 0, 1.9]) {
+      ctx.beginPath();
+      ctx.arc(ex, HH - 6.2, 0.55, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ---- Tank section ------------------------------------------------------
+  const bodyGrad = stainlessGradient(-HW, HW);
+  ctx.fillStyle = bodyGrad;
+  ctx.fillRect(-HW, -HH, HW * 2, HH * 2 - 9);
+
+  // Curved shadow along the bottom of the tank section, so the cylinder reads
+  // as turning away from the viewer rather than as a flat strip.
+  const wrap = ctx.createLinearGradient(0, HH - 22, 0, HH - 9);
+  wrap.addColorStop(0, "rgba(0,0,0,0)");
+  wrap.addColorStop(1, "rgba(0,0,0,0.35)");
+  ctx.fillStyle = wrap;
+  ctx.fillRect(-HW, HH - 22, HW * 2, 13);
+
+  // Weld seams between the stacked steel rings — the single most recognisable
+  // detail on a Starship hull.
+  // Each seam is a shallow ellipse rather than a straight line — that curve is
+  // what sells the hull as a cylinder seen side-on rather than a flat plank.
+  const seamBulge = 1.6;
+  ctx.strokeStyle = "rgba(58,64,72,0.6)";
+  ctx.lineWidth = 0.7;
+  for (let ly = -HH + 6; ly < HH - 9; ly += 6.5) {
+    ctx.beginPath();
+    ctx.moveTo(-HW, ly);
+    ctx.quadraticCurveTo(0, ly + seamBulge * 2, HW, ly);
+    ctx.stroke();
+  }
+  // A highlight under each seam catches the light on the ring below it.
+  ctx.strokeStyle = "rgba(255,255,255,0.18)";
+  ctx.lineWidth = 0.5;
+  for (let ly = -HH + 6.7; ly < HH - 9; ly += 6.5) {
+    ctx.beginPath();
+    ctx.moveTo(-HW, ly);
+    ctx.quadraticCurveTo(0, ly + seamBulge * 2, HW, ly);
+    ctx.stroke();
+  }
+
+  // Raceway — the conduit fairing running the length of the booster.
+  const raceGrad = ctx.createLinearGradient(HW * 0.42, 0, HW * 0.78, 0);
+  raceGrad.addColorStop(0, "#7d848e");
+  raceGrad.addColorStop(0.4, "#aeb6c0");
+  raceGrad.addColorStop(1, "#5c626b");
+  ctx.fillStyle = raceGrad;
+  ctx.fillRect(HW * 0.42, -HH + 4, HW * 0.36, HH * 2 - 15);
+
+  // ---- Hot-stage ring ----------------------------------------------------
+  // Dark vented interstage at the very top, where the ship separates.
+  const hotH = 6;
+  const hotGrad = ctx.createLinearGradient(-HW, 0, HW, 0);
+  hotGrad.addColorStop(0.00, "#1a1c20");
+  hotGrad.addColorStop(0.30, "#4a4f57");
+  hotGrad.addColorStop(0.48, "#33373d");
+  hotGrad.addColorStop(1.00, "#141518");
+  ctx.fillStyle = hotGrad;
+  ctx.fillRect(-HW, -HH - hotH, HW * 2, hotH);
+  // Vent slots around its circumference.
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  for (let vx = -HW + 1.2; vx < HW - 1; vx += 2.4) {
+    ctx.fillRect(vx, -HH - hotH + 1.6, 1.1, hotH - 3.2);
+  }
+  ctx.strokeStyle = "rgba(255,255,255,0.2)";
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(-HW, -HH - hotH + 0.4);
+  ctx.lineTo(HW, -HH - hotH + 0.4);
+  ctx.stroke();
+
+  // ---- Grid fins ---------------------------------------------------------
+  // Four on the real booster, two of them in profile from this angle, sitting
+  // just below the hot-stage ring.
+  drawGridFin(-1, GRIDFIN_TOP);
+  drawGridFin(1, GRIDFIN_TOP);
+
+  // ---- Catch pins --------------------------------------------------------
+  // The load points the arms actually take the booster's weight on, just below
+  // the grid fins as on the real vehicle. Highlighted so it's obvious which
+  // part of the booster has to meet the rail.
+  const pinY = pinOffsetY();
+  const caught = state.phase === PHASE.SUCCESS || state.phase === PHASE.COMPLETE;
+  const live = state.phase === PHASE.FALLING ? catchStatus() : null;
+  const pinTint = caught || (live && live.overRail && live.allGo) ? "#8effc4"
+                : live && live.overRail ? "#ffd06e"
+                : "#e8eef5";
+  for (const dir of [-1, 1]) {
+    ctx.fillStyle = "#2a2f36";
+    ctx.fillRect(dir > 0 ? HW : -HW - 3.6, pinY - 2.4, 3.6, 4.8);
+    ctx.fillStyle = pinTint;
+    ctx.fillRect(dir > 0 ? HW + 0.6 : -HW - 3, pinY - 1.6, 2.4, 3.2);
+  }
+
+  ctx.restore();
+}
+
+function drawGridFin(dir, yTop) {
+  // dir: -1 = fin on the left side, +1 = fin on the right side.
+  // Super Heavy's fins are fixed hexagonal-lattice paddles, noticeably darker
+  // than the polished hull and thicker at the root than at the tip.
+  const rootX = dir * ROCKET_HALF_W;
+  const w = 5.5;
+  const h = GRIDFIN_H;
+  const x = dir > 0 ? rootX : rootX - w;
+  ctx.save();
+
+  // Short hinge shroud tying the fin back into the hull.
+  ctx.fillStyle = "#4d525a";
+  ctx.fillRect(dir > 0 ? rootX - 1 : rootX, yTop + 3.5, 1.6, h - 7);
+
+  const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+  if (dir > 0) {
+    grad.addColorStop(0, "#767d87");
+    grad.addColorStop(1, "#2b2f35");
+  } else {
+    grad.addColorStop(0, "#3a3f46");
+    grad.addColorStop(1, "#878f99");
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(x, yTop, w, h);
+
+  // Lattice cells — the open honeycomb you can see straight through.
+  ctx.strokeStyle = "rgba(12,14,17,0.85)";
+  ctx.lineWidth = 0.55;
+  for (let gy = yTop + 2.2; gy < yTop + h - 1; gy += 2.2) {
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, gy);
+    ctx.lineTo(x + w - 0.5, gy);
+    ctx.stroke();
+  }
+  for (let gx = x + 1.8; gx < x + w - 0.5; gx += 1.8) {
+    ctx.beginPath();
+    ctx.moveTo(gx, yTop + 0.6);
+    ctx.lineTo(gx, yTop + h - 0.6);
+    ctx.stroke();
+  }
+
+  // Heavier frame around the paddle.
+  ctx.strokeStyle = "#191c20";
+  ctx.lineWidth = 0.9;
+  ctx.strokeRect(x, yTop, w, h);
+
+  ctx.restore();
+}
+
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
+// ---------- DPR setup ----------
+function setupCanvasResolution() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+window.addEventListener("resize", setupCanvasResolution);
+
+// ---------- Boot ----------
+setupCanvasResolution();
+seedGroundSmoke();
+showIntroOverlay();
+updateHud();
+requestAnimationFrame((t) => {
+  lastTime = t;
+  requestAnimationFrame(frame);
+});
+
+</script>
+</body>
+</html>

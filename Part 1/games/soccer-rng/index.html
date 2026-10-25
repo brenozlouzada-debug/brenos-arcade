@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Soccer RNG</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg: #0a1210;
+    --panel: #101d19;
+    --panel2: #0d1815;
+    --line: #1e352c;
+    --text: #eafff2;
+    --dim: #7fa392;
+    --accent: #38e07a;
+    --accent2: #1fb85f;
+    --gold: #f5b942;
+    --danger: #ff5d6c;
+    --common: #9aa0a6;
+    --uncommon: #4caf50;
+    --rare: #3d8bfd;
+    --epic: #b569f7;
+    --legendary: #f5b942;
+    --mythic: #ff4d6d;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #123324 0%, transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overscroll-behavior:none;
+  }
+  #app{
+    max-width: 980px;
+    margin: 0 auto;
+    min-height: 100%;
+    display:flex;
+    flex-direction:column;
+    padding: 10px 12px 32px;
+  }
+
+  /* header */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px; flex-wrap:wrap;
+    padding: 8px 4px 14px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+  header h1{
+    font-size: 1.35rem; margin:0; letter-spacing:.02em;
+    display:flex; align-items:center; gap:8px;
+  }
+  .currencies{ display:flex; gap:8px; flex-wrap:wrap; }
+  .pill{
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:999px; padding:6px 12px; font-size:.85rem;
+    display:flex; align-items:center; gap:6px; white-space:nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .pill b{ color:var(--accent); }
+
+  /* nav */
+  nav{
+    display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;
+  }
+  nav button{
+    flex:1 1 auto;
+    background:var(--panel); color:var(--dim); border:1px solid var(--line);
+    padding:10px 8px; border-radius:10px; font-size:.85rem; cursor:pointer;
+    font-weight:600; letter-spacing:.02em; transition: all .15s;
+    min-width: 90px;
+  }
+  nav button.active{
+    background: linear-gradient(180deg, #16382a, #0e241b);
+    color:var(--accent); border-color:var(--accent2);
+    box-shadow: 0 0 0 1px rgba(56,224,122,.15) inset;
+  }
+  nav button:hover{ color:var(--text); }
+
+  .view{ display:none; animation: fade .25s ease; }
+  .view.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  .card-panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px;
+    margin-bottom:14px;
+  }
+
+  h2{ margin:0 0 4px; font-size:1.05rem; }
+  .sub{ color:var(--dim); font-size:.85rem; margin:0 0 14px; }
+
+  /* ROLL VIEW */
+  .roll-stage{
+    display:flex; flex-direction:column; align-items:center; gap:16px;
+    padding: 10px 0 4px;
+  }
+  .player-card{
+    width: 180px; height: 250px; border-radius:16px;
+    position:relative; perspective: 900px;
+  }
+  .player-card-inner{
+    width:100%; height:100%; position:relative;
+    transform-style:preserve-3d; transition: transform .6s cubic-bezier(.2,.8,.2,1);
+  }
+  .player-card.flipped .player-card-inner{ transform: rotateY(180deg); }
+  .pc-face{
+    position:absolute; inset:0; backface-visibility:hidden;
+    border-radius:16px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    border: 2px solid var(--line);
+    background: linear-gradient(160deg, #16281f, #0b1512);
+  }
+  .pc-back{ font-size:3rem; }
+  .pc-front{ transform: rotateY(180deg); padding:14px; gap:4px; }
+  .pc-front .ovr{ font-size:2.2rem; font-weight:800; line-height:1; }
+  .pc-front .pos{ font-size:.8rem; color:var(--dim); letter-spacing:.1em; margin-bottom:6px;}
+  .pc-front .name{ font-weight:700; font-size:1rem; margin-top:8px; }
+  .pc-front .rarity{ font-size:.75rem; text-transform:uppercase; letter-spacing:.12em; margin-top:4px; font-weight:700;}
+  .pc-front .emoji{ font-size:2rem; margin-bottom:2px; }
+
+  .glow-common{ box-shadow: 0 0 18px 0 rgba(154,160,166,.25); }
+  .glow-uncommon{ box-shadow: 0 0 18px 0 rgba(76,175,80,.35); }
+  .glow-rare{ box-shadow: 0 0 22px 2px rgba(61,139,253,.45); }
+  .glow-epic{ box-shadow: 0 0 26px 4px rgba(181,105,247,.55); }
+  .glow-legendary{ box-shadow: 0 0 32px 6px rgba(245,185,66,.65); animation: pulse 1.4s infinite; }
+  .glow-mythic{ box-shadow: 0 0 40px 10px rgba(255,77,109,.75); animation: pulseM 1s infinite; }
+  @keyframes pulse{ 0%,100%{ filter:brightness(1);} 50%{ filter:brightness(1.25);} }
+  @keyframes pulseM{ 0%,100%{ filter:brightness(1) hue-rotate(0deg);} 50%{ filter:brightness(1.3) hue-rotate(25deg);} }
+
+  .lucky-ribbon{
+    position:absolute; top:10px; left:50%; transform:translateX(-50%) translateY(-6px);
+    background: linear-gradient(90deg, #ffe08a, #f5b942, #ffe08a);
+    background-size: 200% auto;
+    color:#2b1a00; font-size:.68rem; font-weight:800; letter-spacing:.08em;
+    padding:3px 10px; border-radius:999px; white-space:nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,.4);
+    opacity:0; animation: luckyIn .4s ease .5s forwards, luckyShine 1.6s linear infinite .5s;
+  }
+  @keyframes luckyIn{ from{ opacity:0; transform:translateX(-50%) translateY(-16px) scale(.7);} to{ opacity:1; transform:translateX(-50%) translateY(-6px) scale(1);} }
+  @keyframes luckyShine{ 0%{ background-position:0% 50%;} 100%{ background-position:200% 50%;} }
+  .lucky-glow{ box-shadow: 0 0 0 3px rgba(245,185,66,.6), 0 0 30px 8px rgba(245,185,66,.5) !important; }
+
+  .roll-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; }
+  .btn{
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    color:#06170e; border:none; font-weight:800; letter-spacing:.02em;
+    padding: 13px 22px; border-radius:12px; font-size:.95rem; cursor:pointer;
+    box-shadow: 0 4px 0 #0c5a30, 0 6px 14px rgba(0,0,0,.35);
+    transition: transform .08s;
+  }
+  .btn:active{ transform: translateY(3px); box-shadow: 0 1px 0 #0c5a30; }
+  .btn:disabled{
+    background:#2a3a33; color:#6c8477; box-shadow:none; cursor:not-allowed;
+  }
+  .btn.secondary{
+    background: linear-gradient(180deg, #274639, #16281f); color:var(--text);
+    box-shadow: 0 4px 0 #0a1610, 0 6px 14px rgba(0,0,0,.35);
+  }
+  .btn.gold{
+    background: linear-gradient(180deg, #ffd77a, var(--gold));
+    box-shadow: 0 4px 0 #a06f0e, 0 6px 14px rgba(0,0,0,.35);
+    color:#2b1a00;
+  }
+  .btn.small{ padding: 8px 14px; font-size:.8rem; }
+
+  .pity-wrap{ width:100%; max-width:340px; }
+  .pity-label{ display:flex; justify-content:space-between; font-size:.75rem; color:var(--dim); margin-bottom:4px; }
+  .pity-bar{ height:8px; border-radius:999px; background:#0c1a15; overflow:hidden; border:1px solid var(--line);}
+  .pity-fill{ height:100%; background: linear-gradient(90deg, var(--rare), var(--epic)); transition: width .3s; }
+
+  .odds-toggle{ background:none; border:none; color:var(--dim); text-decoration:underline; cursor:pointer; font-size:.8rem; }
+  .odds-table{ display:none; width:100%; max-width:340px; font-size:.8rem; margin-top:6px; border-collapse:collapse; }
+  .odds-table.show{ display:table; }
+  .odds-table td{ padding:4px 6px; border-bottom:1px solid var(--line); }
+  .odds-table td:last-child{ text-align:right; color:var(--dim); }
+  .swatch{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; }
+
+  /* SQUAD VIEW */
+  .squad-summary{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
+  .stat-box{ background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:10px 16px; text-align:center; min-width:100px;}
+  .stat-box .v{ font-size:1.4rem; font-weight:800; color:var(--accent);}
+  .stat-box .l{ font-size:.7rem; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; }
+  .collection-grid{
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
+    gap:10px;
+  }
+  .mini-card{
+    border-radius:10px; padding:10px 8px; text-align:center;
+    background: linear-gradient(160deg, #16281f, #0b1512);
+    border: 1.5px solid var(--line); position:relative;
+  }
+  .mini-card .cnt{
+    position:absolute; top:4px; right:6px; font-size:.7rem; color:var(--dim); font-weight:700;
+  }
+  .mini-card .ovr{ font-size:1.3rem; font-weight:800; }
+  .mini-card .pos{ font-size:.65rem; color:var(--dim); letter-spacing:.08em; }
+  .mini-card .name{ font-size:.78rem; margin-top:4px; font-weight:600; }
+  .empty-note{ color:var(--dim); font-size:.9rem; text-align:center; padding: 30px 10px;}
+
+  /* LUCKY SPIN VIEW */
+  .spin-stage{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .wheel-wrap{ position:relative; width:280px; height:280px; }
+  #wheelCanvas{ width:100%; height:100%; display:block; filter: drop-shadow(0 6px 18px rgba(0,0,0,.5)); }
+  .pointer{
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent;
+    border-top:22px solid var(--gold); z-index:3; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5));
+  }
+  .cooldown-text{ color:var(--dim); font-size:.85rem; }
+  .spin-tokens{ font-size:.85rem; color:var(--dim); }
+
+  .reward-modal{
+    position:fixed; inset:0; background:rgba(4,10,8,.72); backdrop-filter: blur(3px);
+    display:flex; align-items:center; justify-content:center; z-index:50;
+    opacity:0; pointer-events:none; transition: opacity .25s;
+  }
+  .reward-modal.show{ opacity:1; pointer-events:auto; }
+  .reward-box{
+    background: linear-gradient(160deg, #17332596, #0d1a15);
+    background-color:#122019;
+    border:1px solid var(--accent2); border-radius:18px; padding:30px 34px;
+    text-align:center; max-width:320px; transform: scale(.85); transition: transform .25s;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  }
+  .reward-modal.show .reward-box{ transform:scale(1); }
+  .reward-box .emoji{ font-size:2.6rem; }
+  .reward-box h3{ margin:8px 0 4px; }
+  .reward-box p{ color:var(--dim); margin:0 0 18px; font-size:.9rem; }
+
+  /* MATCH VIEW */
+  .match-teams{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px;}
+  .team-box{ flex:1; text-align:center; }
+  .team-box .rating{ font-size:2rem; font-weight:800; }
+  .team-box .label{ color:var(--dim); font-size:.8rem; }
+  .vs{ font-weight:800; color:var(--dim); font-size:1.1rem; }
+  .scoreboard{ text-align:center; font-size:2.4rem; font-weight:800; margin: 10px 0; letter-spacing:.05em;}
+  .match-log{
+    background:var(--panel2); border:1px solid var(--line); border-radius:12px;
+    padding:10px 14px; height:150px; overflow-y:auto; font-size:.85rem; color:var(--dim);
+    display:flex; flex-direction:column-reverse;
+  }
+  .match-log div{ padding:3px 0; border-bottom:1px dashed rgba(255,255,255,.05); }
+  .match-log div.goal{ color:var(--accent); font-weight:700; }
+  .match-result{ text-align:center; margin-top:12px; font-size:1rem; font-weight:700; }
+  .center-row{ display:flex; justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap; }
+
+  footer{ text-align:center; color:var(--dim); font-size:.75rem; padding:18px 0 4px; }
+  a.reset-link{ color:var(--dim); }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-thumb{ background:#254235; border-radius:8px; }
+</style>
+</head>
+<body>
+<a href="../../index.html" title="Back to Arcade" style="position:fixed;top:10px;left:10px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:rgba(0,0,0,0.6);color:#fff;font:14px/1 system-ui,-apple-system,sans-serif;border-radius:50%;text-decoration:none;opacity:0.4;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">&larr;</a>
+
+<div id="app">
+  <header>
+    <h1>⚽ Soccer RNG</h1>
+    <div class="currencies">
+      <div class="pill">🪙 <b id="coinsDisplay">0</b></div>
+      <div class="pill">🎡 <b id="tokensDisplay">0</b> spins</div>
+      <div class="pill" id="luckPill" style="display:none">🍀 <b id="luckDisplay">2x</b> luck</div>
+    </div>
+  </header>
+
+  <nav>
+    <button data-view="roll" class="active">🎴 Roll</button>
+    <button data-view="squad">👥 Squad</button>
+    <button data-view="spin">🎡 Lucky Spin</button>
+    <button data-view="match">🏟️ Match</button>
+  </nav>
+
+  <!-- ROLL VIEW -->
+  <section class="view active" id="view-roll">
+    <div class="card-panel roll-stage">
+      <h2 style="align-self:flex-start">Player Roll</h2>
+      <p class="sub" style="align-self:flex-start">Spend coins for a random real footballer. Higher rarities have better stats. (Fan-made ratings, not official stats.) Every roll has a chance to become a <b style="color:var(--gold)">🍀 Lucky Roll</b> — bumping the result up a rarity tier.</p>
+
+      <div class="player-card" id="playerCard">
+        <div class="player-card-inner">
+          <div class="pc-face pc-back">🎴</div>
+          <div class="pc-face pc-front" id="pcFront">
+            <div class="emoji">⚽</div>
+            <div class="pos">POS</div>
+            <div class="ovr">00</div>
+            <div class="name">Name</div>
+            <div class="rarity">Rarity</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="roll-actions">
+        <button class="btn" id="rollBtn">Roll — 100 🪙</button>
+        <button class="btn secondary" id="roll10Btn">Roll x10 — 900 🪙</button>
+      </div>
+
+      <div class="pity-wrap">
+        <div class="pity-label"><span>Pity to guaranteed Epic+</span><span id="pityText">0 / 50</span></div>
+        <div class="pity-bar"><div class="pity-fill" id="pityFill" style="width:0%"></div></div>
+      </div>
+
+      <button class="odds-toggle" id="oddsToggle">Show drop rates ▾</button>
+      <table class="odds-table" id="oddsTable">
+        <tbody id="oddsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SQUAD VIEW -->
+  <section class="view" id="view-squad">
+    <div class="card-panel">
+      <h2>Your Squad</h2>
+      <p class="sub">Best 11 players by rating form your starting squad.</p>
+      <div class="squad-summary">
+        <div class="stat-box"><div class="v" id="squadRating">0</div><div class="l">Squad Rating</div></div>
+        <div class="stat-box"><div class="v" id="squadCount">0</div><div class="l">Players Owned</div></div>
+        <div class="stat-box"><div class="v" id="squadUnique">0</div><div class="l">Unique Cards</div></div>
+        <div class="stat-box"><div class="v" id="squadLucky" style="color:var(--gold)">0</div><div class="l">🍀 Lucky Rolls</div></div>
+      </div>
+      <div class="collection-grid" id="collectionGrid"></div>
+    </div>
+  </section>
+
+  <!-- LUCKY SPIN VIEW -->
+  <section class="view" id="view-spin">
+    <div class="card-panel spin-stage">
+      <h2>Lucky Spin</h2>
+      <p class="sub">Free spin every few minutes, or use a token earned from matches.</p>
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <canvas id="wheelCanvas" width="280" height="280"></canvas>
+      </div>
+      <div class="roll-actions">
+        <button class="btn gold" id="spinBtn">Spin (Free)</button>
+      </div>
+      <div class="cooldown-text" id="cooldownText"></div>
+    </div>
+  </section>
+
+  <!-- MATCH VIEW -->
+  <section class="view" id="view-match">
+    <div class="card-panel">
+      <h2>Play a Match</h2>
+      <p class="sub">Your squad rating battles a random opponent. Win coins and a chance at a spin token.</p>
+      <div class="match-teams">
+        <div class="team-box"><div class="rating" id="myRating">0</div><div class="label">Your Squad</div></div>
+        <div class="vs">VS</div>
+        <div class="team-box"><div class="rating" id="oppRating">0</div><div class="label">Opponent</div></div>
+      </div>
+      <div class="scoreboard" id="scoreboard">0 – 0</div>
+      <div class="match-log" id="matchLog"></div>
+      <div class="match-result" id="matchResult"></div>
+      <div class="center-row">
+        <button class="btn secondary" id="newOppBtn">Find New Opponent</button>
+        <button class="btn" id="playMatchBtn">Kick Off</button>
+        <button class="btn gold" id="autoMatchBtn">▶ Auto Match</button>
+      </div>
+      <div class="cooldown-text" id="autoMatchStats" style="text-align:center; margin-top:8px;"></div>
+    </div>
+  </section>
+
+  <footer>
+    Progress saves automatically in this browser. <a href="#" class="reset-link" id="resetLink">Reset save</a>
+  </footer>
+</div>
+
+<div class="reward-modal" id="rewardModal">
+  <div class="reward-box">
+    <div class="emoji" id="rewardEmoji">🎉</div>
+    <h3 id="rewardTitle">Reward!</h3>
+    <p id="rewardDesc">You got something.</p>
+    <button class="btn" id="rewardCloseBtn">Nice!</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- audio ---------- */
+  var actx = null;
+  function ac(){
+    if(!actx){
+      var C = window.AudioContext || window.webkitAudioContext;
+      actx = new C();
+    }
+    if(actx.state === "suspended") actx.resume();
+    return actx;
+  }
+  function beep(freq, dur, type, gain, delay){
+    try{
+      var ctx = ac();
+      var t0 = ctx.currentTime + (delay||0);
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.type = type || "sine";
+      osc.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(gain!=null?gain:0.15, t0+0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, t0+dur);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t0); osc.stop(t0+dur+0.02);
+    }catch(e){ /* audio not available */ }
+  }
+  function sfxRoll(){ beep(220,0.08,"square",0.1); beep(330,0.08,"square",0.08,0.06); }
+  function sfxReveal(rarityIdx){
+    var base = 260 + rarityIdx*70;
+    beep(base,0.18,"triangle",0.18);
+    beep(base*1.5,0.22,"triangle",0.14,0.08);
+    if(rarityIdx>=4) beep(base*2,0.3,"sawtooth",0.12,0.16);
+  }
+  function sfxSpinTick(){ beep(880,0.03,"square",0.05); }
+  function sfxJackpot(){
+    [0,1,2,3].forEach(function(i){ beep(440+i*160,0.22,"triangle",0.16,i*0.09); });
+  }
+  function sfxGoal(){ beep(523,0.12,"square",0.15); beep(659,0.12,"square",0.15,0.1); beep(784,0.2,"square",0.18,0.2); }
+  function sfxWhistle(){ beep(1200,0.4,"sine",0.1); }
+  function sfxLucky(){
+    [0,1,2,3,4].forEach(function(i){ beep(660+i*110,0.16,"triangle",0.14,i*0.05); });
+  }
+
+  /* ---------- data ---------- */
+  var RARITIES = [
+    { key:"common",    label:"Common",    color:"var(--common)",    hex:"#9aa0a6", weight:600, min:40, max:59,
+      pool:[["Danny Ward","GK"],["Jason Steele","GK"],["Kepa Arrizabalaga","GK"],["Fraser Forster","GK"],
+            ["Ben Godfrey","DEF"],["Ezri Konsa","DEF"],["Nathan Collins","DEF"],["Diego Llorente","DEF"],
+            ["Jayden Bogle","DEF"],["Vitalii Mykolenko","DEF"],["Rico Lewis","DEF"],["Max Aarons","DEF"],
+            ["Ryan Yates","MID"],["Josh Brownhill","MID"],["Conor Chaplin","MID"],["Alex Mowatt","MID"],
+            ["Carlton Morris","FWD"],["Cameron Archer","FWD"],["Taiwo Awoniyi","FWD"],["Divock Origi","FWD"],
+            ["Danny Welbeck","FWD"],["Che Adams","FWD"],["Josh Sargent","FWD"],["Brennan Johnson","FWD"]] },
+    { key:"uncommon",  label:"Uncommon",  color:"var(--uncommon)",  hex:"#4caf50", weight:250, min:55, max:69,
+      pool:[["Jordan Pickford","GK"],["Emiliano Martinez","GK"],["Aaron Ramsdale","GK"],
+            ["Ben White","DEF"],["Joachim Andersen","DEF"],["Sven Botman","DEF"],["Tyrick Mitchell","DEF"],
+            ["James Ward-Prowse","MID"],["Conor Gallagher","MID"],["Kalvin Phillips","MID"],["Youri Tielemans","MID"],
+            ["Emile Smith Rowe","MID"],["Morgan Gibbs-White","MID"],["Pascal Gross","MID"],["Curtis Jones","MID"],
+            ["Ryan Gravenberch","MID"],["Scott McTominay","MID"],
+            ["Ivan Toney","FWD"],["Jarrod Bowen","FWD"],["Anthony Gordon","FWD"],["Bryan Mbeumo","FWD"],
+            ["Kaoru Mitoma","FWD"],["Antoine Semenyo","FWD"]] },
+    { key:"rare",      label:"Rare",      color:"var(--rare)",      hex:"#3d8bfd", weight:100, min:65, max:79,
+      pool:[["David Raya","GK"],
+            ["Ruben Dias","DEF"],["William Saliba","DEF"],["Josko Gvardiol","DEF"],["Alphonso Davies","DEF"],
+            ["Pedri","MID"],["Gavi","MID"],["James Maddison","MID"],["Cole Palmer","MID"],["Florian Wirtz","MID"],
+            ["Jamal Musiala","MID"],["Xavi Simons","MID"],
+            ["Marcus Rashford","FWD"],["Christopher Nkunku","FWD"],["Randal Kolo Muani","FWD"],
+            ["Khvicha Kvaratskhelia","FWD"],["Alexander Isak","FWD"],["Ollie Watkins","FWD"]] },
+    { key:"epic",      label:"Epic",      color:"var(--epic)",      hex:"#b569f7", weight:35,  min:75, max:87,
+      pool:[["Alisson Becker","GK"],["Thibaut Courtois","GK"],
+            ["Declan Rice","MID"],["Bruno Fernandes","MID"],["Rodri","MID"],["Jude Bellingham","MID"],
+            ["Phil Foden","MID"],["Martin Odegaard","MID"],["Federico Valverde","MID"],
+            ["Bukayo Saka","FWD"],["Victor Osimhen","FWD"],["Son Heung-min","FWD"],["Rafael Leao","FWD"]] },
+    { key:"legendary", label:"Legendary", color:"var(--legendary)", hex:"#f5b942", weight:14,  min:101, max:105,
+      pool:[["Virgil van Dijk","DEF"],["Kevin De Bruyne","MID"],["Luka Modric","MID"],
+            ["Neymar Jr","FWD"],["Robert Lewandowski","FWD"],["Vinicius Junior","FWD"],
+            ["Mohamed Salah","FWD"],["Karim Benzema","FWD"],["Harry Kane","FWD"]] },
+    { key:"mythic",    label:"Mythic",    color:"var(--mythic)",    hex:"#ff4d6d", weight:1,   min:106, max:112,
+      pool:[["Lionel Messi","FWD"],["Cristiano Ronaldo","FWD"],["Kylian Mbappe","FWD"],["Erling Haaland","FWD"]] }
+  ];
+  var TOTAL_WEIGHT = RARITIES.reduce(function(s,r){ return s+r.weight; }, 0);
+  var PITY_LIMIT = 50;
+  var PITY_RARITY_INDEX = 3; // Epic
+  var ROLL_COST = 100;
+  var ROLL10_COST = 1000;
+  var LUCKY_ROLL_CHANCE = 0.08; // 8% chance any roll bumps up one rarity tier
+
+  function pickFromPool(rarityIdx){
+    var pool = RARITIES[rarityIdx].pool;
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+
+  /* ---------- state ---------- */
+  var SAVE_KEY = "soccerRNG_save_v1";
+  var state = null;
+
+  function defaultState(){
+    return {
+      coins: 500,
+      spinTokens: 1,
+      collection: {},     // name -> {name,pos,rarityIdx,ovr,count}
+      pityCount: 0,
+      lastFreeSpinAt: 0,
+      luckExpiresAt: 0,
+      opponentRating: null,
+      luckyRollCount: 0
+    };
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(SAVE_KEY);
+      if(!raw) return defaultState();
+      var parsed = JSON.parse(raw);
+      var d = defaultState();
+      for(var k in d){ if(parsed[k] === undefined) parsed[k] = d[k]; }
+      return parsed;
+    }catch(e){
+      return defaultState();
+    }
+  }
+  function save(){
+    try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  state = load();
+
+  /* ---------- helpers ---------- */
+  function fmt(n){
+    n = Math.round(n);
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+  function isLuckActive(){ return Date.now() < state.luckExpiresAt; }
+
+  function weightedPick(list){
+    var total = 0;
+    for(var i=0;i<list.length;i++) total += list[i].w;
+    var r = Math.random()*total;
+    for(i=0;i<list.length;i++){
+      if(r < list[i].w) return list[i];
+      r -= list[i].w;
+    }
+    return list[list.length-1];
+  }
+
+  function rollRarityIndex(){
+    // guaranteed pity
+    if(state.pityCount >= PITY_LIMIT - 1){
+      var poolForced = [];
+      for(var i=PITY_RARITY_INDEX;i<RARITIES.length;i++){
+        poolForced.push({ idx:i, w: RARITIES[i].weight });
+      }
+      return weightedPick(poolForced).idx;
+    }
+    var luck = isLuckActive() ? 3 : 1;
+    var pool = RARITIES.map(function(r,i){
+      var w = r.weight;
+      if(i >= 2) w = w * luck; // boost Rare and above
+      return { idx:i, w:w };
+    });
+    return weightedPick(pool).idx;
+  }
+
+  function generatePlayer(){
+    var idx = rollRarityIndex();
+    var lucky = false;
+    if(idx < RARITIES.length-1 && Math.random() < LUCKY_ROLL_CHANCE){
+      idx++;
+      lucky = true;
+      state.luckyRollCount++;
+    }
+    if(idx >= PITY_RARITY_INDEX){ state.pityCount = 0; }
+    else { state.pityCount++; }
+    var r = RARITIES[idx];
+    var entry = pickFromPool(idx);
+    var ovr = rand(r.min, r.max);
+    return { name:entry[0], pos:entry[1], rarityIdx:idx, ovr:ovr, lucky:lucky };
+  }
+
+  function addToCollection(p){
+    var existing = state.collection[p.name];
+    if(existing){
+      existing.count++;
+      if(p.ovr > existing.ovr){ existing.ovr = p.ovr; existing.rarityIdx = p.rarityIdx; existing.pos = p.pos; }
+    } else {
+      state.collection[p.name] = { name:p.name, pos:p.pos, rarityIdx:p.rarityIdx, ovr:p.ovr, count:1 };
+    }
+  }
+
+  function squadList(){
+    var arr = [];
+    for(var k in state.collection) arr.push(state.collection[k]);
+    arr.sort(function(a,b){ return b.ovr - a.ovr; });
+    return arr;
+  }
+
+  function squadRating(){
+    var arr = squadList();
+    var top = arr.slice(0,11);
+    var sum = 0;
+    for(var i=0;i<11;i++){ sum += top[i] ? top[i].ovr : 32; }
+    return Math.round(sum/11);
+  }
+
+  /* ---------- view switching ---------- */
+  var views = document.querySelectorAll(".view");
+  var navBtns = document.querySelectorAll("nav button");
+  navBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      navBtns.forEach(function(b){ b.classList.remove("active"); });
+      views.forEach(function(v){ v.classList.remove("active"); });
+      btn.classList.add("active");
+      document.getElementById("view-"+btn.dataset.view).classList.add("active");
+      if(btn.dataset.view === "squad") renderSquad();
+      if(btn.dataset.view === "match") renderMatch();
+      if(btn.dataset.view === "spin") { drawWheel(); updateSpinUI(); }
+    });
+  });
+
+  /* ---------- header ---------- */
+  function renderHeader(){
+    document.getElementById("coinsDisplay").textContent = fmt(state.coins);
+    document.getElementById("tokensDisplay").textContent = fmt(state.spinTokens);
+    var luckPill = document.getElementById("luckPill");
+    if(isLuckActive()){
+      luckPill.style.display = "flex";
+      var secs = Math.max(0, Math.ceil((state.luckExpiresAt - Date.now())/1000));
+      document.getElementById("luckDisplay").textContent = "3x (" + secs + "s)";
+    } else {
+      luckPill.style.display = "none";
+    }
+    document.getElementById("rollBtn").disabled = state.coins < ROLL_COST;
+    document.getElementById("roll10Btn").disabled = state.coins < ROLL10_COST;
+  }
+
+  /* ---------- odds table ---------- */
+  var oddsBody = document.getElementById("oddsBody");
+  RARITIES.forEach(function(r){
+    var tr = document.createElement("tr");
+    var pct = (r.weight/TOTAL_WEIGHT*100);
+    tr.innerHTML = '<td><span class="swatch" style="background:'+r.hex+'"></span>'+r.label+'</td><td>'+(pct<0.5?pct.toFixed(2):pct.toFixed(1))+'%</td>';
+    oddsBody.appendChild(tr);
+  });
+  document.getElementById("oddsToggle").addEventListener("click", function(){
+    var t = document.getElementById("oddsTable");
+    var open = t.classList.toggle("show");
+    this.textContent = open ? "Hide drop rates ▴" : "Show drop rates ▾";
+  });
+
+  /* ---------- roll view ---------- */
+  var playerCard = document.getElementById("playerCard");
+  var pcFront = document.getElementById("pcFront");
+  var pityText = document.getElementById("pityText");
+  var pityFill = document.getElementById("pityFill");
+
+  function updatePity(){
+    pityText.textContent = state.pityCount + " / " + PITY_LIMIT;
+    pityFill.style.width = Math.min(100, state.pityCount/PITY_LIMIT*100) + "%";
+  }
+
+  function showCard(p){
+    var r = RARITIES[p.rarityIdx];
+    pcFront.innerHTML =
+      (p.lucky ? '<div class="lucky-ribbon">🍀 LUCKY ROLL</div>' : '') +
+      '<div class="emoji">'+(p.rarityIdx>=4?"🌟":"⚽")+'</div>'+
+      '<div class="pos">'+p.pos+'</div>'+
+      '<div class="ovr" style="color:'+r.hex+'">'+p.ovr+'</div>'+
+      '<div class="name">'+p.name+'</div>'+
+      '<div class="rarity" style="color:'+r.hex+'">'+r.label+'</div>';
+    playerCard.className = "player-card glow-"+r.key + (p.lucky ? " lucky-glow" : "");
+    playerCard.classList.remove("flipped");
+    // force reflow so the flip animation replays each time
+    void playerCard.offsetWidth;
+    requestAnimationFrame(function(){
+      playerCard.classList.add("flipped");
+    });
+  }
+
+  var rolling = false;
+  function doSingleRoll(){
+    if(rolling) return;
+    if(state.coins < ROLL_COST) return;
+    rolling = true;
+    state.coins -= ROLL_COST;
+    sfxRoll();
+    playerCard.classList.remove("flipped");
+    setTimeout(function(){
+      var p = generatePlayer();
+      addToCollection(p);
+      showCard(p);
+      sfxReveal(p.rarityIdx);
+      if(p.lucky) sfxLucky();
+      updatePity();
+      renderHeader();
+      save();
+      rolling = false;
+    }, 260);
+  }
+
+  var multiQueue = [];
+  function doTenRoll(){
+    if(rolling) return;
+    if(state.coins < ROLL10_COST) return;
+    rolling = true;
+    state.coins -= ROLL10_COST;
+    sfxRoll();
+    var results = [];
+    for(var i=0;i<10;i++){
+      var p = generatePlayer();
+      addToCollection(p);
+      results.push(p);
+    }
+    save();
+    renderHeader();
+    updatePity();
+    multiQueue = results;
+    playerCard.classList.remove("flipped");
+    var idx = 0;
+    function showNext(){
+      if(idx >= multiQueue.length){ rolling = false; return; }
+      var p = multiQueue[idx];
+      showCard(p);
+      sfxReveal(p.rarityIdx);
+      if(p.lucky) sfxLucky();
+      idx++;
+      setTimeout(showNext, 650);
+    }
+    setTimeout(showNext, 260);
+  }
+
+  document.getElementById("rollBtn").addEventListener("click", doSingleRoll);
+  document.getElementById("roll10Btn").addEventListener("click", doTenRoll);
+  document.getElementById("rollBtn").textContent = "Roll — " + ROLL_COST + " 🪙";
+  document.getElementById("roll10Btn").textContent = "Roll x10 — " + fmt(ROLL10_COST) + " 🪙";
+
+  /* ---------- squad view ---------- */
+  function renderSquad(){
+    var arr = squadList();
+    document.getElementById("squadRating").textContent = squadRating();
+    var total = 0;
+    for(var k in state.collection) total += state.collection[k].count;
+    document.getElementById("squadCount").textContent = fmt(total);
+    document.getElementById("squadUnique").textContent = arr.length;
+    document.getElementById("squadLucky").textContent = fmt(state.luckyRollCount || 0);
+
+    var grid = document.getElementById("collectionGrid");
+    grid.innerHTML = "";
+    if(arr.length === 0){
+      grid.innerHTML = '<div class="empty-note" style="grid-column:1/-1">No players yet — go roll some cards!</div>';
+      return;
+    }
+    arr.forEach(function(c){
+      var r = RARITIES[c.rarityIdx];
+      var div = document.createElement("div");
+      div.className = "mini-card";
+      div.style.borderColor = r.hex;
+      div.innerHTML =
+        '<div class="cnt">x'+c.count+'</div>'+
+        '<div class="pos">'+c.pos+'</div>'+
+        '<div class="ovr" style="color:'+r.hex+'">'+c.ovr+'</div>'+
+        '<div class="name">'+c.name+'</div>';
+      grid.appendChild(div);
+    });
+  }
+
+  /* ---------- lucky spin view ---------- */
+  var SPIN_COOLDOWN_MS = 3*60*1000; // 3 minutes
+  var SPIN_SEGMENTS = [
+    { label:"+50", emoji:"🪙", weight:20, color:"#2e5c47", apply:function(){ state.coins+=50; return "Coins +50"; } },
+    { label:"Free Roll", emoji:"🎴", weight:15, color:"#1f4a63", apply:function(){ grantFreeRollToken(1); return "1 Free Roll Token"; } },
+    { label:"+150", emoji:"🪙", weight:18, color:"#2e5c47", apply:function(){ state.coins+=150; return "Coins +150"; } },
+    { label:"3x Luck", emoji:"🍀", weight:14, color:"#3a5c1f", apply:function(){ state.luckExpiresAt = Date.now() + 60000; return "3x rare+ odds for 60s"; } },
+    { label:"+25", emoji:"🪙", weight:15, color:"#2e5c47", apply:function(){ state.coins+=25; return "Coins +25"; } },
+    { label:"Rare+ Token", emoji:"💎", weight:10, color:"#4a2e63", apply:function(){ grantGuaranteedRareToken(); return "1 Guaranteed Rare+ roll"; } },
+    { label:"+300", emoji:"🪙", weight:6, color:"#2e5c47", apply:function(){ state.coins+=300; return "Coins +300"; } },
+    { label:"JACKPOT", emoji:"🏆", weight:2, color:"#7a5209", apply:function(){ return grantJackpot(); } }
+  ];
+  var pendingTokens = { freeRoll:0, guaranteedRare:0 };
+
+  function grantFreeRollToken(n){
+    // represented as bonus coins covering a roll, simplest reliable implementation
+    state.coins += ROLL_COST;
+  }
+  function grantGuaranteedRareToken(){
+    var idx = rand(2, RARITIES.length-1); // Rare..Mythic
+    var entry = pickFromPool(idx);
+    var p = { name: entry[0], pos: entry[1], rarityIdx: idx, ovr: rand(RARITIES[idx].min, RARITIES[idx].max) };
+    addToCollection(p);
+    if(idx >= PITY_RARITY_INDEX) state.pityCount = 0;
+    updatePity();
+  }
+  function grantJackpot(){
+    var idx = RARITIES.length-2; // Legendary guaranteed
+    var entry = pickFromPool(idx);
+    var p = { name: entry[0], pos: entry[1], rarityIdx: idx, ovr: rand(RARITIES[idx].min, RARITIES[idx].max) };
+    addToCollection(p);
+    state.pityCount = 0;
+    updatePity();
+    return "Legendary player " + p.name + " (" + p.ovr + " OVR) added to your squad!";
+  }
+
+  var wheelCanvas = document.getElementById("wheelCanvas");
+  var wctx = wheelCanvas.getContext("2d");
+  var wheelRotation = 0; // radians
+  function drawWheel(){
+    var n = SPIN_SEGMENTS.length;
+    var cx = 140, cy = 140, radius = 132;
+    wctx.clearRect(0,0,280,280);
+    wctx.save();
+    wctx.translate(cx,cy);
+    wctx.rotate(wheelRotation);
+    var seg = (Math.PI*2)/n;
+    for(var i=0;i<n;i++){
+      var start = i*seg;
+      wctx.beginPath();
+      wctx.moveTo(0,0);
+      wctx.arc(0,0,radius,start,start+seg);
+      wctx.closePath();
+      wctx.fillStyle = SPIN_SEGMENTS[i].color;
+      wctx.fill();
+      wctx.strokeStyle = "rgba(255,255,255,.15)";
+      wctx.stroke();
+
+      wctx.save();
+      wctx.rotate(start+seg/2);
+      wctx.textAlign = "right";
+      wctx.fillStyle = "#eafff2";
+      wctx.font = "bold 12px 'Segoe UI', sans-serif";
+      wctx.translate(radius-14, 0);
+      wctx.rotate(Math.PI/2);
+      wctx.textAlign = "center";
+      wctx.fillText(SPIN_SEGMENTS[i].emoji, 0, -4);
+      wctx.fillText(SPIN_SEGMENTS[i].label, 0, 12);
+      wctx.restore();
+    }
+    wctx.restore();
+
+    // hub
+    wctx.beginPath();
+    wctx.arc(cx,cy,20,0,Math.PI*2);
+    wctx.fillStyle = "#0d1815";
+    wctx.fill();
+    wctx.strokeStyle = "#f5b942";
+    wctx.lineWidth = 2;
+    wctx.stroke();
+  }
+  drawWheel();
+
+  function updateSpinUI(){
+    var remaining = SPIN_COOLDOWN_MS - (Date.now() - state.lastFreeSpinAt);
+    var canFreeSpin = remaining <= 0;
+    var btn = document.getElementById("spinBtn");
+    var cd = document.getElementById("cooldownText");
+    if(spinning){
+      btn.disabled = true;
+    } else if(canFreeSpin){
+      btn.disabled = false;
+      btn.textContent = "Spin (Free)";
+      cd.textContent = "Free spin ready!";
+    } else if(state.spinTokens > 0){
+      btn.disabled = false;
+      btn.textContent = "Spin (use token)";
+      var s = Math.ceil(remaining/1000);
+      var mm = Math.floor(s/60), ss = s%60;
+      cd.textContent = "Next free spin in " + mm + ":" + (ss<10?"0":"") + ss;
+    } else {
+      btn.disabled = true;
+      btn.textContent = "Spin (Free)";
+      var s2 = Math.ceil(remaining/1000);
+      var mm2 = Math.floor(s2/60), ss2 = s2%60;
+      cd.textContent = "Next free spin in " + mm2 + ":" + (ss2<10?"0":"") + ss2;
+    }
+  }
+
+  var spinning = false;
+  function spinWheel(){
+    if(spinning) return;
+    var remaining = SPIN_COOLDOWN_MS - (Date.now() - state.lastFreeSpinAt);
+    var useToken = remaining > 0;
+    if(useToken){
+      if(state.spinTokens <= 0) return;
+      state.spinTokens--;
+    } else {
+      state.lastFreeSpinAt = Date.now();
+    }
+    save();
+    renderHeader();
+    updateSpinUI();
+
+    spinning = true;
+    var n = SPIN_SEGMENTS.length;
+    var seg = (Math.PI*2)/n;
+    var winner = weightedPick(SPIN_SEGMENTS.map(function(s,i){ return {w:s.weight, i:i}; })).i;
+    // Pointer is fixed at top (angle = -PI/2 in unrotated wheel space).
+    // We want segment `winner`'s center to land at -PI/2 after rotation.
+    var winnerCenter = winner*seg + seg/2;
+    var targetRotation = -Math.PI/2 - winnerCenter;
+    var extraSpins = 6 + Math.floor(Math.random()*3); // 6-8 full turns
+    var startRotation = wheelRotation;
+    var normalizedTarget = ((targetRotation % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
+    var finalRotation = startRotation - (startRotation % (Math.PI*2)) + Math.PI*2*extraSpins + normalizedTarget;
+    // ensure forward motion even with modulo edge cases
+    if(finalRotation <= startRotation) finalRotation += Math.PI*2;
+
+    var duration = 4200;
+    var t0 = performance.now();
+    var lastTick = 0;
+    function frame(now){
+      var t = Math.min(1, (now-t0)/duration);
+      var eased = 1 - Math.pow(1-t, 4);
+      wheelRotation = startRotation + (finalRotation-startRotation)*eased;
+      drawWheel();
+      var tickZone = Math.floor((wheelRotation)/(seg));
+      if(tickZone !== lastTick){ sfxSpinTick(); lastTick = tickZone; }
+      if(t < 1){
+        requestAnimationFrame(frame);
+      } else {
+        wheelRotation = finalRotation;
+        drawWheel();
+        finishSpin(SPIN_SEGMENTS[winner]);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function finishSpin(segment){
+    var desc = segment.apply();
+    save();
+    renderHeader();
+    updatePity();
+    spinning = false;
+    updateSpinUI();
+    var isJackpot = segment.label === "JACKPOT";
+    if(isJackpot) sfxJackpot(); else sfxReveal(2);
+    showReward(isJackpot ? "🏆" : segment.emoji, isJackpot ? "JACKPOT!" : segment.label, desc);
+  }
+
+  document.getElementById("spinBtn").addEventListener("click", spinWheel);
+
+  /* ---------- reward modal ---------- */
+  var rewardModal = document.getElementById("rewardModal");
+  function showReward(emoji, title, desc){
+    document.getElementById("rewardEmoji").textContent = emoji;
+    document.getElementById("rewardTitle").textContent = title;
+    document.getElementById("rewardDesc").textContent = desc;
+    rewardModal.classList.add("show");
+  }
+  document.getElementById("rewardCloseBtn").addEventListener("click", function(){
+    rewardModal.classList.remove("show");
+  });
+
+  /* ---------- match view ---------- */
+  var matchInProgress = false;
+  var autoMatchActive = false;
+  var autoMatchStats = { played:0, wins:0, draws:0, losses:0 };
+  function updateAutoMatchStatsUI(){
+    var el = document.getElementById("autoMatchStats");
+    if(!autoMatchStats.played){ el.textContent = ""; return; }
+    el.textContent = "Auto session: " + autoMatchStats.played + " played — " +
+      autoMatchStats.wins + "W " + autoMatchStats.draws + "D " + autoMatchStats.losses + "L";
+  }
+  function renderMatch(){
+    document.getElementById("myRating").textContent = squadRating();
+    if(state.opponentRating == null){
+      newOpponent();
+    } else {
+      document.getElementById("oppRating").textContent = state.opponentRating;
+    }
+  }
+  function newOpponent(){
+    var mine = squadRating();
+    var variance = rand(-8,10);
+    state.opponentRating = Math.max(35, mine + variance);
+    save();
+    document.getElementById("oppRating").textContent = state.opponentRating;
+    document.getElementById("scoreboard").textContent = "0 – 0";
+    document.getElementById("matchLog").innerHTML = "";
+    document.getElementById("matchResult").textContent = "";
+  }
+  document.getElementById("newOppBtn").addEventListener("click", function(){
+    if(matchInProgress) return;
+    newOpponent();
+  });
+
+  function playMatch(){
+    if(matchInProgress) return;
+    matchInProgress = true;
+    document.getElementById("playMatchBtn").disabled = true;
+    document.getElementById("newOppBtn").disabled = true;
+    document.getElementById("scoreboard").textContent = "0 – 0";
+    var log = document.getElementById("matchLog");
+    log.innerHTML = "";
+    document.getElementById("matchResult").textContent = "";
+
+    var mine = squadRating();
+    var opp = state.opponentRating;
+    var diff = mine - opp; // -inf..+inf, roughly -50..50
+    var myProb = 0.5 + diff/160; // bias goal probability
+    myProb = Math.max(0.15, Math.min(0.85, myProb));
+
+    var minute = 0;
+    var myScore = 0, oppScore = 0;
+    var events = [];
+    // simulate 90 minutes in ~9 ticks of 10 minutes each, each tick has a chance of a goal
+    var ticks = 9;
+    var i = 0;
+    function tick(){
+      minute += 10;
+      var goalChance = 0.32; // chance *something* happens this tick
+      if(Math.random() < goalChance){
+        var scorer = Math.random() < myProb ? "me" : "opp";
+        if(scorer === "me"){ myScore++; } else { oppScore++; }
+        var line = document.createElement("div");
+        line.className = "goal";
+        line.textContent = minute+"' ⚽ GOAL! " + (scorer==="me" ? "Your squad scores!" : "Opponent scores.");
+        log.insertBefore(line, log.firstChild);
+        sfxGoal();
+        document.getElementById("scoreboard").textContent = myScore+" – "+oppScore;
+      } else {
+        var flavor = ["Chance saved by the keeper.","Shot goes just wide.","Good tackle breaks it up.","Half chance, no shot.","Corner comes to nothing."];
+        var line2 = document.createElement("div");
+        line2.textContent = minute+"' " + flavor[Math.floor(Math.random()*flavor.length)];
+        log.insertBefore(line2, log.firstChild);
+      }
+      i++;
+      if(i < ticks){
+        setTimeout(tick, 380);
+      } else {
+        finishMatch(myScore, oppScore);
+      }
+    }
+    setTimeout(tick, 300);
+  }
+
+  function finishMatch(myScore, oppScore){
+    sfxWhistle();
+    var resultEl = document.getElementById("matchResult");
+    var reward = 30;
+    var text;
+    if(myScore > oppScore){ text = "Victory! " ; reward = 150; }
+    else if(myScore === oppScore){ text = "Draw. "; reward = 75; }
+    else { text = "Defeat. "; reward = 30; }
+    state.coins += reward;
+    var gotToken = Math.random() < (myScore>oppScore ? 0.35 : 0.12);
+    if(gotToken) state.spinTokens++;
+    resultEl.textContent = text + "+" + reward + " 🪙" + (gotToken ? "  +1 🎡 spin token" : "");
+    save();
+    renderHeader();
+    matchInProgress = false;
+    document.getElementById("playMatchBtn").disabled = autoMatchActive;
+    document.getElementById("newOppBtn").disabled = autoMatchActive;
+    state.opponentRating = null; // force fresh opponent next time
+
+    autoMatchStats.played++;
+    if(myScore > oppScore) autoMatchStats.wins++;
+    else if(myScore === oppScore) autoMatchStats.draws++;
+    else autoMatchStats.losses++;
+    updateAutoMatchStatsUI();
+
+    if(autoMatchActive){
+      setTimeout(autoMatchStep, 1400);
+    }
+  }
+
+  document.getElementById("playMatchBtn").addEventListener("click", playMatch);
+
+  function autoMatchStep(){
+    if(!autoMatchActive) return;
+    newOpponent();
+    playMatch();
+  }
+  document.getElementById("autoMatchBtn").addEventListener("click", function(){
+    autoMatchActive = !autoMatchActive;
+    var btn = document.getElementById("autoMatchBtn");
+    if(autoMatchActive){
+      btn.textContent = "■ Stop Auto Match";
+      document.getElementById("playMatchBtn").disabled = true;
+      document.getElementById("newOppBtn").disabled = true;
+      if(!matchInProgress) autoMatchStep();
+    } else {
+      btn.textContent = "▶ Auto Match";
+      if(!matchInProgress){
+        document.getElementById("playMatchBtn").disabled = false;
+        document.getElementById("newOppBtn").disabled = false;
+      }
+    }
+  });
+
+  /* ---------- reset ---------- */
+  document.getElementById("resetLink").addEventListener("click", function(e){
+    e.preventDefault();
+    if(confirm("Reset all progress? This cannot be undone.")){
+      state = defaultState();
+      save();
+      renderHeader();
+      updatePity();
+      renderSquad();
+      renderMatch();
+      document.getElementById("matchLog").innerHTML = "";
+      document.getElementById("matchResult").textContent = "";
+      document.getElementById("scoreboard").textContent = "0 – 0";
+    }
+  });
+
+  /* ---------- init ---------- */
+  renderHeader();
+  updatePity();
+  renderSquad();
+
+  setInterval(function(){
+    renderHeader();
+    if(document.getElementById("view-spin").classList.contains("active")) updateSpinUI();
+  }, 1000);
+
+  // unlock audio on first user gesture
+  document.addEventListener("pointerdown", function unlock(){
+    ac();
+    document.removeEventListener("pointerdown", unlock);
+  }, { once:true });
+
+})();
+</script>
+</body>
+</html>

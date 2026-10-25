@@ -1,0 +1,2630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Among Us</title>
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  background: #06070b;
+  color: #eef2f7;
+  font-family: 'Trebuchet MS', 'Segoe UI', Verdana, sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+#app { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+
+.screen {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+.hidden { display: none !important; }
+.dim { color: #9aa4b2; font-size: 13px; }
+
+.title {
+  font-size: 60px; letter-spacing: 8px; margin: 0 0 4px 0;
+  color: #d0433a; text-shadow: 4px 4px 0 #000;
+}
+.subtitle { color: #9aa4b2; margin: 0 0 22px 0; }
+
+/* ---------------- MENU ---------------- */
+
+.menu-panel {
+  background: #171b24; border: 2px solid #2a3040; border-radius: 14px;
+  padding: 20px 28px; width: 400px; display: flex; flex-direction: column; gap: 4px;
+}
+
+.field-label { font-size: 13px; color: #9aa4b2; margin-top: 12px; margin-bottom: 4px; }
+
+#name-input {
+  background: #0d1017; border: 2px solid #2a3040; border-radius: 8px;
+  color: #eef2f7; padding: 8px 10px; font-size: 15px;
+}
+
+.color-picker { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; }
+.color-swatch {
+  width: 100%; aspect-ratio: 1; border-radius: 50%;
+  border: 3px solid transparent; cursor: pointer;
+}
+.color-swatch.selected { border-color: #fff; }
+.color-swatch.taken { opacity: 0.25; cursor: not-allowed; }
+
+.role-picker { display: flex; gap: 6px; }
+.role-btn {
+  flex: 1; background: #0d1017; border: 2px solid #2a3040; color: #eef2f7;
+  padding: 8px 4px; border-radius: 8px; cursor: pointer; font-size: 13px;
+}
+.role-btn.selected { border-color: #d0433a; background: #2a1416; color: #ff6b60; }
+
+input[type=range] { width: 100%; }
+
+.primary-btn {
+  margin-top: 18px; background: #d0433a; border: none; color: white;
+  font-weight: bold; padding: 12px; border-radius: 10px; font-size: 16px;
+  cursor: pointer; letter-spacing: 1px;
+}
+.primary-btn:hover { background: #e15249; }
+
+.small-btn {
+  background: #2a3040; border: 1px solid #3d4457; color: #eef2f7;
+  padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+}
+.small-btn:hover { background: #3d4457; }
+
+.help-text { margin-top: 20px; color: #62697a; font-size: 12px; text-align: center; line-height: 1.7; }
+
+/* ---------------- ROLE REVEAL ---------------- */
+
+#reveal-role {
+  font-size: 68px; font-weight: bold; letter-spacing: 6px;
+  text-shadow: 4px 4px 0 #000; margin-bottom: 6px;
+}
+#reveal-role.crew { color: #6db8ff; }
+#reveal-role.imp { color: #ff3b30; }
+#reveal-sub { color: #9aa4b2; font-size: 17px; margin-bottom: 26px; }
+
+.reveal-crew { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; max-width: 720px; }
+.reveal-crew .rc { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: #9aa4b2; }
+.reveal-crew .rc i { width: 26px; height: 30px; border-radius: 12px 12px 9px 9px; display: block; border: 2px solid rgba(0,0,0,.5); }
+
+/* ---------------- GAME ---------------- */
+
+#game-screen { padding: 0; }
+
+#canvas-wrap { position: relative; width: 1024px; height: 640px; }
+
+#game-canvas {
+  background: #04050a; border-radius: 10px; border: 2px solid #222838; display: block;
+}
+
+#canvas-wrap.hit-flash::after {
+  content: ''; position: absolute; inset: 0; border-radius: 10px;
+  background: radial-gradient(circle, rgba(208,67,58,0) 35%, rgba(208,67,58,.65) 100%);
+  animation: hitFlashFade .5s ease-out forwards; pointer-events: none;
+}
+@keyframes hitFlashFade { from { opacity: 1; } to { opacity: 0; } }
+
+/* task list */
+#task-panel {
+  position: absolute; top: 12px; left: 12px; width: 240px;
+  background: rgba(8,10,16,.72); border: 1px solid #2a3040; border-radius: 10px;
+  padding: 8px 10px; font-size: 12px; pointer-events: none;
+}
+.panel-title { color: #9aa4b2; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+#task-list { list-style: none; margin: 0; padding: 0; }
+#task-list li { padding: 2px 0; color: #ffd34d; line-height: 1.35; }
+#task-list li.done { color: #52d17a; text-decoration: line-through; opacity: .75; }
+#task-list li .loc { color: #6f7789; }
+#comms-down { color: #ff6b60; font-weight: bold; }
+
+#total-progress { position: absolute; top: 12px; left: 268px; width: 260px; }
+.bar { width: 100%; height: 12px; background: rgba(8,10,16,.8); border: 1px solid #2a3040; border-radius: 6px; overflow: hidden; }
+.bar-fill { height: 100%; width: 0%; background: #52d17a; transition: width .25s linear; }
+
+/* sabotage banner */
+#sabotage-banner {
+  position: absolute; top: 44px; left: 50%; transform: translateX(-50%);
+  background: rgba(60,10,10,.92); border: 2px solid #d0433a; color: #ffb0a8;
+  padding: 8px 18px; border-radius: 10px; font-weight: bold; letter-spacing: 1px;
+  display: flex; gap: 12px; align-items: center;
+}
+#sabotage-timer { color: #fff; }
+
+#toast {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,10,16,.92); border: 1px solid #3d4457;
+  padding: 8px 16px; border-radius: 8px; font-size: 14px; transition: opacity .3s;
+}
+
+/* action buttons */
+#action-buttons {
+  position: absolute; right: 16px; bottom: 16px;
+  display: flex; align-items: flex-end; gap: 10px;
+}
+.act-btn {
+  position: relative; width: 68px; height: 68px; border-radius: 50%;
+  background: #1b2130; border: 3px solid #39415a; color: #cdd5e4;
+  cursor: pointer; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 1px; font-size: 10px;
+}
+.act-btn .act-glyph { font-size: 22px; line-height: 1; }
+.act-btn:hover:not(:disabled) { background: #263047; }
+.act-btn:disabled { opacity: .35; cursor: not-allowed; }
+.act-btn.use { width: 86px; height: 86px; border-color: #4e83c4; color: #bfe0ff; }
+.act-btn.kill { border-color: #8f2a24; background: #35161a; color: #ff8b80; }
+.act-btn.kill:hover:not(:disabled) { background: #4a1c20; }
+#kill-cd {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.62); border-radius: 50%; font-size: 22px; font-weight: bold; color: #fff;
+}
+
+/* ---------------- MODALS ---------------- */
+
+.modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,.66);
+  display: flex; align-items: center; justify-content: center; z-index: 50;
+}
+.modal-box {
+  background: #171b24; border: 2px solid #2a3040; border-radius: 14px;
+  padding: 20px 26px; width: 460px; text-align: center;
+}
+.modal-box.wide { width: 660px; }
+.modal-box h2 { margin: 0 0 6px 0; }
+.modal-box p { margin: 0 0 12px 0; color: #9aa4b2; font-size: 13px; }
+
+#task-body { margin: 10px 0 16px 0; min-height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+
+/* minigame pieces */
+.mg-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.mg-bar { width: 320px; height: 24px; background: #0d1017; border: 1px solid #2a3040; border-radius: 6px; overflow: hidden; }
+.mg-bar > div { height: 100%; width: 0%; background: #52d17a; }
+
+.mg-btn {
+  width: 56px; height: 56px; border-radius: 10px; border: 3px solid rgba(255,255,255,.2);
+  cursor: pointer; opacity: .55; display: flex; align-items: center; justify-content: center;
+  font-weight: bold; color: #0d1017; font-size: 18px;
+}
+.mg-btn.lit { opacity: 1; border-color: #fff; }
+.mg-btn.done { opacity: .28; cursor: default; }
+
+.mg-switch {
+  width: 42px; height: 66px; border-radius: 8px; background: #2a3040;
+  border: 2px solid #3d4457; cursor: pointer; position: relative;
+}
+.mg-switch::after {
+  content: ''; position: absolute; left: 5px; right: 5px; height: 24px;
+  background: #d0433a; border-radius: 5px; bottom: 5px; transition: all .12s;
+}
+.mg-switch.on::after { background: #52d17a; bottom: 33px; }
+
+.mg-wire-canvas { background: #0d1017; border: 1px solid #2a3040; border-radius: 8px; cursor: pointer; }
+
+.mg-key {
+  width: 54px; height: 44px; border-radius: 8px; background: #2a3040;
+  border: 1px solid #3d4457; color: #eef2f7; font-size: 18px; cursor: pointer;
+}
+.mg-key:hover { background: #3d4457; }
+.mg-code { font-size: 26px; letter-spacing: 8px; color: #ffd34d; font-weight: bold; }
+.mg-entry { font-size: 24px; letter-spacing: 8px; color: #eef2f7; min-height: 30px; }
+
+.mg-target {
+  position: absolute; width: 34px; height: 34px; border-radius: 50%;
+  background: #d0433a; border: 2px solid #ff8b80; cursor: pointer;
+}
+.mg-field { position: relative; width: 380px; height: 190px; background: #0d1017; border: 1px solid #2a3040; border-radius: 8px; overflow: hidden; }
+
+.mg-slider { width: 320px; }
+.mg-hint { font-size: 12px; color: #6f7789; }
+
+/* sabotage options */
+#sabotage-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.sab-opt {
+  background: #0d1017; border: 2px solid #2a3040; border-radius: 10px;
+  padding: 12px 8px; cursor: pointer; font-size: 13px; color: #eef2f7;
+}
+.sab-opt:hover:not(.disabled) { border-color: #d0433a; color: #ff8b80; }
+.sab-opt.disabled { opacity: .35; cursor: not-allowed; }
+.sab-opt small { display: block; color: #6f7789; font-size: 11px; margin-top: 3px; }
+
+/* voting */
+.voter-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; max-height: 340px; overflow-y: auto; }
+.voter-card {
+  background: #0d1017; border: 2px solid #2a3040; border-radius: 10px;
+  padding: 9px 6px; cursor: pointer; text-align: center; font-size: 13px;
+}
+.voter-card:hover:not(.dead) { border-color: #d0433a; }
+.voter-card.voted { border-color: #52d17a; }
+.voter-card.dead { opacity: .32; cursor: not-allowed; }
+.voter-card .dot { width: 22px; height: 26px; border-radius: 10px 10px 8px 8px; margin: 0 auto 6px auto; border: 2px solid rgba(0,0,0,.5); }
+.voter-card .tally { font-size: 11px; color: #9aa4b2; min-height: 14px; }
+
+/* ejection */
+#eject-canvas { background: transparent; }
+#eject-text { font-size: 26px; margin-top: 10px; }
+#eject-remain { margin-top: 8px; }
+
+/* map overlay */
+#map-overlay {
+  position: fixed; inset: 0; background: rgba(3,4,8,.88);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 60;
+}
+#map-canvas { border: 2px solid #2a3040; border-radius: 10px; background: #06080f; }
+</style>
+</head>
+<body>
+<a href="../../index.html" title="Back to Arcade" style="position:fixed;top:10px;left:10px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:rgba(0,0,0,0.6);color:#fff;font:14px/1 system-ui,-apple-system,sans-serif;border-radius:50%;text-decoration:none;opacity:0.4;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">&larr;</a>
+
+<div id="app">
+
+  <!-- ================= MAIN MENU ================= -->
+  <div id="menu-screen" class="screen">
+    <h1 class="title">AMONG US</h1>
+    <p class="subtitle">a fan-made tribute &mdash; The Skeld</p>
+
+    <div class="menu-panel">
+      <label class="field-label">Your name</label>
+      <input id="name-input" type="text" maxlength="10" value="You">
+
+      <label class="field-label">Your color</label>
+      <div id="color-picker" class="color-picker"></div>
+
+      <label class="field-label">Choose your role</label>
+      <div id="role-picker" class="role-picker">
+        <button class="role-btn selected" data-role="random">Random</button>
+        <button class="role-btn" data-role="crewmate">Crewmate</button>
+        <button class="role-btn" data-role="impostor">Impostor</button>
+      </div>
+
+      <label class="field-label">Players: <span id="player-count-label">10</span></label>
+      <input id="player-count" type="range" min="5" max="15" value="10">
+
+      <label class="field-label">Impostors: <span id="impostor-count-label">2</span></label>
+      <input id="impostor-count" type="range" min="1" max="3" value="2">
+
+      <button id="start-btn" class="primary-btn">Start Game</button>
+    </div>
+
+    <div class="help-text">
+      <b>Move</b> WASD / Arrows &nbsp;·&nbsp; <b>Use</b> E &nbsp;·&nbsp; <b>Report</b> R &nbsp;·&nbsp; <b>Map</b> Tab<br>
+      <b>Impostor</b> &mdash; Kill Q &nbsp;·&nbsp; Vent V &nbsp;·&nbsp; Sabotage G
+    </div>
+  </div>
+
+  <!-- ================= ROLE REVEAL ================= -->
+  <div id="reveal-screen" class="screen hidden">
+    <div id="reveal-role">CREWMATE</div>
+    <div id="reveal-sub"></div>
+    <div id="reveal-crew" class="reveal-crew"></div>
+  </div>
+
+  <!-- ================= GAME ================= -->
+  <div id="game-screen" class="screen hidden">
+    <div id="canvas-wrap">
+      <canvas id="game-canvas" width="1024" height="640"></canvas>
+
+      <!-- task list (crewmate) -->
+      <div id="task-panel">
+        <div class="panel-title">Tasks</div>
+        <ul id="task-list"></ul>
+        <div id="comms-down" class="hidden">Comms Sabotaged</div>
+      </div>
+
+      <!-- total task progress -->
+      <div id="total-progress">
+        <div class="bar"><div id="total-progress-bar" class="bar-fill"></div></div>
+      </div>
+
+      <!-- sabotage alert -->
+      <div id="sabotage-banner" class="hidden">
+        <span id="sabotage-text"></span>
+        <span id="sabotage-timer"></span>
+      </div>
+
+      <div id="toast" class="hidden"></div>
+
+      <!-- action buttons -->
+      <div id="action-buttons">
+        <button id="sabotage-btn" class="act-btn impostor-only hidden" title="Sabotage (G)">
+          <span class="act-glyph">&#9888;</span><span class="act-label">Sabotage</span>
+        </button>
+        <button id="vent-btn" class="act-btn impostor-only hidden" title="Vent (V)">
+          <span class="act-glyph">&#9723;</span><span class="act-label">Vent</span>
+        </button>
+        <button id="report-btn" class="act-btn" title="Report (R)">
+          <span class="act-glyph">&#9873;</span><span class="act-label">Report</span>
+        </button>
+        <button id="kill-btn" class="act-btn kill impostor-only hidden" title="Kill (Q)">
+          <span class="act-glyph">&#128481;</span><span class="act-label">Kill</span>
+          <span id="kill-cd" class="kill-cd hidden">0</span>
+        </button>
+        <button id="use-btn" class="act-btn use" title="Use (E)">
+          <span class="act-glyph">&#9881;</span><span class="act-label">Use</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TASK / MINIGAME MODAL ================= -->
+  <div id="task-modal" class="modal hidden">
+    <div class="modal-box">
+      <h2 id="task-title">Task</h2>
+      <p id="task-instructions"></p>
+      <div id="task-body"></div>
+      <button id="task-close-btn" class="small-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- ================= SABOTAGE MENU ================= -->
+  <div id="sabotage-modal" class="modal hidden">
+    <div class="modal-box">
+      <h2>Sabotage</h2>
+      <p class="dim">Choose a system to disrupt.</p>
+      <div id="sabotage-options"></div>
+      <button id="sabotage-close-btn" class="small-btn">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ================= MEETING ================= -->
+  <div id="meeting-modal" class="modal hidden">
+    <div class="modal-box wide">
+      <h2 id="meeting-title">Emergency Meeting</h2>
+      <p id="meeting-subtitle"></p>
+      <div id="meeting-timer" class="dim"></div>
+      <div id="voter-list" class="voter-list"></div>
+      <button id="skip-vote-btn" class="small-btn">Skip Vote</button>
+    </div>
+  </div>
+
+  <!-- ================= EJECTION ================= -->
+  <div id="eject-screen" class="screen hidden">
+    <canvas id="eject-canvas" width="640" height="260"></canvas>
+    <div id="eject-text"></div>
+    <div id="eject-remain" class="dim"></div>
+  </div>
+
+  <!-- ================= GAME OVER ================= -->
+  <div id="gameover-screen" class="screen hidden">
+    <h1 id="gameover-title" class="title">GAME OVER</h1>
+    <p id="gameover-subtitle" class="subtitle"></p>
+    <div id="gameover-crew" class="reveal-crew"></div>
+    <button id="restart-btn" class="primary-btn">Back to Menu</button>
+  </div>
+
+  <!-- ================= MAP OVERLAY ================= -->
+  <div id="map-overlay" class="hidden">
+    <canvas id="map-canvas" width="900" height="560"></canvas>
+    <div class="dim">Tab to close</div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+/* ======================================================================
+   AMONG US (fan tribute) — The Skeld
+   Layout, vent topology, task names/locations and sabotages follow the
+   real game's design; all code and art here are original.
+   ====================================================================== */
+
+const VIEW_W = 1024, VIEW_H = 640;
+const WORLD_W = 2600, WORLD_H = 1560;
+
+const PLAYER_R = 15;
+const PLAYER_SPEED = 210;
+const GHOST_SPEED_MULT = 1.35;
+
+const KILL_RANGE = 55;
+const USE_RANGE = 62;
+const REPORT_RANGE = 70;
+const VENT_RANGE = 40;
+const WITNESS_RADIUS = 220;
+const KILL_OPPORTUNITY_RADIUS = 420;
+
+const KILL_COOLDOWN = 30;
+const SABOTAGE_COOLDOWN = 25;
+const CRITICAL_TIME = 30;     // reactor / O2 countdown (real game: 30s)
+const DOOR_CLOSED_TIME = 10;  // real game: doors reopen after 10s
+const DISCUSSION_TIME = 15;
+const VOTING_TIME = 30;
+
+const VISION_NORMAL = 300;
+const VISION_LIGHTS_OUT = 120;
+const VISION_IMPOSTOR = 360;
+
+// The 18 official colors, in the game's color-ID order.
+const PALETTE = [
+  { name: 'Red',    color: '#c51111' }, { name: 'Blue',   color: '#132ed1' },
+  { name: 'Green',  color: '#117f2d' }, { name: 'Pink',   color: '#ed54ba' },
+  { name: 'Orange', color: '#ef7d0d' }, { name: 'Yellow', color: '#f5f557' },
+  { name: 'Black',  color: '#3f474e' }, { name: 'White',  color: '#d6e0f0' },
+  { name: 'Purple', color: '#6b2fbb' }, { name: 'Brown',  color: '#71491e' },
+  { name: 'Cyan',   color: '#38fedc' }, { name: 'Lime',   color: '#50ef39' },
+  { name: 'Maroon', color: '#5e2615' }, { name: 'Rose',   color: '#ecc0d3' },
+  { name: 'Banana', color: '#f5f5be' }, { name: 'Gray',   color: '#8394bf' },
+  { name: 'Tan',    color: '#928776' }, { name: 'Coral',  color: '#ec7578' },
+];
+
+/* ----------------------------- MAP ----------------------------------- */
+
+const ROOMS = [
+  { name: 'Upper Engine',   x: 140,  y: 200,  w: 300, h: 240 },
+  { name: 'Reactor',        x: 40,   y: 560,  w: 220, h: 340 },
+  { name: 'Lower Engine',   x: 140,  y: 1020, w: 300, h: 240 },
+  { name: 'Security',       x: 420,  y: 660,  w: 200, h: 180 },
+  { name: 'MedBay',         x: 560,  y: 380,  w: 280, h: 200 },
+  { name: 'Electrical',     x: 560,  y: 1020, w: 300, h: 240 },
+  { name: 'Cafeteria',      x: 1000, y: 160,  w: 420, h: 360 },
+  { name: 'Storage',        x: 960,  y: 960,  w: 340, h: 340 },
+  { name: 'Admin',          x: 1400, y: 980,  w: 280, h: 220 },
+  { name: 'Weapons',        x: 1560, y: 180,  w: 300, h: 220 },
+  { name: 'O2',             x: 1600, y: 520,  w: 240, h: 180 },
+  { name: 'Navigation',     x: 2180, y: 560,  w: 260, h: 240 },
+  { name: 'Shields',        x: 1700, y: 1080, w: 300, h: 220 },
+  { name: 'Communications', x: 1150, y: 1330, w: 280, h: 150 },
+];
+
+const CORRIDORS = [
+  { x: 440,  y: 300,  w: 560, h: 80  }, // upper engine <-> cafeteria
+  { x: 300,  y: 440,  w: 80,  h: 580 }, // left vertical spine
+  { x: 260,  y: 680,  w: 40,  h: 80  }, // reactor stub
+  { x: 380,  y: 700,  w: 40,  h: 80  }, // security stub
+  { x: 440,  y: 1100, w: 120, h: 80  }, // lower engine <-> electrical
+  { x: 860,  y: 1100, w: 100, h: 80  }, // electrical <-> storage
+  { x: 1100, y: 520,  w: 80,  h: 440 }, // cafeteria <-> storage
+  { x: 1420, y: 240,  w: 140, h: 80  }, // cafeteria <-> weapons
+  { x: 1340, y: 520,  w: 80,  h: 460 }, // cafeteria <-> admin
+  { x: 1300, y: 1040, w: 100, h: 80  }, // storage <-> admin
+  { x: 1180, y: 1300, w: 80,  h: 30  }, // storage <-> communications
+  { x: 1900, y: 300,  w: 80,  h: 880 }, // right hallway
+  { x: 1860, y: 300,  w: 40,  h: 80  }, // weapons stub
+  { x: 1840, y: 560,  w: 60,  h: 80  }, // o2 stub
+  { x: 1980, y: 620,  w: 200, h: 80  }, // hallway <-> navigation
+  { x: 1430, y: 1380, w: 330, h: 60  }, // communications <-> shields
+  { x: 1700, y: 1300, w: 60,  h: 140 }, // riser up into shields
+];
+
+// every rect a player may stand on
+const WALK = [];
+ROOMS.forEach(r => WALK.push({ x: r.x, y: r.y, w: r.w, h: r.h, room: r.name }));
+CORRIDORS.forEach(c => WALK.push({ x: c.x, y: c.y, w: c.w, h: c.h, room: null }));
+
+function roomByName(n) { return ROOMS.find(r => r.name === n); }
+// a point at fractional position (fx, fy) inside a room
+function pt(roomName, fx, fy) {
+  const r = roomByName(roomName);
+  return { x: r.x + r.w * fx, y: r.y + r.h * fy, room: roomName };
+}
+
+/* Vents — 14 of them, wired into the six groups the real Skeld uses. */
+const VENTS = [
+  { id: 'v_upperEngine', room: 'Upper Engine',   x: 200,  y: 405,  group: 'A' },
+  { id: 'v_reactorN',    room: 'Reactor',        x: 150,  y: 600,  group: 'A' },
+  { id: 'v_reactorS',    room: 'Reactor',        x: 150,  y: 860,  group: 'B' },
+  { id: 'v_lowerEngine', room: 'Lower Engine',   x: 200,  y: 1060, group: 'B' },
+  { id: 'v_electrical',  room: 'Electrical',     x: 610,  y: 1200, group: 'C' },
+  { id: 'v_medbay',      room: 'MedBay',         x: 600,  y: 540,  group: 'C' },
+  { id: 'v_security',    room: 'Security',       x: 455,  y: 800,  group: 'C' },
+  { id: 'v_admin',       room: 'Admin',          x: 1440, y: 1160, group: 'D' },
+  { id: 'v_cafeteria',   room: 'Cafeteria',      x: 1040, y: 200,  group: 'D' },
+  { id: 'v_hallway',     room: 'Hallway',        x: 1940, y: 980,  group: 'D' },
+  { id: 'v_navN',        room: 'Navigation',     x: 2215, y: 600,  group: 'E' },
+  { id: 'v_weapons',     room: 'Weapons',        x: 1600, y: 220,  group: 'E' },
+  { id: 'v_navS',        room: 'Navigation',     x: 2215, y: 762,  group: 'F' },
+  { id: 'v_shields',     room: 'Shields',        x: 1740, y: 1262, group: 'F' },
+];
+
+const EMERGENCY_BUTTON = pt('Cafeteria', 0.5, 0.5);
+const ADMIN_TABLE = pt('Admin', 0.5, 0.62);
+
+/* Sabotage fix stations */
+const FIX_POINTS = {
+  reactorA: { ...pt('Reactor', 0.32, 0.2),  label: 'Hand Scanner' },
+  reactorB: { ...pt('Reactor', 0.32, 0.82), label: 'Hand Scanner' },
+  o2A:      { ...pt('O2', 0.28, 0.6),       label: 'Keypad' },
+  o2B:      { ...pt('Admin', 0.22, 0.3),    label: 'Keypad' },
+  lights:   { ...pt('Electrical', 0.78, 0.35), label: 'Breaker Panel' },
+  comms:    { ...pt('Communications', 0.75, 0.5), label: 'Radio' },
+};
+
+/* ----------------------------- TASKS --------------------------------- */
+/* The 18 unique Skeld tasks, at their real rooms. `game` picks a minigame. */
+
+const TASK_DEFS = [
+  // ---- COMMON ----
+  { id: 'swipeCard', name: 'Swipe Card', type: 'common',
+    steps: [{ p: pt('Admin', 0.75, 0.35), game: 'swipe' }] },
+  { id: 'fixWiring', name: 'Fix Wiring', type: 'common',
+    steps: [
+      { p: pt('Electrical', 0.2, 0.25), game: 'wires' },
+      { p: pt('Storage', 0.2, 0.2),     game: 'wires' },
+      { p: pt('Cafeteria', 0.12, 0.8),  game: 'wires' },
+    ] },
+
+  // ---- SHORT ----
+  { id: 'calibrateDistributor', name: 'Calibrate Distributor', type: 'short',
+    steps: [{ p: pt('Electrical', 0.5, 0.75), game: 'timing' }] },
+  { id: 'chartCourse', name: 'Chart Course', type: 'short',
+    steps: [{ p: pt('Navigation', 0.3, 0.3), game: 'sequence' }] },
+  { id: 'cleanO2Filter', name: 'Clean O2 Filter', type: 'short',
+    steps: [{ p: pt('O2', 0.72, 0.35), game: 'targets' }] },
+  { id: 'stabilizeSteering', name: 'Stabilize Steering', type: 'short',
+    steps: [{ p: pt('Navigation', 0.72, 0.65), game: 'slider' }] },
+  { id: 'unlockManifolds', name: 'Unlock Manifolds', type: 'short',
+    steps: [{ p: pt('Reactor', 0.72, 0.5), game: 'sequence' }] },
+  { id: 'primeShields', name: 'Prime Shields', type: 'short', visual: true,
+    steps: [{ p: pt('Shields', 0.5, 0.5), game: 'targets' }] },
+  { id: 'uploadData', name: 'Upload Data', type: 'short',
+    steps: [
+      { p: pt('Weapons', 0.28, 0.72), game: 'hold' },
+      { p: pt('Admin', 0.5, 0.2),     game: 'hold' },
+    ] },
+  { id: 'divertPower', name: 'Divert Power', type: 'short',
+    steps: [
+      { p: pt('Electrical', 0.35, 0.5), game: 'toggles' },
+      { p: pt('Shields', 0.2, 0.25),    game: 'hold' },
+    ] },
+
+  // ---- LONG ----
+  { id: 'alignEngineOutput', name: 'Align Engine Output', type: 'long',
+    steps: [
+      { p: pt('Upper Engine', 0.5, 0.6), game: 'slider' },
+      { p: pt('Lower Engine', 0.5, 0.6), game: 'slider' },
+    ] },
+  { id: 'clearAsteroids', name: 'Clear Asteroids', type: 'long', visual: true,
+    steps: [{ p: pt('Weapons', 0.68, 0.35), game: 'targets' }] },
+  { id: 'emptyChute', name: 'Empty Chute', type: 'long', visual: true,
+    steps: [
+      { p: pt('O2', 0.5, 0.8),      game: 'hold' },
+      { p: pt('Storage', 0.78, 0.5), game: 'hold' },
+    ] },
+  { id: 'emptyGarbage', name: 'Empty Garbage', type: 'long', visual: true,
+    steps: [
+      { p: pt('Cafeteria', 0.85, 0.78), game: 'hold' },
+      { p: pt('Storage', 0.5, 0.82),    game: 'hold' },
+    ] },
+  { id: 'fuelEngines', name: 'Fuel Engines', type: 'long',
+    steps: [
+      { p: pt('Storage', 0.3, 0.55),      game: 'hold' },
+      { p: pt('Upper Engine', 0.22, 0.3), game: 'hold' },
+      { p: pt('Lower Engine', 0.22, 0.3), game: 'hold' },
+    ] },
+  { id: 'inspectSample', name: 'Inspect Sample', type: 'long',
+    steps: [{ p: pt('MedBay', 0.28, 0.3), game: 'sample' }] },
+  { id: 'startReactor', name: 'Start Reactor', type: 'long',
+    steps: [{ p: pt('Reactor', 0.72, 0.2), game: 'simon' }] },
+  { id: 'submitScan', name: 'Submit Scan', type: 'long', visual: true,
+    steps: [{ p: pt('MedBay', 0.75, 0.62), game: 'hold' }] },
+];
+
+const COMMON_TASKS = TASK_DEFS.filter(t => t.type === 'common');
+const SHORT_TASKS  = TASK_DEFS.filter(t => t.type === 'short');
+const LONG_TASKS   = TASK_DEFS.filter(t => t.type === 'long');
+
+/* ------------------------- GEOMETRY / NAV ---------------------------- */
+
+function rectHas(r, x, y) { return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h; }
+function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+function walkIndexAt(x, y) {
+  for (let i = 0; i < WALK.length; i++) if (rectHas(WALK[i], x, y)) return i;
+  return -1;
+}
+function isWalkable(x, y) { return walkIndexAt(x, y) !== -1; }
+
+function roomAt(x, y) {
+  const i = walkIndexAt(x, y);
+  if (i === -1) return null;
+  return WALK[i].room || 'Hallway';
+}
+
+/* Adjacency graph over WALK rects; portals are the midpoints of shared edges. */
+const NAV = WALK.map(() => []);
+(function buildNav() {
+  const T = 2;
+  for (let i = 0; i < WALK.length; i++) {
+    for (let j = i + 1; j < WALK.length; j++) {
+      const a = WALK[i], b = WALK[j];
+      const ax2 = a.x + a.w, ay2 = a.y + a.h, bx2 = b.x + b.w, by2 = b.y + b.h;
+      // overlapping (rects that intersect are trivially connected)
+      const ox = Math.min(ax2, bx2) - Math.max(a.x, b.x);
+      const oy = Math.min(ay2, by2) - Math.max(a.y, b.y);
+      if (ox > 0 && oy > 0) {
+        const p = { x: (Math.max(a.x, b.x) + Math.min(ax2, bx2)) / 2,
+                    y: (Math.max(a.y, b.y) + Math.min(ay2, by2)) / 2 };
+        NAV[i].push({ to: j, p }); NAV[j].push({ to: i, p });
+        continue;
+      }
+      // vertical shared edge
+      if (Math.abs(ax2 - b.x) <= T || Math.abs(bx2 - a.x) <= T) {
+        const y1 = Math.max(a.y, b.y), y2 = Math.min(ay2, by2);
+        if (y2 - y1 > 8) {
+          const x = Math.abs(ax2 - b.x) <= T ? ax2 : bx2;
+          const p = { x, y: (y1 + y2) / 2 };
+          NAV[i].push({ to: j, p }); NAV[j].push({ to: i, p });
+        }
+      }
+      // horizontal shared edge
+      if (Math.abs(ay2 - b.y) <= T || Math.abs(by2 - a.y) <= T) {
+        const x1 = Math.max(a.x, b.x), x2 = Math.min(ax2, bx2);
+        if (x2 - x1 > 8) {
+          const y = Math.abs(ay2 - b.y) <= T ? ay2 : by2;
+          const p = { x: (x1 + x2) / 2, y };
+          NAV[i].push({ to: j, p }); NAV[j].push({ to: i, p });
+        }
+      }
+    }
+  }
+})();
+
+/* Breadth-first path of waypoints from (sx,sy) to (tx,ty). */
+function findPath(sx, sy, tx, ty) {
+  const s = walkIndexAt(sx, sy), t = walkIndexAt(tx, ty);
+  if (s === -1 || t === -1) return null;
+  if (s === t) return [{ x: tx, y: ty }];
+  const prev = new Map([[s, null]]);
+  const q = [s];
+  while (q.length) {
+    const cur = q.shift();
+    if (cur === t) break;
+    for (const e of NAV[cur]) {
+      if (prev.has(e.to)) continue;
+      prev.set(e.to, { from: cur, p: e.p });
+      q.push(e.to);
+    }
+  }
+  if (!prev.has(t)) return null;
+  const pts = [];
+  let cur = t;
+  while (prev.get(cur)) { const step = prev.get(cur); pts.push(step.p); cur = step.from; }
+  pts.reverse();
+  pts.push({ x: tx, y: ty });
+  return pts;
+}
+
+/* Doors: auto-generated where door-rooms meet corridors. */
+const DOOR_ROOMS = ['Cafeteria', 'Storage', 'Upper Engine', 'Lower Engine', 'Electrical', 'MedBay', 'Security'];
+const DOORS = [];
+(function buildDoors() {
+  const TH = 18;
+  DOOR_ROOMS.forEach(name => {
+    const idx = WALK.findIndex(w => w.room === name);
+    if (idx === -1) return;
+    NAV[idx].forEach(e => {
+      if (WALK[e.to].room !== null) return; // only door onto corridors
+      const r = WALK[idx];
+      const onVertical = Math.abs(e.p.x - r.x) < 3 || Math.abs(e.p.x - (r.x + r.w)) < 3;
+      DOORS.push(onVertical
+        ? { room: name, x: e.p.x - TH / 2, y: e.p.y - 44, w: TH, h: 88 }
+        : { room: name, x: e.p.x - 44, y: e.p.y - TH / 2, w: 88, h: TH });
+    });
+  });
+})();
+
+/* ============================ STATE ================================== */
+
+const state = {
+  phase: 'menu',
+  players: [], bodies: [], human: null,
+  effects: [], shake: { magnitude: 0, start: 0, duration: 0 },
+  keys: {}, lastTime: 0,
+  totalSteps: 0, doneSteps: 0,
+  meeting: null, taskUI: null,
+  mapOpen: false, adminView: false,
+  sabotage: {
+    critical: null,      // 'reactor' | 'o2'
+    criticalTime: 0,
+    fixed: {},           // fix-point id -> true (or hold state)
+    lights: false,
+    comms: false,
+    doors: [],           // { room, until }
+    cooldown: 0,
+  },
+};
+
+const el = {};
+[
+  'menu-screen','reveal-screen','game-screen','gameover-screen','eject-screen',
+  'name-input','color-picker','role-picker','player-count','player-count-label',
+  'impostor-count','impostor-count-label','start-btn',
+  'reveal-role','reveal-sub','reveal-crew',
+  'game-canvas','canvas-wrap','task-panel','task-list','comms-down',
+  'total-progress-bar','sabotage-banner','sabotage-text','sabotage-timer','toast',
+  'use-btn','kill-btn','kill-cd','report-btn','vent-btn','sabotage-btn',
+  'task-modal','task-title','task-instructions','task-body','task-close-btn',
+  'sabotage-modal','sabotage-options','sabotage-close-btn',
+  'meeting-modal','meeting-title','meeting-subtitle','meeting-timer','voter-list','skip-vote-btn',
+  'eject-canvas','eject-text','eject-remain',
+  'gameover-title','gameover-subtitle','gameover-crew','restart-btn',
+  'map-overlay','map-canvas',
+].forEach(id => {
+  el[id.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = document.getElementById(id);
+});
+
+const ctx = el.gameCanvas.getContext('2d');
+const mapCtx = el.mapCanvas.getContext('2d');
+const ejectCtx = el.ejectCanvas.getContext('2d');
+
+/* ============================ AUDIO ================================== */
+
+let audioCtx = null;
+function AC() {
+  if (!audioCtx) {
+    const C = window.AudioContext || window.webkitAudioContext;
+    audioCtx = C ? new C() : null;
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+window.addEventListener('pointerdown', AC, { once: true });
+window.addEventListener('keydown', AC, { once: true });
+
+function noiseBuf(c, sec) {
+  const b = c.createBuffer(1, Math.max(1, (c.sampleRate * sec) | 0), c.sampleRate);
+  const d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+function beep(freq, dur, type = 'square', vol = 0.12) {
+  const c = AC(); if (!c) return;
+  const t = c.currentTime;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function playKillSound(vol = 1) {
+  const c = AC(); if (!c) return;
+  const t = c.currentTime;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(220, t);
+  o.frequency.exponentialRampToValueAtTime(38, t + 0.18);
+  g.gain.setValueAtTime(0.5 * vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.24);
+
+  const n = c.createBufferSource(); n.buffer = noiseBuf(c, 0.09);
+  const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2600;
+  const ng = c.createGain();
+  ng.gain.setValueAtTime(0.55 * vol, t);
+  ng.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+  n.connect(f).connect(ng).connect(c.destination); n.start(t);
+}
+function playVentSound() {
+  const c = AC(); if (!c) return;
+  const t = c.currentTime;
+  const n = c.createBufferSource(); n.buffer = noiseBuf(c, 0.34);
+  const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.1;
+  f.frequency.setValueAtTime(1800, t);
+  f.frequency.exponentialRampToValueAtTime(180, t + 0.32);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(0.3, t + 0.05);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.33);
+  n.connect(f).connect(g).connect(c.destination); n.start(t);
+  beep(950, 0.1, 'square', 0.1);
+}
+function playAlarm() {
+  beep(880, 0.18, 'square', 0.15);
+  setTimeout(() => beep(660, 0.22, 'square', 0.15), 190);
+}
+
+/* ============================ EFFECTS ================================ */
+
+function spawnEffect(type, x, y, opts = {}) {
+  state.effects.push(Object.assign({ type, x, y, start: performance.now(), duration: 420 }, opts));
+}
+function triggerShake(mag, dur) { state.shake = { magnitude: mag, start: performance.now(), duration: dur }; }
+function shakeOffset() {
+  const s = state.shake;
+  if (!s.duration) return { x: 0, y: 0 };
+  const e = performance.now() - s.start;
+  if (e > s.duration) return { x: 0, y: 0 };
+  const m = s.magnitude * (1 - e / s.duration);
+  return { x: (Math.random() * 2 - 1) * m, y: (Math.random() * 2 - 1) * m };
+}
+function isVenting(p) { return !!(p.ventUntil && performance.now() < p.ventUntil); }
+
+function toast(msg, ms = 2200) {
+  el.toast.textContent = msg;
+  el.toast.classList.remove('hidden');
+  el.toast.style.opacity = '1';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => {
+    el.toast.style.opacity = '0';
+    setTimeout(() => el.toast.classList.add('hidden'), 300);
+  }, ms);
+}
+
+function shade(hex, pct) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = clamp((n >> 16) + Math.round(2.55 * pct), 0, 255);
+  const g = clamp(((n >> 8) & 255) + Math.round(2.55 * pct), 0, 255);
+  const b = clamp((n & 255) + Math.round(2.55 * pct), 0, 255);
+  return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+}
+
+/* ============================ TEXTURES =============================== */
+
+let floorPat = null;
+(function () {
+  const t = document.createElement('canvas'); t.width = t.height = 48;
+  const c = t.getContext('2d');
+  c.fillStyle = '#232a3a'; c.fillRect(0, 0, 48, 48);
+  c.strokeStyle = 'rgba(255,255,255,.045)'; c.lineWidth = 1;
+  c.strokeRect(0.5, 0.5, 47, 47);
+  c.fillStyle = 'rgba(0,0,0,.13)';
+  c.fillRect(0, 0, 48, 3); c.fillRect(0, 0, 3, 48);
+  c.fillStyle = 'rgba(255,255,255,.03)';
+  c.fillRect(6, 6, 8, 8); c.fillRect(30, 26, 6, 6);
+  floorPat = ctx.createPattern(t, 'repeat');
+})();
+
+const stars = document.createElement('canvas');
+stars.width = WORLD_W; stars.height = WORLD_H;
+(function () {
+  const c = stars.getContext('2d');
+  c.fillStyle = '#04050a'; c.fillRect(0, 0, WORLD_W, WORLD_H);
+  for (let i = 0; i < 520; i++) {
+    c.globalAlpha = Math.random() * 0.55 + 0.12;
+    c.fillStyle = '#fff';
+    c.beginPath();
+    c.arc(Math.random() * WORLD_W, Math.random() * WORLD_H, Math.random() * 1.3 + 0.3, 0, 7);
+    c.fill();
+  }
+  c.globalAlpha = 1;
+})();
+
+/* ============================ PLAYER ================================= */
+
+class Player {
+  constructor(id, name, color, isBot) {
+    this.id = id; this.name = name; this.color = color; this.isBot = isBot;
+    this.isImpostor = false; this.alive = true;
+    this.killCooldown = 0;
+    this.ventUntil = 0; this.hiddenUntil = 0; this.inVent = false;
+    const s = pt('Cafeteria', 0.3 + Math.random() * 0.4, 0.3 + Math.random() * 0.4);
+    this.x = s.x; this.y = s.y;
+    this.facing = 1;
+    this._lx = this.x; this._ly = this.y;   // last position, for the walk cycle
+    this.walkPhase = Math.random() * 6.28;
+    this.moving = false;
+    // a personal offset so bots working the same station don't stack up
+    this.offX = (Math.random() - 0.5) * 54;
+    this.offY = (Math.random() - 0.5) * 54;
+    this.tasks = [];          // { defId, name, stepIndex, steps:[{p,game,done}] }
+    this.path = null; this.pathI = 0;
+    this.aiTarget = null; this.aiTimer = 0; this.aiState = 'task';
+    this.suspect = null; this.suspectTimer = 0;
+  }
+  get vision() {
+    if (!this.alive) return 9999;
+    if (this.isImpostor) return VISION_IMPOSTOR;
+    return state.sabotage.lights ? VISION_LIGHTS_OUT : VISION_NORMAL;
+  }
+}
+
+/* ============================ MENU =================================== */
+
+let selectedColor = 0, selectedRole = 'random';
+
+function buildColorPicker() {
+  el.colorPicker.innerHTML = '';
+  PALETTE.forEach((c, i) => {
+    const d = document.createElement('div');
+    d.className = 'color-swatch' + (i === selectedColor ? ' selected' : '');
+    d.style.background = c.color;
+    d.title = c.name;
+    d.addEventListener('click', () => {
+      selectedColor = i;
+      [...el.colorPicker.children].forEach(n => n.classList.remove('selected'));
+      d.classList.add('selected');
+    });
+    el.colorPicker.appendChild(d);
+  });
+}
+buildColorPicker();
+
+el.rolePicker.querySelectorAll('.role-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    selectedRole = b.dataset.role;
+    el.rolePicker.querySelectorAll('.role-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+  });
+});
+el.playerCount.addEventListener('input', () => {
+  el.playerCountLabel.textContent = el.playerCount.value;
+  const maxImp = Math.max(1, Math.min(3, Math.floor(Number(el.playerCount.value) / 4)));
+  el.impostorCount.max = maxImp;
+  if (Number(el.impostorCount.value) > maxImp) {
+    el.impostorCount.value = maxImp;
+    el.impostorCountLabel.textContent = maxImp;
+  }
+});
+el.impostorCount.addEventListener('input', () => {
+  el.impostorCountLabel.textContent = el.impostorCount.value;
+});
+el.startBtn.addEventListener('click', startGame);
+el.restartBtn.addEventListener('click', backToMenu);
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+/* ============================ SETUP ================================== */
+
+function startGame() {
+  const total = Number(el.playerCount.value);
+  const impCount = Number(el.impostorCount.value);
+  const name = (el.nameInput.value || 'You').trim().slice(0, 10) || 'You';
+
+  state.players = []; state.bodies = []; state.effects = [];
+  state.totalSteps = 0; state.doneSteps = 0;
+  state.meeting = null; state.taskUI = null; state.mapOpen = false;
+  state.sabotage = { critical: null, criticalTime: 0, fixed: {}, lights: false, comms: false, doors: [], cooldown: 0 };
+
+  const human = new Player('human', name, PALETTE[selectedColor].color, false);
+  state.players.push(human);
+  state.human = human;
+
+  const pool = shuffle(PALETTE.filter((_, i) => i !== selectedColor).slice());
+  for (let i = 1; i < total; i++) {
+    const c = pool[(i - 1) % pool.length];
+    state.players.push(new Player('bot' + i, c.name, c.color, true));
+  }
+
+  // roles
+  let impIds = [];
+  const ids = state.players.map(p => p.id);
+  if (selectedRole === 'impostor') {
+    impIds.push('human');
+    const rest = shuffle(ids.filter(i => i !== 'human'));
+    while (impIds.length < impCount) impIds.push(rest.pop());
+  } else if (selectedRole === 'crewmate') {
+    impIds = shuffle(ids.filter(i => i !== 'human')).slice(0, impCount);
+  } else {
+    impIds = shuffle(ids.slice()).slice(0, impCount);
+  }
+  state.players.forEach(p => {
+    p.isImpostor = impIds.includes(p.id);
+    if (p.isImpostor) p.killCooldown = 10; // spawn grace
+  });
+
+  // tasks: everyone shares the common tasks; short/long are rolled per player.
+  // Impostors get a fake list of the same shape so they can pretend.
+  const commons = COMMON_TASKS;
+  state.players.forEach(p => {
+    const picks = [
+      ...commons,
+      ...shuffle(SHORT_TASKS.slice()).slice(0, 3),
+      ...shuffle(LONG_TASKS.slice()).slice(0, 2),
+    ];
+    p.tasks = picks.map(def => ({
+      defId: def.id, name: def.name, visual: !!def.visual,
+      steps: def.steps.map(s => ({ p: s.p, game: s.game, done: false })),
+    }));
+    if (!p.isImpostor) state.totalSteps += p.tasks.reduce((n, t) => n + t.steps.length, 0);
+  });
+
+  spreadPlayers();
+  showReveal();
+}
+
+// Scatter everyone across the ship instead of leaving them piled in one room.
+function spreadPlayers() {
+  const rooms = shuffle(ROOMS.slice());
+  state.players.forEach((p, i) => {
+    const r = rooms[i % rooms.length];
+    let placed = false;
+    for (let tries = 0; tries < 30 && !placed; tries++) {
+      const x = r.x + r.w * (0.2 + Math.random() * 0.6);
+      const y = r.y + r.h * (0.2 + Math.random() * 0.6);
+      // keep a little breathing room from anyone already placed
+      const clash = state.players.some((o, j) => j < i && dist(o.x, o.y, x, y) < PLAYER_R * 3);
+      if (isWalkable(x, y) && !clash) { p.x = x; p.y = y; placed = true; }
+    }
+    p.path = null; p._lx = p.x; p._ly = p.y;
+  });
+}
+
+function showReveal() {
+  const h = state.human;
+  el.menuScreen.classList.add('hidden');
+  el.gameoverScreen.classList.add('hidden');
+  el.revealScreen.classList.remove('hidden');
+  el.revealRole.textContent = h.isImpostor ? 'IMPOSTOR' : 'CREWMATE';
+  el.revealRole.className = h.isImpostor ? 'imp' : 'crew';
+  const imps = state.players.filter(p => p.isImpostor);
+  el.revealSub.textContent = h.isImpostor
+    ? (imps.length > 1 ? `There are ${imps.length} Impostors among us` : 'There is 1 Impostor among us')
+    : `${state.players.length - imps.length} Crewmates · ${imps.length} Impostor${imps.length > 1 ? 's' : ''}`;
+
+  el.revealCrew.innerHTML = '';
+  const show = h.isImpostor ? imps : state.players;
+  show.forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'rc';
+    d.innerHTML = `<i style="background:${p.color}"></i>${p.name}`;
+    el.revealCrew.appendChild(d);
+  });
+
+  beep(h.isImpostor ? 160 : 520, 0.5, h.isImpostor ? 'sawtooth' : 'sine', 0.12);
+  setTimeout(beginPlay, 2600);
+}
+
+function beginPlay() {
+  el.revealScreen.classList.add('hidden');
+  el.gameScreen.classList.remove('hidden');
+  const imp = state.human.isImpostor;
+  document.querySelectorAll('.impostor-only').forEach(n => n.classList.toggle('hidden', !imp));
+  renderTaskPanel();
+  updateProgressBar();
+  state.phase = 'playing';
+  state.lastTime = performance.now();
+  requestAnimationFrame(loop);
+}
+
+/* ============================ INPUT ================================== */
+
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  state.keys[k] = true;
+  if (state.phase !== 'playing') return;
+  if (state.taskUI) { if (k === 'escape') closeTask(); return; }
+  if (state.meeting) return;
+  if (k === 'e') doUse();
+  else if (k === 'r') doReport();
+  else if (k === 'q') doKill();
+  else if (k === 'v') doVent();
+  else if (k === 'g') openSabotageMenu();
+  else if (k === 'tab') { e.preventDefault(); toggleMap(); }
+});
+window.addEventListener('keyup', e => { state.keys[e.key.toLowerCase()] = false; });
+
+el.useBtn.addEventListener('click', doUse);
+el.reportBtn.addEventListener('click', doReport);
+el.killBtn.addEventListener('click', doKill);
+el.ventBtn.addEventListener('click', doVent);
+el.sabotageBtn.addEventListener('click', openSabotageMenu);
+el.taskCloseBtn.addEventListener('click', closeTask);
+el.sabotageCloseBtn.addEventListener('click', () => el.sabotageModal.classList.add('hidden'));
+el.skipVoteBtn.addEventListener('click', () => castVote('human', null));
+
+function toggleMap() {
+  state.mapOpen = !state.mapOpen;
+  el.mapOverlay.classList.toggle('hidden', !state.mapOpen);
+  if (state.mapOpen) drawMap();
+  else state.adminView = false; // player counts only show while at the Admin table
+}
+
+/* ============================ LOOP =================================== */
+
+function loop(now) {
+  const dt = Math.min(0.05, (now - state.lastTime) / 1000);
+  state.lastTime = now;
+  if (state.phase === 'playing') update(dt);
+  else if (state.phase === 'meeting') tickMeeting(dt);
+  if (state.phase === 'playing' || state.phase === 'meeting') render();
+  if (state.mapOpen) drawMap();
+  requestAnimationFrame(loop);
+}
+
+function update(dt) {
+  if (!state.taskUI && !state.meeting) moveHuman(dt);
+  state.players.forEach(p => { if (p.isBot && (p.alive || !p.isImpostor)) updateBot(p, dt); });
+  state.players.forEach(p => { if (p.killCooldown > 0) p.killCooldown = Math.max(0, p.killCooldown - dt); });
+  state.players.forEach(p => {
+    if (p.suspectTimer > 0) { p.suspectTimer -= dt; if (p.suspectTimer <= 0) p.suspect = null; }
+  });
+  applySeparation();
+  updateWalkCycles();
+  tickSabotage(dt);
+  updateHUD();
+  checkWin();
+}
+
+// advance each character's walk cycle by how far they actually travelled
+function updateWalkCycles() {
+  state.players.forEach(p => {
+    const moved = Math.hypot(p.x - p._lx, p.y - p._ly);
+    p.moving = moved > 0.35;
+    if (p.moving) p.walkPhase += moved * 0.055;
+    p._lx = p.x; p._ly = p.y;
+  });
+}
+
+function nudge(p, dx, dy) {
+  if (!p.alive) { p.x = clamp(p.x + dx, PLAYER_R, WORLD_W - PLAYER_R); p.y = clamp(p.y + dy, PLAYER_R, WORLD_H - PLAYER_R); return; }
+  if (isWalkable(p.x + dx, p.y) && !doorBlocked(p.x + dx, p.y)) p.x += dx;
+  if (isWalkable(p.x, p.y + dy) && !doorBlocked(p.x, p.y + dy)) p.y += dy;
+}
+
+// personal space: nobody gets to stand inside somebody else
+function applySeparation() {
+  const MIN = PLAYER_R * 2.1;
+  const ps = state.players;
+  for (let i = 0; i < ps.length; i++) {
+    const a = ps[i];
+    if (!a.alive || a.inVent || isVenting(a)) continue;
+    for (let j = i + 1; j < ps.length; j++) {
+      const b = ps[j];
+      if (!b.alive || b.inVent || isVenting(b)) continue;
+      let dx = b.x - a.x, dy = b.y - a.y;
+      let d = Math.hypot(dx, dy);
+      if (d >= MIN) continue;
+      if (d < 0.001) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d = Math.hypot(dx, dy) || 1; }
+      const nx = dx / d, ny = dy / d;
+      const overlap = MIN - d;
+      // the human is never shoved by the AI — bots yield instead
+      if (a.isBot && b.isBot) {
+        nudge(a, -nx * overlap * 0.5, -ny * overlap * 0.5);
+        nudge(b,  nx * overlap * 0.5,  ny * overlap * 0.5);
+      } else if (a.isBot) {
+        nudge(a, -nx * overlap, -ny * overlap);
+      } else if (b.isBot) {
+        nudge(b, nx * overlap, ny * overlap);
+      }
+    }
+  }
+}
+
+/* --------------------------- MOVEMENT -------------------------------- */
+
+function doorBlocked(x, y) {
+  if (!state.sabotage.doors.length) return false;
+  return state.sabotage.doors.some(d =>
+    DOORS.some(dr => dr.room === d.room && rectHas(dr, x, y))
+  );
+}
+
+function tryMove(p, nx, ny, ghost) {
+  if (ghost) { // ghosts drift through walls
+    p.x = clamp(nx, PLAYER_R, WORLD_W - PLAYER_R);
+    p.y = clamp(ny, PLAYER_R, WORLD_H - PLAYER_R);
+    return;
+  }
+  if (isWalkable(nx, p.y) && !doorBlocked(nx, p.y)) p.x = nx;
+  if (isWalkable(p.x, ny) && !doorBlocked(p.x, ny)) p.y = ny;
+}
+
+function moveHuman(dt) {
+  const h = state.human;
+  if (isVenting(h)) return;
+  let dx = 0, dy = 0;
+  if (state.keys['w'] || state.keys['arrowup']) dy -= 1;
+  if (state.keys['s'] || state.keys['arrowdown']) dy += 1;
+  if (state.keys['a'] || state.keys['arrowleft']) dx -= 1;
+  if (state.keys['d'] || state.keys['arrowright']) dx += 1;
+  if (!dx && !dy) return;
+  const L = Math.hypot(dx, dy);
+  dx /= L; dy /= L;
+  if (dx !== 0) h.facing = dx > 0 ? 1 : -1;
+  const sp = PLAYER_SPEED * (h.alive ? 1 : GHOST_SPEED_MULT) * dt;
+  tryMove(h, h.x + dx * sp, h.y + dy * sp, !h.alive);
+}
+
+/* --------------------------- ACTIONS --------------------------------- */
+
+function nearestTaskStep(p) {
+  let best = null, bd = USE_RANGE;
+  p.tasks.forEach(t => {
+    const i = t.steps.findIndex(s => !s.done);
+    if (i === -1) return;
+    const s = t.steps[i];
+    const d = dist(p.x, p.y, s.p.x, s.p.y);
+    if (d <= bd) { bd = d; best = { task: t, step: s }; }
+  });
+  return best;
+}
+
+function nearestFixPoint(p) {
+  const sb = state.sabotage;
+  const ids = [];
+  if (sb.critical === 'reactor') ids.push('reactorA', 'reactorB');
+  if (sb.critical === 'o2') ids.push('o2A', 'o2B');
+  if (sb.lights) ids.push('lights');
+  if (sb.comms) ids.push('comms');
+  let best = null, bd = USE_RANGE;
+  ids.forEach(id => {
+    const f = FIX_POINTS[id];
+    const d = dist(p.x, p.y, f.x, f.y);
+    if (d <= bd) { bd = d; best = id; }
+  });
+  return best;
+}
+
+function doUse() {
+  const h = state.human;
+  if (isVenting(h) || state.taskUI || state.meeting) return;
+
+  // 0. climb out of a vent
+  if (h.inVent) {
+    h.inVent = false;
+    spawnEffect('vent', h.x, h.y);
+    playVentSound();
+    toast('Out of vent', 900);
+    return;
+  }
+
+  // 1. sabotage repairs take priority
+  const fix = nearestFixPoint(h);
+  if (fix && h.alive) { openFixUI(fix); return; }
+
+  // 2. emergency button (Cafeteria, crewmates & impostors alike)
+  if (h.alive && dist(h.x, h.y, EMERGENCY_BUTTON.x, EMERGENCY_BUTTON.y) <= USE_RANGE) {
+    if (state.sabotage.critical) { toast('Cannot call a meeting during an emergency'); return; }
+    if (h.meetingsUsed) { toast('You have already used your emergency meeting'); return; }
+    h.meetingsUsed = true;
+    openMeeting('emergency', `${h.name} called an emergency meeting`);
+    return;
+  }
+
+  // 3. admin table
+  if (dist(h.x, h.y, ADMIN_TABLE.x, ADMIN_TABLE.y) <= USE_RANGE) {
+    if (state.sabotage.comms) { toast('Admin is down — comms sabotaged'); return; }
+    state.adminView = true; toggleMap(); return;
+  }
+
+  // 4. tasks (ghosts may finish theirs; impostors only fake them)
+  const near = nearestTaskStep(h);
+  if (near) openTask(near.task, near.step);
+}
+
+function doReport() {
+  const h = state.human;
+  if (!h.alive || isVenting(h)) return;
+  const b = state.bodies.find(b => !b.reported && dist(h.x, h.y, b.x, b.y) <= REPORT_RANGE);
+  if (!b) return;
+  b.reported = true;
+  openMeeting('report', `${h.name} reported ${b.name}'s body`);
+}
+
+function doKill() {
+  const h = state.human;
+  if (!h.alive || !h.isImpostor || isVenting(h) || h.killCooldown > 0) return;
+  const t = state.players.find(p => p !== h && p.alive && !p.isImpostor && dist(h.x, h.y, p.x, p.y) <= KILL_RANGE);
+  if (!t) return;
+  performKill(h, t);
+}
+
+function performKill(killer, target) {
+  target.alive = false;
+  state.bodies.push({ x: target.x, y: target.y, name: target.name, color: target.color, reported: false });
+  killer.killCooldown = KILL_COOLDOWN;
+  // step to the victim, but stand beside the body rather than inside it
+  const ka = Math.atan2(killer.y - target.y, killer.x - target.x) || 0;
+  const kx = target.x + Math.cos(ka) * PLAYER_R * 1.6;
+  const ky = target.y + Math.sin(ka) * PLAYER_R * 1.6;
+  if (isWalkable(kx, ky)) { killer.x = kx; killer.y = ky; }
+
+  spawnEffect('kill', target.x, target.y, { duration: 520 });
+  const h = state.human;
+  const involved = killer === h || target === h;
+  const d = dist(h.x, h.y, target.x, target.y);
+  playKillSound(involved ? 1 : clamp(1 - d / 600, 0.06, 0.85));
+  if (involved) triggerShake(11, 340);
+  else if (d < 420) triggerShake(5 * clamp(1 - d / 420, 0, 1), 190);
+
+  state.players.forEach(p => {
+    if (p !== killer && p.alive && !p.isImpostor && dist(p.x, p.y, target.x, target.y) <= WITNESS_RADIUS) {
+      p.suspect = killer.id; p.suspectTimer = 45;
+    }
+  });
+
+  if (target === h) {
+    toast('You were killed', 3000);
+    el.canvasWrap.classList.remove('hit-flash');
+    void el.canvasWrap.offsetWidth;
+    el.canvasWrap.classList.add('hit-flash');
+  }
+  checkWin();
+}
+
+function ventAt(p) { return VENTS.find(v => dist(p.x, p.y, v.x, v.y) <= VENT_RANGE); }
+
+function doVent() {
+  const h = state.human;
+  if (!h.alive || !h.isImpostor || isVenting(h)) return;
+
+  if (h.inVent) {
+    const here = ventAt(h);
+    if (!here) { h.inVent = false; return; }
+    const group = VENTS.filter(v => v.group === here.group && v.id !== here.id);
+    if (!group.length) return;
+    const next = group[(Math.random() * group.length) | 0];
+    playVentSound();
+    spawnEffect('vent', h.x, h.y);
+    h.ventUntil = performance.now() + 260;
+    h.hiddenUntil = performance.now() + 260;
+    setTimeout(() => {
+      h.x = next.x; h.y = next.y;
+      spawnEffect('vent', next.x, next.y);
+      toast(`${next.room}`, 1100);
+    }, 260);
+    return;
+  }
+
+  const v = ventAt(h);
+  if (!v) return;
+  playVentSound();
+  spawnEffect('vent', v.x, v.y);
+  h.x = v.x; h.y = v.y;
+  h.inVent = true;
+  toast('In vent — V to move, E to climb out', 2200);
+}
+
+/* --------------------------- SABOTAGE -------------------------------- */
+
+function openSabotageMenu() {
+  const h = state.human;
+  if (!h.alive || !h.isImpostor || state.meeting || state.taskUI) return;
+  const sb = state.sabotage;
+  const opts = [
+    { id: 'reactor', label: 'Reactor Meltdown', sub: 'Two hand scanners · 30s', block: !!sb.critical || sb.cooldown > 0 },
+    { id: 'o2',      label: 'Oxygen Depleted',  sub: 'Two keypads · 30s',      block: !!sb.critical || sb.cooldown > 0 },
+    { id: 'lights',  label: 'Fix Lights',       sub: 'Shrinks crew vision',    block: sb.lights || sb.cooldown > 0 },
+    { id: 'comms',   label: 'Comms Sabotaged',  sub: 'Hides the task list',    block: sb.comms || sb.cooldown > 0 },
+    { id: 'doors',   label: 'Close Doors',      sub: 'Seals this room · 10s',  block: sb.cooldown > 0 || !roomAt(h.x, h.y) },
+  ];
+  el.sabotageOptions.innerHTML = '';
+  opts.forEach(o => {
+    const d = document.createElement('div');
+    d.className = 'sab-opt' + (o.block ? ' disabled' : '');
+    d.innerHTML = `${o.label}<small>${o.sub}</small>`;
+    if (!o.block) d.addEventListener('click', () => { el.sabotageModal.classList.add('hidden'); triggerSabotage(o.id); });
+    el.sabotageOptions.appendChild(d);
+  });
+  el.sabotageModal.classList.remove('hidden');
+}
+
+function triggerSabotage(kind) {
+  const sb = state.sabotage;
+  sb.cooldown = SABOTAGE_COOLDOWN;
+  if (kind === 'reactor' || kind === 'o2') {
+    sb.critical = kind;
+    sb.criticalTime = CRITICAL_TIME;
+    sb.fixed = {};
+    playAlarm();
+    toast(kind === 'reactor' ? 'Reactor meltdown!' : 'Oxygen depleted!', 2600);
+  } else if (kind === 'lights') {
+    sb.lights = true; sb.fixed.lights = false;
+    playAlarm(); toast('Lights sabotaged', 2200);
+  } else if (kind === 'comms') {
+    sb.comms = true;
+    playAlarm(); toast('Communications sabotaged', 2200);
+    renderTaskPanel();
+  } else if (kind === 'doors') {
+    const room = roomAt(state.human.x, state.human.y);
+    if (!room || room === 'Hallway') return;
+    sb.doors.push({ room, until: performance.now() + DOOR_CLOSED_TIME * 1000 });
+    beep(300, 0.25, 'square', 0.16);
+    toast(`Doors closed — ${room}`, 1800);
+  }
+}
+
+function tickSabotage(dt) {
+  const sb = state.sabotage;
+  if (sb.cooldown > 0) sb.cooldown = Math.max(0, sb.cooldown - dt);
+  sb.doors = sb.doors.filter(d => performance.now() < d.until);
+
+  if (sb.critical) {
+    sb.criticalTime -= dt;
+    // bots pitch in on repairs
+    state.players.forEach(p => {
+      if (!p.isBot || !p.alive || p.isImpostor) return;
+      const ids = sb.critical === 'reactor' ? ['reactorA', 'reactorB'] : ['o2A', 'o2B'];
+      ids.forEach(id => {
+        if (dist(p.x, p.y, FIX_POINTS[id].x, FIX_POINTS[id].y) < 46) sb.fixed[id] = true;
+      });
+    });
+    const ids = sb.critical === 'reactor' ? ['reactorA', 'reactorB'] : ['o2A', 'o2B'];
+    if (ids.every(i => sb.fixed[i])) {
+      sb.critical = null; sb.fixed = {};
+      toast('Systems stabilized', 1800);
+      beep(700, 0.2, 'sine', 0.12);
+    } else if (sb.criticalTime <= 0) {
+      endGame(true, sb.critical === 'reactor' ? 'The reactor melted down.' : 'The crew ran out of oxygen.');
+      sb.critical = null;
+    }
+  }
+
+  if (sb.lights) {
+    state.players.forEach(p => {
+      if (p.isBot && p.alive && !p.isImpostor && dist(p.x, p.y, FIX_POINTS.lights.x, FIX_POINTS.lights.y) < 46) {
+        if (Math.random() < 0.02) { sb.lights = false; toast('Lights restored', 1500); }
+      }
+    });
+  }
+  if (sb.comms) {
+    state.players.forEach(p => {
+      if (p.isBot && p.alive && !p.isImpostor && dist(p.x, p.y, FIX_POINTS.comms.x, FIX_POINTS.comms.y) < 46) {
+        if (Math.random() < 0.02) { sb.comms = false; renderTaskPanel(); toast('Comms restored', 1500); }
+      }
+    });
+  }
+}
+
+/* ============================ HUD ==================================== */
+
+function renderTaskPanel() {
+  const h = state.human;
+  if (state.sabotage.comms && !h.isImpostor) {
+    el.taskList.innerHTML = '';
+    el.commsDown.classList.remove('hidden');
+    return;
+  }
+  el.commsDown.classList.add('hidden');
+  el.taskList.innerHTML = '';
+  h.tasks.forEach(t => {
+    const li = document.createElement('li');
+    const done = t.steps.every(s => s.done);
+    const next = t.steps.find(s => !s.done);
+    if (done) li.className = 'done';
+    li.innerHTML = `${t.name} <span class="loc">${next ? next.p.room : ''}</span>`;
+    el.taskList.appendChild(li);
+  });
+  if (h.isImpostor) {
+    const li = document.createElement('li');
+    li.style.color = '#ff6b60';
+    li.textContent = '(fake tasks)';
+    el.taskList.appendChild(li);
+  }
+}
+
+function updateProgressBar() {
+  const pct = state.totalSteps ? (state.doneSteps / state.totalSteps) * 100 : 0;
+  el.totalProgressBar.style.width = pct + '%';
+}
+
+function updateHUD() {
+  const h = state.human;
+  const sb = state.sabotage;
+
+  if (h.isImpostor) {
+    const cd = Math.ceil(h.killCooldown);
+    el.killCd.classList.toggle('hidden', cd <= 0);
+    el.killCd.textContent = cd;
+    const target = state.players.find(p => p !== h && p.alive && !p.isImpostor && dist(h.x, h.y, p.x, p.y) <= KILL_RANGE);
+    el.killBtn.disabled = !h.alive || h.killCooldown > 0 || !target;
+    el.ventBtn.disabled = !h.alive || (!h.inVent && !ventAt(h));
+    el.sabotageBtn.disabled = !h.alive || sb.cooldown > 0;
+  }
+  el.reportBtn.disabled = !h.alive || !state.bodies.some(b => !b.reported && dist(h.x, h.y, b.x, b.y) <= REPORT_RANGE);
+  el.useBtn.disabled = !(
+    (h.inVent) ||
+    (h.alive && nearestFixPoint(h)) ||
+    (h.alive && dist(h.x, h.y, EMERGENCY_BUTTON.x, EMERGENCY_BUTTON.y) <= USE_RANGE) ||
+    (dist(h.x, h.y, ADMIN_TABLE.x, ADMIN_TABLE.y) <= USE_RANGE) ||
+    nearestTaskStep(h)
+  );
+
+  const crit = sb.critical;
+  const showBanner = crit || sb.lights || sb.comms;
+  el.sabotageBanner.classList.toggle('hidden', !showBanner);
+  if (showBanner) {
+    el.sabotageText.textContent = crit === 'reactor' ? 'REACTOR MELTDOWN'
+      : crit === 'o2' ? 'OXYGEN DEPLETED'
+      : sb.lights ? 'LIGHTS OUT' : 'COMMS DOWN';
+    el.sabotageTimer.textContent = crit ? Math.max(0, Math.ceil(sb.criticalTime)) + 's' : '';
+  }
+  el.taskPanel.style.display = 'block';
+}
+
+/* ============================ TASK UI ================================ */
+
+function openTask(task, step) {
+  state.taskUI = { task, step };
+  el.taskTitle.textContent = task.name;
+  el.taskBody.innerHTML = '';
+  el.taskInstructions.textContent = '';
+  el.taskModal.classList.remove('hidden');
+  const done = () => completeStep(task, step);
+  MINIGAMES[step.game] ? MINIGAMES[step.game](el.taskBody, el.taskInstructions, done) : done();
+}
+
+function closeTask() {
+  state.taskUI = null;
+  el.taskModal.classList.add('hidden');
+  if (el.taskBody._cleanup) { el.taskBody._cleanup(); el.taskBody._cleanup = null; }
+  el.taskBody.innerHTML = '';
+}
+
+function completeStep(task, step) {
+  if (!step.done) {
+    step.done = true;
+    // impostors' fake tasks never count toward the crew's progress bar
+    if (!state.human.isImpostor) { state.doneSteps++; updateProgressBar(); }
+    beep(880, 0.12, 'sine', 0.1);
+    const all = task.steps.every(s => s.done);
+    toast(all ? `${task.name} complete` : `${task.name} — next: ${task.steps.find(s => !s.done).p.room}`, 1600);
+    renderTaskPanel();
+  }
+  closeTask();
+  checkWin();
+}
+
+function openFixUI(id) {
+  const sb = state.sabotage;
+  state.taskUI = { fix: id };
+  el.taskBody.innerHTML = '';
+  el.taskModal.classList.remove('hidden');
+
+  if (id === 'reactorA' || id === 'reactorB') {
+    el.taskTitle.textContent = 'Reactor';
+    MINIGAMES.handprint(el.taskBody, el.taskInstructions, () => {
+      sb.fixed[id] = true;
+      toast('Hold until your crewmate does the same', 1800);
+      closeTask();
+    });
+  } else if (id === 'o2A' || id === 'o2B') {
+    el.taskTitle.textContent = 'Oxygen';
+    MINIGAMES.keypad(el.taskBody, el.taskInstructions, () => {
+      sb.fixed[id] = true;
+      toast('Keypad accepted', 1500);
+      closeTask();
+    });
+  } else if (id === 'lights') {
+    el.taskTitle.textContent = 'Breaker Panel';
+    MINIGAMES.toggles(el.taskBody, el.taskInstructions, () => {
+      sb.lights = false;
+      toast('Lights restored', 1600);
+      closeTask();
+    });
+  } else if (id === 'comms') {
+    el.taskTitle.textContent = 'Communications';
+    MINIGAMES.dial(el.taskBody, el.taskInstructions, () => {
+      sb.comms = false;
+      renderTaskPanel();
+      toast('Comms restored', 1600);
+      closeTask();
+    });
+  }
+}
+
+/* ------------------------- MINIGAMES --------------------------------- */
+
+const MINIGAMES = {};
+
+MINIGAMES.hold = (body, instr, done) => {
+  instr.textContent = 'Hold the button until it fills.';
+  const bar = document.createElement('div');
+  bar.className = 'mg-bar';
+  const fill = document.createElement('div');
+  bar.appendChild(fill);
+  const btn = document.createElement('button');
+  btn.className = 'small-btn'; btn.textContent = 'Hold';
+  body.append(bar, btn);
+  let v = 0, holding = false, raf;
+  const step = () => {
+    v = clamp(v + (holding ? 0.018 : -0.01), 0, 1);
+    fill.style.width = v * 100 + '%';
+    if (v >= 1) { cancelAnimationFrame(raf); done(); return; }
+    raf = requestAnimationFrame(step);
+  };
+  const on = () => { holding = true; }, off = () => { holding = false; };
+  btn.addEventListener('pointerdown', on);
+  window.addEventListener('pointerup', off);
+  raf = requestAnimationFrame(step);
+  body._cleanup = () => { cancelAnimationFrame(raf); window.removeEventListener('pointerup', off); };
+};
+
+MINIGAMES.simon = (body, instr, done) => {
+  instr.textContent = 'Watch the pattern, then repeat it.';
+  const COLORS = [['r', '#d0433a'], ['b', '#3a6fd0'], ['g', '#3ad068'], ['y', '#d0c93a']];
+  const top = document.createElement('div'); top.className = 'mg-row';
+  const bot = document.createElement('div'); bot.className = 'mg-row';
+  body.append(top, bot);
+  const seq = Array.from({ length: 4 }, () => COLORS[(Math.random() * 4) | 0][0]);
+  let input = [], accept = false;
+  const mk = (row, c, click) => {
+    const d = document.createElement('div');
+    d.className = 'mg-btn'; d.style.background = c[1]; d.dataset.id = c[0];
+    if (click) d.addEventListener('click', () => click(c[0]));
+    row.appendChild(d); return d;
+  };
+  const tops = COLORS.map(c => mk(top, c));
+  COLORS.forEach(c => mk(bot, c, id => {
+    if (!accept) return;
+    beep(400 + COLORS.findIndex(x => x[0] === id) * 120, 0.1, 'sine', 0.1);
+    if (seq[input.length] !== id) { input = []; accept = false; toast('Wrong — watch again', 1200); setTimeout(play, 700); return; }
+    input.push(id);
+    if (input.length === seq.length) done();
+  }));
+  const timers = [];
+  function play() {
+    accept = false; let t = 300;
+    seq.forEach(id => {
+      const b = tops.find(x => x.dataset.id === id);
+      timers.push(setTimeout(() => { b.classList.add('lit'); beep(500, 0.1, 'sine', 0.08); }, t));
+      timers.push(setTimeout(() => b.classList.remove('lit'), t + 380));
+      t += 560;
+    });
+    timers.push(setTimeout(() => { accept = true; }, t));
+  }
+  play();
+  body._cleanup = () => timers.forEach(clearTimeout);
+};
+
+MINIGAMES.sequence = (body, instr, done) => {
+  instr.textContent = 'Click the numbers in order.';
+  const row = document.createElement('div'); row.className = 'mg-row';
+  body.appendChild(row);
+  const nums = shuffle([1, 2, 3, 4, 5, 6]);
+  let next = 1;
+  nums.forEach(n => {
+    const d = document.createElement('div');
+    d.className = 'mg-btn'; d.style.background = '#cdd5e4'; d.textContent = n;
+    d.addEventListener('click', () => {
+      if (d.classList.contains('done') || n !== next) return;
+      d.classList.add('done'); beep(500 + n * 60, 0.1, 'sine', 0.1);
+      next++;
+      if (next > 6) done();
+    });
+    row.appendChild(d);
+  });
+};
+
+MINIGAMES.toggles = (body, instr, done) => {
+  instr.textContent = 'Flip every switch up.';
+  const row = document.createElement('div'); row.className = 'mg-row';
+  body.appendChild(row);
+  const n = 5;
+  const sw = [];
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'mg-switch';
+    if (Math.random() < 0.6) d.classList.add('on');
+    d.addEventListener('click', () => {
+      d.classList.toggle('on');
+      beep(d.classList.contains('on') ? 620 : 320, 0.07, 'square', 0.09);
+      if (sw.every(s => s.classList.contains('on'))) done();
+    });
+    sw.push(d); row.appendChild(d);
+  }
+  if (sw.every(s => s.classList.contains('on'))) sw[0].classList.remove('on');
+};
+
+MINIGAMES.slider = (body, instr, done) => {
+  instr.textContent = 'Center every slider on the marker.';
+  const wrap = document.createElement('div');
+  body.appendChild(wrap);
+  const sliders = [];
+  for (let i = 0; i < 3; i++) {
+    const s = document.createElement('input');
+    s.type = 'range'; s.min = 0; s.max = 100; s.className = 'mg-slider';
+    s.value = (Math.random() * 40 | 0) + (Math.random() < 0.5 ? 0 : 60);
+    s.addEventListener('input', check);
+    const line = document.createElement('div');
+    line.style.cssText = 'display:flex;align-items:center;gap:8px;justify-content:center';
+    const tag = document.createElement('span'); tag.className = 'mg-hint'; tag.textContent = '50';
+    line.append(s, tag);
+    wrap.appendChild(line);
+    sliders.push(s);
+  }
+  function check() {
+    if (sliders.every(s => Math.abs(s.value - 50) <= 3)) { beep(760, 0.14, 'sine', 0.1); done(); }
+  }
+};
+
+MINIGAMES.targets = (body, instr, done) => {
+  instr.textContent = 'Click every target.';
+  const field = document.createElement('div');
+  field.className = 'mg-field';
+  body.appendChild(field);
+  let left = 6;
+  for (let i = 0; i < 6; i++) {
+    const d = document.createElement('div');
+    d.className = 'mg-target';
+    d.style.left = 10 + Math.random() * 330 + 'px';
+    d.style.top = 10 + Math.random() * 145 + 'px';
+    d.addEventListener('click', () => {
+      d.remove(); left--;
+      beep(300 + Math.random() * 500, 0.08, 'square', 0.1);
+      if (!left) done();
+    });
+    field.appendChild(d);
+  }
+};
+
+MINIGAMES.timing = (body, instr, done) => {
+  instr.textContent = 'Stop the needle inside the green zone.';
+  const field = document.createElement('div');
+  field.className = 'mg-field'; field.style.height = '90px';
+  const zone = document.createElement('div');
+  zone.style.cssText = 'position:absolute;top:0;bottom:0;width:70px;left:155px;background:rgba(82,209,122,.28);border-left:2px solid #52d17a;border-right:2px solid #52d17a';
+  const needle = document.createElement('div');
+  needle.style.cssText = 'position:absolute;top:0;bottom:0;width:4px;background:#ffd34d;left:0';
+  field.append(zone, needle);
+  const btn = document.createElement('button');
+  btn.className = 'small-btn'; btn.textContent = 'Stop';
+  body.append(field, btn);
+  let x = 0, dir = 1, raf;
+  const step = () => {
+    x += dir * 4.6;
+    if (x > 376) { x = 376; dir = -1; }
+    if (x < 0) { x = 0; dir = 1; }
+    needle.style.left = x + 'px';
+    raf = requestAnimationFrame(step);
+  };
+  raf = requestAnimationFrame(step);
+  btn.addEventListener('click', () => {
+    cancelAnimationFrame(raf);
+    if (x >= 155 && x <= 225) { beep(740, 0.15, 'sine', 0.1); done(); }
+    else { toast('Missed — try again', 1100); raf = requestAnimationFrame(step); }
+  });
+  body._cleanup = () => cancelAnimationFrame(raf);
+};
+
+MINIGAMES.swipe = (body, instr, done) => {
+  instr.textContent = 'Drag the card steadily across the reader.';
+  const field = document.createElement('div');
+  field.className = 'mg-field'; field.style.height = '110px';
+  const card = document.createElement('div');
+  card.style.cssText = 'position:absolute;left:8px;top:30px;width:90px;height:56px;border-radius:6px;background:linear-gradient(135deg,#ffd34d,#e08a2b);cursor:grab';
+  field.appendChild(card);
+  body.appendChild(field);
+  let dragging = false, startT = 0, startX = 0;
+  card.addEventListener('pointerdown', e => {
+    dragging = true; startT = performance.now(); startX = e.clientX;
+    card.setPointerCapture(e.pointerId);
+  });
+  card.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dx = clamp(e.clientX - startX, 0, 282);
+    card.style.left = 8 + dx + 'px';
+    if (dx >= 280) {
+      dragging = false;
+      const el = performance.now() - startT;
+      if (el < 350) { toast('Too fast — try again', 1200); reset(); }
+      else if (el > 2200) { toast('Too slow — try again', 1200); reset(); }
+      else { beep(820, 0.16, 'sine', 0.11); done(); }
+    }
+  });
+  card.addEventListener('pointerup', () => { if (dragging) { dragging = false; reset(); } });
+  function reset() { card.style.left = '8px'; }
+};
+
+MINIGAMES.wires = (body, instr, done) => {
+  instr.textContent = 'Connect each wire to its matching color.';
+  const cv = document.createElement('canvas');
+  cv.width = 380; cv.height = 200; cv.className = 'mg-wire-canvas';
+  body.appendChild(cv);
+  const c = cv.getContext('2d');
+  const cols = ['#d0433a', '#3a6fd0', '#ffd34d', '#e0407f'];
+  const right = shuffle(cols.slice());
+  const links = {};
+  let dragFrom = null, mouse = null;
+
+  const leftY = i => 34 + i * 44, rightY = i => 34 + i * 44;
+  function draw() {
+    c.clearRect(0, 0, 380, 200);
+    c.fillStyle = '#0d1017'; c.fillRect(0, 0, 380, 200);
+    cols.forEach((col, i) => {
+      c.fillStyle = col; c.fillRect(8, leftY(i) - 12, 40, 24);
+      if (links[col]) {
+        c.strokeStyle = col; c.lineWidth = 7; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(48, leftY(i));
+        c.lineTo(332, rightY(right.indexOf(col))); c.stroke();
+      }
+    });
+    right.forEach((col, i) => { c.fillStyle = col; c.fillRect(332, rightY(i) - 12, 40, 24); });
+    if (dragFrom !== null && mouse) {
+      c.strokeStyle = cols[dragFrom]; c.lineWidth = 7; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(48, leftY(dragFrom)); c.lineTo(mouse.x, mouse.y); c.stroke();
+    }
+  }
+  draw();
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  cv.addEventListener('pointerdown', e => {
+    const m = pos(e);
+    cols.forEach((col, i) => { if (m.x < 60 && Math.abs(m.y - leftY(i)) < 20 && !links[col]) dragFrom = i; });
+  });
+  cv.addEventListener('pointermove', e => { if (dragFrom !== null) { mouse = pos(e); draw(); } });
+  cv.addEventListener('pointerup', e => {
+    if (dragFrom === null) return;
+    const m = pos(e);
+    right.forEach((col, i) => {
+      if (m.x > 320 && Math.abs(m.y - rightY(i)) < 22 && col === cols[dragFrom]) {
+        links[col] = true; beep(600, 0.09, 'sine', 0.09);
+      }
+    });
+    dragFrom = null; mouse = null; draw();
+    if (cols.every(c2 => links[c2])) done();
+  });
+};
+
+MINIGAMES.keypad = (body, instr, done) => {
+  const code = String(Math.floor(1000 + Math.random() * 8999));
+  instr.textContent = 'Enter the backup code.';
+  const shown = document.createElement('div'); shown.className = 'mg-code'; shown.textContent = code;
+  const entry = document.createElement('div'); entry.className = 'mg-entry';
+  const pad = document.createElement('div'); pad.className = 'mg-row'; pad.style.maxWidth = '190px'; pad.style.margin = '0 auto';
+  body.append(shown, entry, pad);
+  let typed = '';
+  for (let i = 1; i <= 9; i++) addKey(String(i));
+  addKey('0');
+  function addKey(n) {
+    const b = document.createElement('button');
+    b.className = 'mg-key'; b.textContent = n;
+    b.addEventListener('click', () => {
+      typed += n; entry.textContent = typed;
+      beep(500, 0.06, 'square', 0.08);
+      if (typed.length === 4) {
+        if (typed === code) { beep(820, 0.16, 'sine', 0.11); done(); }
+        else { toast('Wrong code', 1100); typed = ''; entry.textContent = ''; }
+      }
+    });
+    pad.appendChild(b);
+  }
+};
+
+MINIGAMES.dial = (body, instr, done) => {
+  const target = 20 + Math.random() * 60;
+  instr.textContent = 'Tune the dial until the signal is clear.';
+  const s = document.createElement('input');
+  s.type = 'range'; s.min = 0; s.max = 100; s.value = 0; s.className = 'mg-slider';
+  const meter = document.createElement('div'); meter.className = 'mg-bar';
+  const fill = document.createElement('div'); fill.style.background = '#ffd34d'; meter.appendChild(fill);
+  body.append(meter, s);
+  s.addEventListener('input', () => {
+    const q = clamp(1 - Math.abs(s.value - target) / 40, 0, 1);
+    fill.style.width = q * 100 + '%';
+    if (q > 0.96) { beep(820, 0.18, 'sine', 0.11); done(); }
+  });
+};
+
+MINIGAMES.handprint = (body, instr, done) => {
+  instr.textContent = 'Hold your hand on the scanner.';
+  const b = document.createElement('button');
+  b.className = 'small-btn'; b.textContent = '✋ Hold';
+  const bar = document.createElement('div'); bar.className = 'mg-bar';
+  const fill = document.createElement('div'); bar.appendChild(fill);
+  body.append(bar, b);
+  let v = 0, holding = false, raf;
+  const step = () => {
+    v = clamp(v + (holding ? 0.025 : -0.02), 0, 1);
+    fill.style.width = v * 100 + '%';
+    if (v >= 1) { cancelAnimationFrame(raf); done(); return; }
+    raf = requestAnimationFrame(step);
+  };
+  b.addEventListener('pointerdown', () => holding = true);
+  const off = () => holding = false;
+  window.addEventListener('pointerup', off);
+  raf = requestAnimationFrame(step);
+  body._cleanup = () => { cancelAnimationFrame(raf); window.removeEventListener('pointerup', off); };
+};
+
+MINIGAMES.sample = (body, instr, done) => {
+  instr.textContent = 'Start the analysis, then flag the anomaly.';
+  const row = document.createElement('div'); row.className = 'mg-row';
+  const btn = document.createElement('button'); btn.className = 'small-btn'; btn.textContent = 'Start Analysis';
+  body.append(btn, row);
+  btn.addEventListener('click', () => {
+    btn.disabled = true; btn.textContent = 'Analyzing…';
+    setTimeout(() => {
+      btn.remove();
+      const odd = (Math.random() * 5) | 0;
+      for (let i = 0; i < 5; i++) {
+        const d = document.createElement('div');
+        d.className = 'mg-btn';
+        d.style.background = i === odd ? '#d0433a' : '#4a5268';
+        d.addEventListener('click', () => {
+          if (i === odd) { beep(800, 0.15, 'sine', 0.11); done(); }
+          else toast('Not that one', 900);
+        });
+        row.appendChild(d);
+      }
+    }, 1600);
+  });
+};
+
+/* ============================ BOT AI ================================= */
+
+function botGoto(p, tx, ty, dt, speedMult = 0.85) {
+  if (!p.path || p.pathGoalX !== tx || p.pathGoalY !== ty) {
+    p.path = findPath(p.x, p.y, tx, ty);
+    p.pathGoalX = tx; p.pathGoalY = ty; p.pathI = 0;
+    if (!p.path) return true; // unreachable
+  }
+  const wp = p.path[p.pathI];
+  if (!wp) return true;
+  const d = dist(p.x, p.y, wp.x, wp.y);
+  if (d < 14) {
+    p.pathI++;
+    if (p.pathI >= p.path.length) { p.path = null; return true; }
+    return false;
+  }
+  const sp = PLAYER_SPEED * speedMult * dt;
+  const nx = p.x + ((wp.x - p.x) / d) * sp;
+  const ny = p.y + ((wp.y - p.y) / d) * sp;
+  if (nx !== p.x) p.facing = nx > p.x ? 1 : -1;
+  tryMove(p, nx, ny, !p.alive);
+  return false;
+}
+
+function botPickTask(p) {
+  for (const t of p.tasks) {
+    const s = t.steps.find(s => !s.done);
+    if (s) return { task: t, step: s };
+  }
+  return null;
+}
+
+function updateBot(p, dt) {
+  if (state.meeting || state.taskUI) return;
+  if (p.isImpostor) updateImpostorBot(p, dt);
+  else updateCrewBot(p, dt);
+}
+
+function updateCrewBot(p, dt) {
+  const sb = state.sabotage;
+  if (p.alive) {
+    // report a body you stumble across
+    const b = state.bodies.find(b => !b.reported && dist(p.x, p.y, b.x, b.y) < 90);
+    if (b && Math.random() < 0.03) {
+      b.reported = true;
+      openMeeting('report', `${p.name} reported ${b.name}'s body`);
+      return;
+    }
+    // emergencies first
+    if (sb.critical) {
+      const ids = sb.critical === 'reactor' ? ['reactorA', 'reactorB'] : ['o2A', 'o2B'];
+      const mine = FIX_POINTS[ids[p.id.charCodeAt(p.id.length - 1) % 2]];
+      botGoto(p, mine.x, mine.y, dt, 1.0);
+      return;
+    }
+    if (sb.lights) { botGoto(p, FIX_POINTS.lights.x, FIX_POINTS.lights.y, dt, 0.95); return; }
+    if (sb.comms) { botGoto(p, FIX_POINTS.comms.x, FIX_POINTS.comms.y, dt, 0.95); return; }
+  }
+
+  const job = botPickTask(p);
+  if (!job) { botWander(p, dt); return; }
+  const arrived = botGoto(p, job.step.p.x + p.offX, job.step.p.y + p.offY, dt);
+  if (arrived) {
+    p.aiTimer += dt;
+    if (p.aiTimer > 2.2) {
+      p.aiTimer = 0;
+      job.step.done = true;
+      if (!p.isImpostor) { state.doneSteps++; updateProgressBar(); }
+      checkWin();
+    }
+  }
+}
+
+function updateImpostorBot(p, dt) {
+  const sb = state.sabotage;
+  if (!sb.critical && sb.cooldown <= 0 && Math.random() < 0.0009) {
+    triggerSabotage(Math.random() < 0.5 ? 'lights' : (Math.random() < 0.5 ? 'reactor' : 'comms'));
+  }
+
+  // only stalk a target nobody else can see
+  let victim = null, vd = Infinity;
+  if (p.killCooldown <= 0) {
+    state.players.forEach(o => {
+      if (o === p || !o.alive || o.isImpostor) return;
+      const d = dist(p.x, p.y, o.x, o.y);
+      if (d > KILL_OPPORTUNITY_RADIUS) return;
+      const seen = state.players.some(w =>
+        w !== p && w !== o && w.alive && !w.isImpostor && dist(w.x, w.y, o.x, o.y) < WITNESS_RADIUS);
+      if (seen) return;
+      if (d < vd) { vd = d; victim = o; }
+    });
+  }
+  if (victim) {
+    if (vd <= KILL_RANGE * 0.8) performKill(p, victim);
+    // stop short of walking into them — closing the last few pixels just looks like loitering
+    else if (vd > PLAYER_R * 2.4) botGoto(p, victim.x, victim.y, dt, 0.95);
+    return;
+  }
+
+  // otherwise behave exactly like a crewmate doing their list
+  const job = botPickTask(p);
+  if (!job) { botWander(p, dt); return; }
+  const arrived = botGoto(p, job.step.p.x + p.offX, job.step.p.y + p.offY, dt);
+  if (arrived) {
+    p.aiTimer += dt;
+    if (p.aiTimer > 2.0) { p.aiTimer = 0; job.step.done = true; } // fake completion
+  }
+}
+
+function botWander(p, dt) {
+  if (!p.aiTarget || dist(p.x, p.y, p.aiTarget.x, p.aiTarget.y) < 40) {
+    const r = ROOMS[(Math.random() * ROOMS.length) | 0];
+    p.aiTarget = { x: r.x + r.w * (0.25 + Math.random() * 0.5), y: r.y + r.h * (0.25 + Math.random() * 0.5) };
+    p.path = null;
+  }
+  if (botGoto(p, p.aiTarget.x, p.aiTarget.y, dt, 0.6)) p.aiTarget = null;
+}
+
+/* ============================ RENDER ================================= */
+
+const camera = { x: 0, y: 0 };
+function updateCamera() {
+  const h = state.human;
+  camera.x = clamp(h.x - VIEW_W / 2, 0, Math.max(0, WORLD_W - VIEW_W));
+  camera.y = clamp(h.y - VIEW_H / 2, 0, Math.max(0, WORLD_H - VIEW_H));
+}
+
+function render() {
+  updateCamera();
+  const s = shakeOffset();
+  ctx.clearRect(0, 0, VIEW_W, VIEW_H);
+  ctx.save();
+  ctx.translate(-camera.x + s.x, -camera.y + s.y);
+
+  ctx.drawImage(stars, 0, 0);
+
+  // walls, then floors on top (floors erase the seam between adjoining rects)
+  const W = 7;
+  ctx.fillStyle = '#39435c';
+  WALK.forEach(r => ctx.fillRect(r.x - W, r.y - W, r.w + W * 2, r.h + W * 2));
+  ctx.fillStyle = floorPat;
+  WALK.forEach(r => ctx.fillRect(r.x, r.y, r.w, r.h));
+
+  // lights-out tint over the floor
+  if (state.sabotage.lights) {
+    ctx.fillStyle = 'rgba(4,6,14,.55)';
+    WALK.forEach(r => ctx.fillRect(r.x, r.y, r.w, r.h));
+  }
+
+  ctx.fillStyle = 'rgba(160,176,208,.34)';
+  ctx.font = 'bold 15px sans-serif';
+  ROOMS.forEach(r => ctx.fillText(r.name.toUpperCase(), r.x + 12, r.y + 24));
+
+  drawStations();
+  drawDoors();
+  drawVents();
+  drawBodies();
+  drawPlayers();
+  drawEffects();
+  ctx.restore();
+
+  drawVision();
+}
+
+function drawStations() {
+  const h = state.human;
+  // emergency button
+  ctx.fillStyle = '#c0392b';
+  ctx.beginPath(); ctx.arc(EMERGENCY_BUTTON.x, EMERGENCY_BUTTON.y, 16, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#ffd7d2'; ctx.lineWidth = 3; ctx.stroke();
+
+  // admin table
+  ctx.fillStyle = '#2f3a52';
+  ctx.fillRect(ADMIN_TABLE.x - 34, ADMIN_TABLE.y - 18, 68, 36);
+  ctx.strokeStyle = '#5b6b8c'; ctx.lineWidth = 2;
+  ctx.strokeRect(ADMIN_TABLE.x - 34, ADMIN_TABLE.y - 18, 68, 36);
+
+  // this player's own task markers
+  h.tasks.forEach(t => {
+    const s = t.steps.find(s => !s.done);
+    if (!s) return;
+    ctx.fillStyle = h.isImpostor ? '#7a6a3a' : '#ffd34d';
+    ctx.beginPath(); ctx.arc(s.p.x, s.p.y, 11, 0, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,211,77,.16)';
+    ctx.beginPath(); ctx.arc(s.p.x, s.p.y, 26, 0, 7); ctx.fill();
+  });
+
+  // active sabotage repair points
+  const sb = state.sabotage;
+  const active = [];
+  if (sb.critical === 'reactor') active.push('reactorA', 'reactorB');
+  if (sb.critical === 'o2') active.push('o2A', 'o2B');
+  if (sb.lights) active.push('lights');
+  if (sb.comms) active.push('comms');
+  active.forEach(id => {
+    const f = FIX_POINTS[id];
+    const ok = sb.fixed[id];
+    ctx.fillStyle = ok ? '#2f8f4e' : '#d0433a';
+    ctx.beginPath(); ctx.arc(f.x, f.y, 14, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    const pulse = 20 + Math.sin(performance.now() / 180) * 6;
+    ctx.strokeStyle = 'rgba(208,67,58,.5)';
+    ctx.beginPath(); ctx.arc(f.x, f.y, pulse, 0, 7); ctx.stroke();
+  });
+}
+
+function drawDoors() {
+  const now = performance.now();
+  state.sabotage.doors.forEach(d => {
+    DOORS.filter(dr => dr.room === d.room).forEach(dr => {
+      ctx.fillStyle = '#c94a3d';
+      ctx.fillRect(dr.x, dr.y, dr.w, dr.h);
+      ctx.strokeStyle = '#ffb0a8'; ctx.lineWidth = 2;
+      ctx.strokeRect(dr.x, dr.y, dr.w, dr.h);
+    });
+  });
+}
+
+function drawVents() {
+  const h = state.human;
+  if (!h.isImpostor && h.alive) return; // only impostors and ghosts see vents
+  VENTS.forEach(v => {
+    ctx.fillStyle = '#11151f';
+    ctx.strokeStyle = h.inVent && dist(h.x, h.y, v.x, v.y) < 4 ? '#ffd34d' : '#59647f';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(v.x - 17, v.y - 13, 34, 26, 5) : ctx.rect(v.x - 17, v.y - 13, 34, 26);
+    ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#39435c'; ctx.lineWidth = 2;
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath(); ctx.moveTo(v.x + i * 6, v.y - 8); ctx.lineTo(v.x + i * 6, v.y + 8); ctx.stroke();
+    }
+  });
+}
+
+function drawBodies() {
+  state.bodies.forEach(b => {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    // body lying down, bone poking out — the classic silhouette
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.beginPath(); ctx.ellipse(0, 12, 22, 7, 0, 0, 7); ctx.fill();
+    const g = ctx.createLinearGradient(-20, -10, 20, 10);
+    g.addColorStop(0, shade(b.color, 22)); g.addColorStop(1, shade(b.color, -20));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(0, 0, 21, 13, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#e8eef7';
+    ctx.fillRect(12, -16, 5, 14);
+    ctx.beginPath(); ctx.arc(14.5, -17, 4, 0, 7); ctx.fill();
+    ctx.fillStyle = '#9fd8ff';
+    ctx.beginPath(); ctx.ellipse(-6, -2, 7, 5, 0, 0, 7); ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawCharacter(x, y, color, alpha, facing, tag, phase = 0, moving = false) {
+  // walk cycle: a little vertical bob, a squash-and-stretch, and alternating legs
+  const sw = moving ? Math.sin(phase) : 0;
+  const bob = moving ? -Math.abs(Math.sin(phase)) * 2.6 : 0;
+  const squash = moving ? 1 + Math.abs(Math.sin(phase)) * 0.05 : 1;
+  const lean = moving ? Math.sin(phase) * 0.045 : 0;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x, y + bob);
+  ctx.scale(facing, 1);
+  ctx.rotate(lean);
+
+  // shadow stays on the ground and tightens as the body lifts
+  ctx.fillStyle = 'rgba(0,0,0,.35)';
+  ctx.beginPath();
+  ctx.ellipse(0, PLAYER_R * 1.15 - bob, PLAYER_R * (.85 - Math.abs(bob) * .02), PLAYER_R * .3, 0, 0, 7);
+  ctx.fill();
+
+  // backpack
+  ctx.fillStyle = shade(color, -38);
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(-PLAYER_R - 8, -PLAYER_R * .55, 9, PLAYER_R * 1.15, 4)
+                : ctx.rect(-PLAYER_R - 8, -PLAYER_R * .55, 9, PLAYER_R * 1.15);
+  ctx.fill();
+
+  // legs (drawn behind the body so they tuck under it)
+  ctx.fillStyle = shade(color, -30);
+  const legLift = 5;
+  const l1 = moving ? Math.max(0, sw) * legLift : 0;
+  const l2 = moving ? Math.max(0, -sw) * legLift : 0;
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(-PLAYER_R * .72 + sw * 3, PLAYER_R * .92 - l1, 9, 8, 3)
+                : ctx.rect(-PLAYER_R * .72 + sw * 3, PLAYER_R * .92 - l1, 9, 8);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(PLAYER_R * .08 - sw * 3, PLAYER_R * .92 - l2, 9, 8, 3)
+                : ctx.rect(PLAYER_R * .08 - sw * 3, PLAYER_R * .92 - l2, 9, 8);
+  ctx.fill();
+
+  // body
+  ctx.save();
+  ctx.scale(1 / squash, squash);
+  const g = ctx.createLinearGradient(-PLAYER_R, -PLAYER_R, PLAYER_R, PLAYER_R);
+  g.addColorStop(0, shade(color, 30)); g.addColorStop(1, shade(color, -20));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(-PLAYER_R, PLAYER_R * .9);
+  ctx.quadraticCurveTo(-PLAYER_R * 1.05, -PLAYER_R * 1.25, 0, -PLAYER_R * 1.25);
+  ctx.quadraticCurveTo(PLAYER_R * 1.05, -PLAYER_R * 1.25, PLAYER_R, PLAYER_R * .9);
+  ctx.quadraticCurveTo(0, PLAYER_R * 1.35, -PLAYER_R, PLAYER_R * .9);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 2; ctx.stroke();
+
+  // visor
+  ctx.beginPath();
+  ctx.ellipse(4, -PLAYER_R * .38, 9.5, 6.6, -.12, 0, 7);
+  const vg = ctx.createLinearGradient(-4, -PLAYER_R * .8, 14, 0);
+  vg.addColorStop(0, '#e6f6ff'); vg.addColorStop(1, '#5f9ec9');
+  ctx.fillStyle = vg; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.42)'; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(0.5, -PLAYER_R * .55, 2.6, 1.3, -.3, 0, 7);
+  ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fill();
+  ctx.restore();
+
+  ctx.restore();
+
+  if (tag) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#eef2f7';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(tag, x, y - PLAYER_R * 2.1);
+    ctx.textAlign = 'left';
+    ctx.restore();
+  }
+}
+
+function drawPlayers() {
+  const now = performance.now();
+  const h = state.human;
+  state.players.forEach(p => {
+    if (p === h) return;
+    if (!p.alive) {
+      // ghosts are visible only to other ghosts
+      if (h.alive) return;
+      drawCharacter(p.x, p.y, p.color, 0.4, p.facing, p.name, p.walkPhase, p.moving);
+      return;
+    }
+    if (p.hiddenUntil && now < p.hiddenUntil) return;
+    if (p.inVent) return;
+    drawCharacter(p.x, p.y, p.color, 1, p.facing, p.name, p.walkPhase, p.moving);
+  });
+  if (h.hiddenUntil && now < h.hiddenUntil) return;
+  if (h.inVent) {
+    drawCharacter(h.x, h.y, h.color, .45, h.facing, null, h.walkPhase, false);
+    return;
+  }
+  drawCharacter(h.x, h.y, h.color, h.alive ? 1 : .45, h.facing, h.name, h.walkPhase, h.moving);
+}
+
+function drawEffects() {
+  const now = performance.now();
+  state.effects = state.effects.filter(e => now - e.start < e.duration);
+  state.effects.forEach(e => {
+    const t = clamp((now - e.start) / e.duration, 0, 1);
+    if (e.type === 'kill') {
+      ctx.save();
+      ctx.globalAlpha = 1 - t;
+      ctx.strokeStyle = '#ff3b30';
+      ctx.lineWidth = 4 * (1 - t) + 1;
+      ctx.beginPath(); ctx.arc(e.x, e.y, PLAYER_R + t * 52, 0, 7); ctx.stroke();
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * 7 + t * 2;
+        ctx.beginPath();
+        ctx.moveTo(e.x + Math.cos(a) * (PLAYER_R + 4), e.y + Math.sin(a) * (PLAYER_R + 4));
+        ctx.lineTo(e.x + Math.cos(a) * (PLAYER_R + t * 40), e.y + Math.sin(a) * (PLAYER_R + t * 40));
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else if (e.type === 'vent') {
+      ctx.save();
+      ctx.globalAlpha = (1 - t) * .8;
+      ctx.fillStyle = '#8892a6';
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(e.x + (i - 1) * 8, e.y - t * 12, 7 + t * (20 + i * 8), 0, 7);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+  });
+}
+
+function drawVision() {
+  const h = state.human;
+  if (!h.alive) return;
+  const r = h.vision;
+  const sx = h.x - camera.x, sy = h.y - camera.y;
+  const g = ctx.createRadialGradient(sx, sy, r * 0.45, sx, sy, r);
+  g.addColorStop(0, 'rgba(3,4,9,0)');
+  g.addColorStop(1, 'rgba(3,4,9,0.97)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+}
+
+/* ------------------------------ MAP ---------------------------------- */
+
+function drawMap() {
+  const c = mapCtx, W = el.mapCanvas.width, H = el.mapCanvas.height;
+  c.clearRect(0, 0, W, H);
+  c.fillStyle = '#06080f'; c.fillRect(0, 0, W, H);
+  const pad = 20;
+  const k = Math.min((W - pad * 2) / WORLD_W, (H - pad * 2) / WORLD_H);
+  const ox = (W - WORLD_W * k) / 2, oy = (H - WORLD_H * k) / 2;
+  const T = (x, y) => ({ x: ox + x * k, y: oy + y * k });
+
+  WALK.forEach(r => {
+    const p = T(r.x, r.y);
+    c.fillStyle = r.room ? 'rgba(90,120,180,.30)' : 'rgba(70,90,130,.18)';
+    c.fillRect(p.x, p.y, r.w * k, r.h * k);
+    c.strokeStyle = 'rgba(150,180,230,.35)'; c.lineWidth = 1;
+    c.strokeRect(p.x, p.y, r.w * k, r.h * k);
+  });
+
+  c.fillStyle = 'rgba(190,210,240,.75)';
+  c.font = '10px sans-serif';
+  ROOMS.forEach(r => {
+    const p = T(r.x + 6, r.y + 16);
+    c.fillText(r.name, p.x, p.y);
+    if (state.adminView && !state.sabotage.comms) {
+      const n = state.players.filter(pl => pl.alive && roomAt(pl.x, pl.y) === r.name).length;
+      if (n) {
+        const q = T(r.x + r.w / 2, r.y + r.h / 2);
+        c.fillStyle = '#ffd34d'; c.font = 'bold 15px sans-serif';
+        c.fillText(String(n), q.x - 4, q.y + 5);
+        c.fillStyle = 'rgba(190,210,240,.75)'; c.font = '10px sans-serif';
+      }
+    }
+  });
+
+  const h = state.human;
+  const hp = T(h.x, h.y);
+  c.fillStyle = h.color;
+  c.beginPath(); c.arc(hp.x, hp.y, 5, 0, 7); c.fill();
+  c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke();
+
+  if (!h.alive) {
+    state.bodies.forEach(b => {
+      const p = T(b.x, b.y);
+      c.fillStyle = '#d0433a';
+      c.fillRect(p.x - 3, p.y - 3, 6, 6);
+    });
+  }
+}
+
+/* ============================ MEETINGS =============================== */
+
+function openMeeting(reason, msg) {
+  if (state.phase !== 'playing') return;
+  closeTask();
+  el.sabotageModal.classList.add('hidden');
+  if (state.mapOpen) toggleMap();
+
+  // meetings clear non-critical sabotages, like the real game
+  state.sabotage.lights = false;
+  state.sabotage.comms = false;
+  state.sabotage.doors = [];
+  renderTaskPanel();
+
+  // everyone teleports to the Cafeteria table
+  state.players.forEach(p => {
+    if (!p.alive) return;
+    const s = pt('Cafeteria', 0.25 + Math.random() * 0.5, 0.25 + Math.random() * 0.5);
+    p.x = s.x; p.y = s.y; p.path = null; p.inVent = false;
+  });
+
+  state.phase = 'meeting';
+  state.meeting = { reason, sub: 'discussion', timer: DISCUSSION_TIME, votes: {} };
+  el.meetingTitle.textContent = reason === 'report' ? 'Dead Body Reported' : 'Emergency Meeting';
+  el.meetingSubtitle.textContent = msg;
+  el.skipVoteBtn.disabled = true;
+  el.skipVoteBtn.classList.remove('voted');
+  el.meetingModal.classList.remove('hidden');
+  playAlarm();
+  renderVoters();
+}
+
+function renderVoters() {
+  el.voterList.innerHTML = '';
+  const m = state.meeting;
+  state.players.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'voter-card' + (!p.alive ? ' dead' : '');
+    card.dataset.id = p.id;
+    const tally = Object.entries(m.votes).filter(([, v]) => v === p.id).length;
+    card.innerHTML =
+      `<div class="dot" style="background:${p.color}"></div>` +
+      `${p.name}${p.id === 'human' ? ' (you)' : ''}${!p.alive ? ' 💀' : ''}` +
+      `<div class="tally">${m.sub === 'voting' && tally ? '● '.repeat(tally) : ''}</div>`;
+    if (p.alive) card.addEventListener('click', () => castVote('human', p.id));
+    el.voterList.appendChild(card);
+  });
+}
+
+function tickMeeting(dt) {
+  const m = state.meeting;
+  if (!m) return;
+  m.timer -= dt;
+  if (m.sub === 'discussion') {
+    el.meetingTimer.textContent = `Discussion — ${Math.max(0, Math.ceil(m.timer))}s`;
+    if (m.timer <= 0) {
+      m.sub = 'voting'; m.timer = VOTING_TIME;
+      el.skipVoteBtn.disabled = !state.human.alive;
+      scheduleBotVotes();
+      renderVoters();
+    }
+  } else {
+    el.meetingTimer.textContent = `Voting — ${Math.max(0, Math.ceil(m.timer))}s`;
+    const aliveVoters = state.players.filter(p => p.alive).length;
+    if (m.timer <= 0 || Object.keys(m.votes).length >= aliveVoters) resolveVotes();
+  }
+}
+
+function scheduleBotVotes() {
+  const ref = state.meeting;
+  state.players.forEach(p => {
+    if (!p.isBot || !p.alive) return;
+    setTimeout(() => {
+      if (state.meeting !== ref || ref.sub !== 'voting') return;
+      castVote(p.id, decideBotVote(p));
+    }, (1.5 + Math.random() * (VOTING_TIME - 5)) * 1000);
+  });
+}
+
+function decideBotVote(p) {
+  if (p.suspect) {
+    const s = state.players.find(x => x.id === p.suspect);
+    if (s && s.alive && Math.random() < 0.85) return s.id;
+  }
+  if (p.isImpostor) {
+    // impostors vote for a crewmate, never a fellow impostor
+    const crew = state.players.filter(o => o.alive && !o.isImpostor);
+    if (crew.length && Math.random() < 0.6) return crew[(Math.random() * crew.length) | 0].id;
+    return null;
+  }
+  if (Math.random() < 0.4) return null;
+  const others = state.players.filter(o => o.alive && o.id !== p.id);
+  return others.length ? others[(Math.random() * others.length) | 0].id : null;
+}
+
+function castVote(voterId, targetId) {
+  const m = state.meeting;
+  if (!m || m.sub !== 'voting') return;
+  const voter = state.players.find(p => p.id === voterId);
+  if (!voter || !voter.alive || voterId in m.votes) return;
+  m.votes[voterId] = targetId;
+  if (voterId === 'human') {
+    [...el.voterList.children].forEach(c => c.classList.remove('voted'));
+    el.skipVoteBtn.classList.remove('voted');
+    if (targetId) {
+      const c = [...el.voterList.children].find(c => c.dataset.id === targetId);
+      if (c) c.classList.add('voted');
+    } else el.skipVoteBtn.classList.add('voted');
+    el.skipVoteBtn.disabled = true;
+  }
+  renderVoters();
+}
+
+function resolveVotes() {
+  const m = state.meeting;
+  const tally = {}; let skips = 0;
+  state.players.forEach(p => {
+    if (!p.alive || !(p.id in m.votes)) return;
+    const v = m.votes[p.id];
+    if (v == null) skips++; else tally[v] = (tally[v] || 0) + 1;
+  });
+  let max = 0;
+  Object.values(tally).forEach(n => { if (n > max) max = n; });
+  const top = Object.entries(tally).filter(([, n]) => n === max && max > 0).map(([id]) => id);
+
+  let ejected = null;
+  if (top.length === 1 && max > skips) ejected = state.players.find(p => p.id === top[0]);
+
+  el.meetingModal.classList.add('hidden');
+  state.meeting = null;
+  showEjection(ejected);
+}
+
+/* --------------------------- EJECTION -------------------------------- */
+
+function showEjection(ejected) {
+  state.phase = 'eject';
+  el.gameScreen.classList.add('hidden');
+  el.ejectScreen.classList.remove('hidden');
+
+  if (ejected) ejected.alive = false;
+
+  const remaining = state.players.filter(p => p.alive && p.isImpostor).length;
+  el.ejectText.textContent = ejected
+    ? `${ejected.name} was ${ejected.isImpostor ? '' : 'not '}The Impostor.`
+    : 'No one was ejected. (Skipped)';
+  el.ejectRemain.textContent = remaining === 1
+    ? '1 Impostor remains.'
+    : `${remaining} Impostors remain.`;
+
+  // float the ejected crewmate off into space
+  const start = performance.now();
+  const DUR = 3000;
+  (function anim() {
+    const t = clamp((performance.now() - start) / DUR, 0, 1);
+    ejectCtx.clearRect(0, 0, 640, 260);
+    ejectCtx.fillStyle = '#05060c';
+    ejectCtx.fillRect(0, 0, 640, 260);
+    for (let i = 0; i < 60; i++) {
+      const sx = (i * 97) % 640, sy = (i * 53) % 260;
+      ejectCtx.globalAlpha = .3 + (i % 5) * .12;
+      ejectCtx.fillStyle = '#fff';
+      ejectCtx.fillRect(sx, sy, 2, 2);
+    }
+    ejectCtx.globalAlpha = 1;
+    if (ejected) {
+      const x = 60 + t * 520, y = 130 + Math.sin(t * 6) * 16;
+      ejectCtx.save();
+      ejectCtx.translate(x, y);
+      ejectCtx.rotate(t * 5);
+      const g = ejectCtx.createLinearGradient(-18, -18, 18, 18);
+      g.addColorStop(0, shade(ejected.color, 28));
+      g.addColorStop(1, shade(ejected.color, -22));
+      ejectCtx.fillStyle = g;
+      ejectCtx.beginPath(); ejectCtx.ellipse(0, 0, 17, 21, 0, 0, 7); ejectCtx.fill();
+      ejectCtx.strokeStyle = 'rgba(0,0,0,.5)'; ejectCtx.lineWidth = 2; ejectCtx.stroke();
+      ejectCtx.fillStyle = '#9fd8ff';
+      ejectCtx.beginPath(); ejectCtx.ellipse(5, -5, 7, 5, 0, 0, 7); ejectCtx.fill();
+      ejectCtx.restore();
+    }
+    if (t < 1 && state.phase === 'eject') requestAnimationFrame(anim);
+  })();
+
+  setTimeout(() => {
+    el.ejectScreen.classList.add('hidden');
+    if (checkWin()) return;
+    el.gameScreen.classList.remove('hidden');
+    state.phase = 'playing';
+    state.lastTime = performance.now();
+    // everyone heads off in their own direction again rather than milling about the table
+    spreadPlayers();
+    state.players.forEach(p => { p.killCooldown = Math.max(p.killCooldown, 10); p.path = null; });
+  }, 3600);
+}
+
+/* ============================ WIN ==================================== */
+
+function checkWin() {
+  if (state.phase === 'gameover') return true;
+  const imps = state.players.filter(p => p.alive && p.isImpostor).length;
+  const crew = state.players.filter(p => p.alive && !p.isImpostor).length;
+  if (imps === 0) { endGame(false, 'All Impostors were ejected.'); return true; }
+  if (state.totalSteps && state.doneSteps >= state.totalSteps) { endGame(false, 'The crew finished every task.'); return true; }
+  if (imps >= crew) { endGame(true, 'The Impostors outnumber the crew.'); return true; }
+  return false;
+}
+
+function endGame(impostorsWin, msg) {
+  if (state.phase === 'gameover') return;
+  state.phase = 'gameover';
+  state.meeting = null;
+  closeTask();
+  el.meetingModal.classList.add('hidden');
+  el.sabotageModal.classList.add('hidden');
+  el.mapOverlay.classList.add('hidden');
+  el.ejectScreen.classList.add('hidden');
+  el.gameScreen.classList.add('hidden');
+  el.gameoverScreen.classList.remove('hidden');
+
+  const won = impostorsWin === state.human.isImpostor;
+  el.gameoverTitle.textContent = impostorsWin ? 'IMPOSTORS WIN' : 'CREWMATES WIN';
+  el.gameoverTitle.style.color = impostorsWin ? '#ff3b30' : '#6db8ff';
+  el.gameoverSubtitle.textContent = `${msg} ${won ? 'You won!' : 'You lost.'}`;
+
+  el.gameoverCrew.innerHTML = '';
+  state.players.filter(p => p.isImpostor).forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'rc';
+    d.innerHTML = `<i style="background:${p.color}"></i>${p.name}`;
+    el.gameoverCrew.appendChild(d);
+  });
+  beep(impostorsWin ? 150 : 660, 0.6, impostorsWin ? 'sawtooth' : 'sine', 0.12);
+}
+
+function backToMenu() {
+  state.phase = 'menu';
+  state.keys = {};
+  el.gameoverScreen.classList.add('hidden');
+  el.gameScreen.classList.add('hidden');
+  el.ejectScreen.classList.add('hidden');
+  el.menuScreen.classList.remove('hidden');
+}
+</script>
+</body>
+</html>

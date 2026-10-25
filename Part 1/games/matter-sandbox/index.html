@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Matter — Falling Particle Sandbox</title>
+<style>
+  :root{
+    --bg:#0a0f0c;
+    --panel:#121814;
+    --panel-2:#161d18;
+    --border:#2a352c;
+    --border-soft:#1d251f;
+    --ink:#eef1ea;
+    --muted:#8d998e;
+    --accent:#ffb238;
+    --accent-dim:#7a5a1f;
+    --accent-soft:rgba(255,178,56,.14);
+    --font-display:'Arial Narrow','Helvetica Neue Condensed','Helvetica Neue',Arial,system-ui,sans-serif;
+    --font-mono:ui-monospace,'SF Mono','Cascadia Code','Roboto Mono',Menlo,Consolas,monospace;
+    --font-body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    overflow:hidden;
+  }
+
+  .app{
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    background:
+      radial-gradient(ellipse at 20% -10%, rgba(255,178,56,.05), transparent 45%),
+      var(--bg);
+  }
+
+  /* ---------- status bar ---------- */
+  .statusbar{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:12px 20px;
+    border-bottom:1px solid var(--border-soft);
+    background:linear-gradient(180deg, var(--panel), var(--bg));
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    font-family:var(--font-display);
+    font-weight:800;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-size:20px;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  .brand-mark{
+    width:9px;height:9px;
+    background:var(--accent);
+    box-shadow:0 0 8px 1px var(--accent);
+    flex:0 0 auto;
+  }
+  .brand-sub{
+    font-family:var(--font-mono);
+    font-weight:400;
+    text-transform:none;
+    letter-spacing:0;
+    font-size:11px;
+    color:var(--muted);
+    display:none;
+  }
+  .readouts{
+    display:flex;
+    gap:18px;
+    font-family:var(--font-mono);
+    font-size:11px;
+  }
+  .readout{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:2px;
+    min-width:44px;
+  }
+  .readout .k{
+    color:var(--muted);
+    letter-spacing:.1em;
+  }
+  .readout .v{
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+    font-size:13px;
+  }
+
+  /* ---------- stage ---------- */
+  .stage{
+    flex:1;
+    display:flex;
+    gap:16px;
+    padding:16px 20px 20px;
+    min-height:0;
+  }
+  .viewport{
+    position:relative;
+    flex:1;
+    min-width:0;
+    background:#060907;
+    border:1px solid var(--border);
+    overflow:hidden;
+    cursor:crosshair;
+  }
+  canvas#sim{
+    display:block;
+    width:100%;
+    height:100%;
+    image-rendering:pixelated;
+    image-rendering:crisp-edges;
+    touch-action:none;
+  }
+  .corner{
+    position:absolute;
+    width:16px;height:16px;
+    border:2px solid var(--accent-dim);
+    opacity:.8;
+    pointer-events:none;
+  }
+  .corner.tl{top:-1px;left:-1px;border-right:none;border-bottom:none;}
+  .corner.tr{top:-1px;right:-1px;border-left:none;border-bottom:none;}
+  .corner.bl{bottom:-1px;left:-1px;border-right:none;border-top:none;}
+  .corner.br{bottom:-1px;right:-1px;border-left:none;border-top:none;}
+
+  .flash{
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle, rgba(255,200,110,.65), rgba(255,120,40,.2) 45%, transparent 72%);
+    opacity:0;
+    pointer-events:none;
+  }
+
+  .hint{
+    position:absolute;
+    left:10px;
+    bottom:10px;
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:.04em;
+    color:var(--muted);
+    background:rgba(6,9,7,.55);
+    padding:4px 8px;
+    border:1px solid var(--border-soft);
+    pointer-events:none;
+    transition:opacity .6s ease;
+  }
+
+  .banner{
+    position:absolute;
+    left:50%; top:14px;
+    transform:translateX(-50%);
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:#ff8a6a;
+    background:rgba(6,9,7,.72);
+    padding:6px 12px;
+    border:1px solid rgba(255,90,60,.4);
+    pointer-events:none;
+    opacity:0;
+    transition:opacity .3s ease;
+    white-space:nowrap;
+  }
+  .banner.show{opacity:1;}
+
+  /* ---------- rail ---------- */
+  .rail{
+    flex:0 0 234px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    overflow-y:auto;
+  }
+  .rail-section{
+    background:var(--panel);
+    border:1px solid var(--border-soft);
+    padding:12px;
+  }
+  .rail-section h2{
+    margin:0 0 10px;
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-weight:500;
+  }
+
+  .swatches{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:6px;
+  }
+  .swatch{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+    padding:8px 4px 6px;
+    background:var(--panel-2);
+    border:1px solid var(--border-soft);
+    color:var(--muted);
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .swatch .chip{
+    width:16px;height:16px;
+    border:1px solid rgba(0,0,0,.35);
+  }
+  .swatch .num{
+    position:absolute;
+    top:2px; left:3px;
+    font-size:8px;
+    color:var(--muted);
+    opacity:.6;
+  }
+  .swatch:hover{border-color:var(--border);color:var(--ink);}
+  .swatch.active{
+    border-color:var(--accent);
+    color:var(--accent);
+    background:var(--accent-soft);
+  }
+  .swatch:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+
+  .brush-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  input[type=range]{
+    flex:1;
+    accent-color:var(--accent);
+    background:transparent;
+  }
+  .brush-val{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--accent);
+    min-width:16px;
+    text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .actions{
+    display:flex;
+    gap:8px;
+  }
+  button{
+    flex:1;
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    padding:9px 6px;
+    background:var(--panel-2);
+    color:var(--ink);
+    border:1px solid var(--border);
+    cursor:pointer;
+  }
+  button:hover{border-color:var(--accent-dim);}
+  button:active{background:var(--accent-soft);}
+  button:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+  button.primary{color:var(--accent);border-color:var(--accent-dim);}
+
+  .legend p{
+    margin:0;
+    font-size:11.5px;
+    line-height:1.55;
+    color:var(--muted);
+  }
+  .legend b{color:var(--ink); font-weight:600;}
+
+  @media (min-width:640px){
+    .brand-sub{display:inline;}
+  }
+
+  @media (max-width:760px){
+    .stage{flex-direction:column; padding:12px;}
+    .rail{
+      flex:0 0 auto;
+      flex-direction:row;
+      flex-wrap:wrap;
+      max-height:none;
+    }
+    .rail-section{flex:1 1 150px;}
+    .viewport{min-height:46vh;}
+    .readouts{gap:12px;}
+    .readout{min-width:auto;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .flash{transition:none;}
+  }
+</style>
+</head>
+<body>
+<a href="../../index.html" title="Back to Arcade" style="position:fixed;top:10px;left:10px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:rgba(0,0,0,0.6);color:#fff;font:14px/1 system-ui,-apple-system,sans-serif;border-radius:50%;text-decoration:none;opacity:0.4;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">&larr;</a>
+
+<div class="app">
+  <header class="statusbar">
+    <div class="brand"><span class="brand-mark"></span>Matter<span class="brand-sub">falling-particle sandbox</span></div>
+    <div class="readouts">
+      <div class="readout"><span class="k">Tool</span><span class="v" id="rTool">Sand</span></div>
+      <div class="readout"><span class="k">Rad</span><span class="v" id="rRadius">2</span></div>
+      <div class="readout"><span class="k">Cells</span><span class="v" id="rCount">0</span></div>
+      <div class="readout"><span class="k">Fps</span><span class="v" id="rFps">60</span></div>
+      <div class="readout"><span class="k">Survivor</span><span class="v" id="rPlayer">Alive</span></div>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="viewport" id="viewport">
+      <canvas id="sim"></canvas>
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <div class="flash" id="flash"></div>
+      <div class="banner" id="banner"></div>
+      <div class="hint" id="hint">drag to place &middot; A/D move, W jump, F fight &middot; 1&ndash;9 materials &middot; space pause</div>
+    </div>
+
+    <aside class="rail">
+      <div class="rail-section">
+        <h2>Materials</h2>
+        <div class="swatches" id="swatches"></div>
+      </div>
+      <div class="rail-section">
+        <h2>Brush radius</h2>
+        <div class="brush-row">
+          <input type="range" id="brush" min="1" max="10" value="2" step="1">
+          <span class="brush-val" id="brushVal">2</span>
+        </div>
+      </div>
+      <div class="rail-section actions">
+        <button id="pauseBtn">Pause</button>
+        <button id="clearBtn">Clear</button>
+        <button id="soundBtn">Sound: On</button>
+      </div>
+      <div class="rail-section legend">
+        <h2>Survivor controls</h2>
+        <p><b>A/D</b> or <b>&larr;/&rarr;</b> walk, <b>W</b> or <b>&uarr;</b> jump, <b>F</b> swing at nearby zombies. Getting bitten turns you into one of them. In water you sink slowly instead of falling — tap <b>W</b> repeatedly to paddle back up to the surface, and staying fully submerged too long will drown you. Paint a <b>Recruit</b> to hand control to a new body — your old one wanders off as an ordinary human.</p>
+      </div>
+      <div class="rail-section legend">
+        <h2>Field notes</h2>
+        <p><b>Fire</b> ignites wood, oil, plant and gunpowder, dies in water. <b>Acid</b> eats stone, sand, wood, plant and gunpowder. <b>Bombs</b> and <b>gunpowder</b> detonate on contact with flame and chain into their own kind. <b>Lava</b> incinerates fuel, turns sand to <b>glass</b>, melts snow and ice, and hardens to stone in water. <b>Snow</b> melts near heat; water freezes where it touches ice. <b>Plant</b> grows toward water. <b>Fuse</b> carries flame fast and true — wire it to a bomb. <b>Clone</b> copies whatever last touched it; <b>Void</b> erases anything it touches. <b>Zombies</b> hunt down humans but prefer chasing you, and spread the infection on contact; <b>cure</b> turns them back. Painting <b>glass</b> over anything seals it behind the pane, visible but frozen in place — until an explosion shatters the glass and spills it back out. <b>Sand</b> turns to <b>mud</b> where it touches standing water; <b>concrete</b> sets into stone the same way. <b>Crystal</b> is tough and inert but still melts against lava; <b>honey</b> is a slow, syrupy liquid that smothers flame without boiling away.</p>
+      </div>
+      <div class="rail-section legend">
+        <h2>Reactions</h2>
+        <p><b>Sodium</b> bursts into flame — sometimes a small blast — the instant it touches water. <b>Base</b> neutralizes acid on contact, leaving water and a little salt. <b>Baking soda</b> fizzes into foam when it meets acid; <b>yeast</b> and <b>peroxide</b> do the same, more violently. <b>Ammonia</b> and <b>bleach</b> combine into a lethal toxic gas — never mix them. <b>Thermite</b> ignites into molten metal that burns straight through stone. <b>Iron</b> rusts in standing water and melts in fire or lava. <b>Napalm</b> catches fire far more readily than oil and keeps burning long after — even sitting on water. A <b>spark</b> instantly detonates or ignites whatever it touches, then vanishes. <b>Oxygen</b> feeds any flame it drifts into, burning brighter and longer. <b>Nitroglycerin</b> is wildly unstable — the faintest touch of flame or acid sets it off, and it can go off on its own.</p>
+      </div>
+      <div class="rail-section legend">
+        <h2>Devices</h2>
+        <p><b>Dry ice</b> slowly sublimates into fog, faster near heat or water. Paint a <b>blue</b> and an <b>orange portal</b> — sized by your brush — and anything that touches one steps out the other, you and every human or zombie included; placing a new one retires its predecessor. A <b>fan</b> blows whatever sits above it further up. <b>Heaters</b> and <b>coolers</b> radiate warmth or cold into anything nearby. <b>Water</b> and <b>lava sources</b> trickle out their material forever.</p>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- material definitions ----------------
+  const T = {
+    EMPTY:0, SAND:1, WATER:2, STONE:3, WOOD:4, FIRE:5, BOMB:6, OIL:7, ACID:8, SMOKE:9, STEAM:10,
+    ICE:11, LAVA:12, PLANT:13, FUSE:14, CLONE:15, VOID:16,
+    HUMAN:17, ZOMBIE:18, PLAYER:19,
+    SNOW:20, GLASS:21, GUNPOWDER:22, CURE:23,
+    SODIUM:24, BASE:25, BAKINGSODA:26, THERMITE:27,
+    RECRUIT:28,
+    AMMONIA:29, BLEACH:30, TOXICGAS:31, YEAST:32, PEROXIDE:33, FOAM:34,
+    IRON:35, RUST:36, DRYICE:37, PORTALBLUE:38, PORTALORANGE:39,
+    FAN:40, HEATER:41, COOLER:42, WATERSOURCE:43, LAVASOURCE:44,
+    MUD:45, CONCRETE:46, NAPALM:47, SPARK:48, OXYGEN:49, NITRO:50, CRYSTAL:51, HONEY:52
+  };
+
+  const TOOLS = [
+    { t:T.SAND,  label:'Sand',   swatch:[216,184,119] },
+    { t:T.WATER, label:'Water',  swatch:[47,127,176] },
+    { t:T.STONE, label:'Stone',  swatch:[122,125,120] },
+    { t:T.WOOD,  label:'Wood',   swatch:[107,74,44] },
+    { t:T.FIRE,  label:'Fire',   swatch:[255,106,42] },
+    { t:T.OIL,   label:'Oil',    swatch:[92,70,42] },
+    { t:T.ACID,  label:'Acid',   swatch:[176,222,58] },
+    { t:T.BOMB,  label:'Bomb',   swatch:[38,40,35] },
+    { t:T.EMPTY, label:'Erase',  swatch:[18,24,20] },
+    { t:T.ICE,   label:'Ice',    swatch:[176,224,230] },
+    { t:T.LAVA,  label:'Lava',   swatch:[255,90,20] },
+    { t:T.PLANT, label:'Plant',  swatch:[54,150,64] },
+    { t:T.FUSE,  label:'Fuse',   swatch:[196,168,102] },
+    { t:T.CLONE, label:'Clone',  swatch:[190,90,220] },
+    { t:T.VOID,  label:'Void',   swatch:[58,20,72] },
+    { t:T.HUMAN, label:'Human',  swatch:[224,190,158] },
+    { t:T.ZOMBIE,label:'Zombie', swatch:[110,140,80] },
+    { t:T.SNOW,  label:'Snow',   swatch:[236,242,246] },
+    { t:T.GLASS, label:'Glass',  swatch:[196,224,228] },
+    { t:T.GUNPOWDER, label:'Gunpowder', swatch:[86,84,70] },
+    { t:T.CURE,  label:'Cure',   swatch:[110,230,190] },
+    { t:T.SODIUM, label:'Sodium', swatch:[205,208,214] },
+    { t:T.BASE,  label:'Base',   swatch:[120,140,220] },
+    { t:T.BAKINGSODA, label:'Baking Soda', swatch:[245,245,238] },
+    { t:T.THERMITE, label:'Thermite', swatch:[150,88,66] },
+    { t:T.RECRUIT, label:'Recruit', swatch:[140,200,255] },
+    { t:T.AMMONIA, label:'Ammonia', swatch:[200,220,140] },
+    { t:T.BLEACH, label:'Bleach', swatch:[225,235,240] },
+    { t:T.TOXICGAS, label:'Toxic Gas', swatch:[180,210,60] },
+    { t:T.YEAST, label:'Yeast', swatch:[222,198,150] },
+    { t:T.PEROXIDE, label:'Peroxide', swatch:[235,245,250] },
+    { t:T.IRON, label:'Iron', swatch:[140,148,158] },
+    { t:T.RUST, label:'Rust', swatch:[150,80,40] },
+    { t:T.DRYICE, label:'Dry Ice', swatch:[210,236,242] },
+    { t:T.PORTALBLUE, label:'Portal Blue', swatch:[60,140,255] },
+    { t:T.PORTALORANGE, label:'Portal Orange', swatch:[255,140,40] },
+    { t:T.FAN, label:'Fan', swatch:[150,190,198] },
+    { t:T.HEATER, label:'Heater', swatch:[205,95,60] },
+    { t:T.COOLER, label:'Cooler', swatch:[110,170,215] },
+    { t:T.WATERSOURCE, label:'Water Source', swatch:[95,140,165] },
+    { t:T.LAVASOURCE, label:'Lava Source', swatch:[130,75,58] },
+    { t:T.MUD, label:'Mud', swatch:[92,72,50] },
+    { t:T.CONCRETE, label:'Concrete', swatch:[168,168,160] },
+    { t:T.NAPALM, label:'Napalm', swatch:[120,58,30] },
+    { t:T.SPARK, label:'Spark', swatch:[235,245,255] },
+    { t:T.OXYGEN, label:'Oxygen', swatch:[196,214,255] },
+    { t:T.NITRO, label:'Nitroglycerin', swatch:[219,229,110] },
+    { t:T.CRYSTAL, label:'Crystal', swatch:[190,205,235] },
+    { t:T.HONEY, label:'Honey', swatch:[225,165,40] },
+  ];
+
+  const DENSITY = {};
+  DENSITY[T.FIRE]=0; DENSITY[T.SMOKE]=0; DENSITY[T.STEAM]=0;
+  DENSITY[T.OIL]=2; DENSITY[T.WATER]=3; DENSITY[T.ACID]=3; DENSITY[T.LAVA]=4;
+  DENSITY[T.SAND]=5; DENSITY[T.BOMB]=6;
+  DENSITY[T.SNOW]=4; DENSITY[T.GUNPOWDER]=5; DENSITY[T.CURE]=3;
+  DENSITY[T.SODIUM]=5; DENSITY[T.BASE]=3; DENSITY[T.BAKINGSODA]=5; DENSITY[T.THERMITE]=5;
+  DENSITY[T.AMMONIA]=3; DENSITY[T.BLEACH]=3; DENSITY[T.TOXICGAS]=0; DENSITY[T.YEAST]=5;
+  DENSITY[T.PEROXIDE]=3; DENSITY[T.FOAM]=0;
+  DENSITY[T.MUD]=4; DENSITY[T.CONCRETE]=5; DENSITY[T.NAPALM]=2; DENSITY[T.OXYGEN]=0;
+  DENSITY[T.NITRO]=4; DENSITY[T.HONEY]=3;
+
+  const BG = [10,15,12];
+
+  // ---------------- state ----------------
+  const canvas = document.getElementById('sim');
+  const ctx = canvas.getContext('2d', { alpha:true });
+  const viewport = document.getElementById('viewport');
+  const flashEl = document.getElementById('flash');
+  const hintEl = document.getElementById('hint');
+  const bannerEl = document.getElementById('banner');
+  const rPlayerEl = document.getElementById('rPlayer');
+
+  const CELL = 4;
+  let gridW = 0, gridH = 0;
+  let type, life, noise, moved, imgData, imgBuf;
+  let back, backLife; // material sealed behind a glass cell, frozen (not simulated)
+
+  let currentTool = T.SAND;
+  let brushRadius = 2;
+  let paused = false;
+  let frameParity = 0;
+  let shakeFrames = 0, shakeMag = 0;
+  let particleCount = 0;
+
+  // ---------------- audio ----------------
+  let soundOn = true;
+  let audioCtx = null;
+  let lastPlaceSound = 0;
+
+  function ensureAudio(){
+    if(!soundOn) return null;
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      audioCtx = new AC();
+    }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function beep(freq, duration, type, gainPeak, startDelay){
+    const ctx = ensureAudio();
+    if(!ctx) return;
+    const t0 = ctx.currentTime + (startDelay||0);
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(gainPeak||0.2, t0+0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+duration);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0+duration+0.02);
+  }
+
+  function sweep(freqFrom, freqTo, duration, type, gainPeak){
+    const ctx = ensureAudio();
+    if(!ctx) return;
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freqFrom, t0);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(freqTo,1), t0+duration);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(gainPeak||0.2, t0+0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+duration);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0+duration+0.02);
+  }
+
+  function noiseBurst(duration, gainPeak){
+    const ctx = ensureAudio();
+    if(!ctx) return;
+    const t0 = ctx.currentTime;
+    const bufSize = Math.max(1, Math.floor(ctx.sampleRate*duration));
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for(let i=0;i<bufSize;i++) data[i] = (Math.random()*2-1) * (1 - i/bufSize);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1800, t0);
+    filter.frequency.exponentialRampToValueAtTime(120, t0+duration);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(gainPeak||0.4, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+duration);
+    src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    src.start(t0);
+  }
+
+  function playExplosion(radius){
+    noiseBurst(0.5 + Math.min(radius||9,20)*0.01, 0.5);
+    sweep(160, 40, 0.35, 'triangle', 0.25);
+  }
+  function playJump(){
+    sweep(220, 440, 0.16, 'square', 0.12);
+  }
+  function playHurt(){
+    sweep(180, 90, 0.22, 'sawtooth', 0.2);
+  }
+  function playInfected(){
+    sweep(100, 60, 0.5, 'sawtooth', 0.22);
+    beep(70, 0.4, 'sawtooth', 0.15, 0.1);
+  }
+  function playCure(){
+    beep(440, 0.12, 'sine', 0.15);
+    beep(660, 0.16, 'sine', 0.15, 0.08);
+  }
+  function playWarp(){
+    sweep(300, 900, 0.2, 'sine', 0.15);
+    sweep(900, 1400, 0.12, 'sine', 0.08, 0.15);
+  }
+  function playClick(){
+    beep(520, 0.06, 'square', 0.08);
+  }
+  function playPlace(){
+    const now = performance.now();
+    if(now - lastPlaceSound < 45) return;
+    lastPlaceSound = now;
+    beep(180+Math.random()*60, 0.04, 'square', 0.04);
+  }
+
+  // ---------------- player state ----------------
+  // playerX/playerY mark the feet-anchor cell; the body template is stamped relative to it.
+  let playerX = 0, playerY = 0;
+  let playerAlive = false;
+  let playerJumpTicks = 0;
+  let playerMoveCooldown = 0;
+  let playerFallCooldown = 0;
+  let respawnTimer = 0;
+  let drownTicks = 0;
+  const keysDown = Object.create(null);
+
+  const PART = { HEAD:1, TORSO:2, ARM:3, LEG:4 };
+  const PART_CHAR = { H:PART.HEAD, T:PART.TORSO, A:PART.ARM, L:PART.LEG };
+  const BODY_TEMPLATE = [
+    '...HHH...',
+    '..HHHHH..',
+    '..HHHHH..',
+    '..HHHHH..',
+    '...HHH...',
+    '...TTT...',
+    '.AATTTAA.',
+    '.AATTTAA.',
+    '.AATTTAA.',
+    '.A.TTT.A.',
+    '...TTT...',
+    '...TTT...',
+    '..LL.LL..',
+    '..LL.LL..',
+    '..LL.LL..',
+    '..LL.LL..',
+  ];
+  const BODY = (function(){
+    const rows = BODY_TEMPLATE.length;
+    const cols = BODY_TEMPLATE[0].length;
+    const centerCol = (cols-1)/2;
+    const cells = [];
+    for(let r=0;r<rows;r++){
+      const dy = r-(rows-1); // bottom row = 0 (feet), top row = -(rows-1)
+      for(let c=0;c<cols;c++){
+        const ch = BODY_TEMPLATE[r][c];
+        if(ch==='.') continue;
+        cells.push([Math.round(c-centerCol), dy, PART_CHAR[ch]]);
+      }
+    }
+    return cells;
+  })();
+  const BODY_HEIGHT = BODY_TEMPLATE.length;
+  const BODY_HALF_WIDTH = Math.floor(BODY_TEMPLATE[0].length/2);
+
+  const PLAYER_COLORS = { 1:[248,210,178], 2:[52,120,168], 3:[248,210,178], 4:[46,54,72] };
+  const HUMAN_COLORS  = { 1:[224,190,158], 2:[196,140,70],  3:[224,190,158], 4:[92,70,52] };
+  const ZOMBIE_COLORS = { 1:[118,150,90],  2:[70,92,62],    3:[104,134,80],  4:[52,64,48] };
+
+  // beings: autonomous humans/zombies, each {x, y, team} — x,y is the feet-anchor cell
+  const beings = [];
+
+  // single-pair teleporters: placing a new one of a colour retires the old one
+  let bluePortalPos = null, orangePortalPos = null;
+  let bluePortalCells = [], orangePortalCells = [];
+
+  function idx(x,y){ return y*gridW+x; }
+  function inBounds(x,y){ return x>=0 && x<gridW && y>=0 && y<gridH; }
+
+  function allocateGrid(w,h){
+    gridW = w; gridH = h;
+    const n = w*h;
+    type = new Uint8Array(n);
+    life = new Uint16Array(n);
+    moved = new Uint8Array(n);
+    noise = new Int16Array(n);
+    back = new Uint8Array(n);
+    backLife = new Uint16Array(n);
+    for(let i=0;i<n;i++) noise[i] = (Math.random()*24|0)-12;
+    canvas.width = w; canvas.height = h;
+    imgData = ctx.createImageData(w,h);
+    imgBuf = imgData.data;
+  }
+
+  function buildStarterScene(){
+    bluePortalPos = null; orangePortalPos = null;
+    bluePortalCells = []; orangePortalCells = [];
+    const groundH = Math.max(3, Math.round(gridH*0.08));
+    for(let y=gridH-groundH;y<gridH;y++){
+      for(let x=0;x<gridW;x++) type[idx(x,y)] = T.STONE;
+    }
+    // stone shelf, left third
+    const shelfY = Math.round(gridH*0.62);
+    const shelfX0 = Math.round(gridW*0.06), shelfX1 = Math.round(gridW*0.34);
+    for(let x=shelfX0;x<shelfX1;x++){
+      type[idx(x,shelfY)] = T.STONE;
+      type[idx(x,shelfY+1)] = T.STONE;
+    }
+    // sand pile on the shelf
+    for(let x=shelfX0+2;x<shelfX1-2;x++){
+      const h = 4 + Math.round(3*Math.sin((x-shelfX0)/3));
+      for(let k=0;k<h;k++){
+        const y = shelfY-1-k;
+        if(y>0) type[idx(x,y)] = T.SAND;
+      }
+    }
+    // water pool, right side resting on ground
+    const poolX0 = Math.round(gridW*0.58), poolX1 = Math.round(gridW*0.94);
+    const poolTop = gridH-groundH-Math.round(gridH*0.16);
+    for(let y=poolTop;y<gridH-groundH;y++){
+      for(let x=poolX0;x<poolX1;x++) type[idx(x,y)] = T.WATER;
+    }
+    // a wood pillar and a bomb sitting near it, centre
+    const px = Math.round(gridW*0.46);
+    const pillarTop = gridH-groundH-Math.round(gridH*0.22);
+    for(let y=pillarTop;y<gridH-groundH;y++) type[idx(px,y)] = T.WOOD;
+    const bx = px+3, by = gridH-groundH-1;
+    if(inBounds(bx,by)){ type[idx(bx,by)] = T.BOMB; life[idx(bx,by)] = Math.random()*20|0; }
+
+    // a knot of survivors, and one zombie shambling in from the edge
+    beings.length = 0;
+    const floorY = gridH-groundH-1;
+    [0.28,0.38,0.48].forEach(function(fx){
+      spawnBeing(Math.round(gridW*fx), floorY, T.HUMAN);
+    });
+    spawnBeing(Math.round(gridW*0.88), floorY, T.ZOMBIE);
+
+    spawnPlayer();
+  }
+
+  function bipedPassable(x,y){
+    if(!inBounds(x,y)) return false;
+    const t = type[idx(x,y)];
+    return t===T.EMPTY || t===T.WATER || t===T.OIL || t===T.ACID || t===T.SMOKE || t===T.STEAM || t===T.PLANT;
+  }
+
+  function canPlaceBody(cx,cy){
+    for(let k=0;k<BODY.length;k++){
+      if(!bipedPassable(cx+BODY[k][0], cy+BODY[k][1])) return false;
+    }
+    return true;
+  }
+  function clearBodyAt(cx,cy){
+    for(let k=0;k<BODY.length;k++){
+      const x=cx+BODY[k][0], y=cy+BODY[k][1];
+      if(inBounds(x,y)){ type[idx(x,y)]=T.EMPTY; life[idx(x,y)]=0; }
+    }
+  }
+  function stampBodyAt(cx,cy,bodyType){
+    for(let k=0;k<BODY.length;k++){
+      const x=cx+BODY[k][0], y=cy+BODY[k][1];
+      if(inBounds(x,y)){ type[idx(x,y)]=bodyType; life[idx(x,y)]=BODY[k][2]; }
+    }
+  }
+  // clears the body at (cx,cy), then tries to place it at (newX,newY); restores on failure.
+  // returns true if it actually moved.
+  function tryBodyMove(cx,cy,newX,newY,bodyType){
+    clearBodyAt(cx,cy);
+    if(canPlaceBody(newX,newY)){
+      stampBodyAt(newX,newY,bodyType);
+      return true;
+    }
+    stampBodyAt(cx,cy,bodyType);
+    return false;
+  }
+  function isGrounded(cx,cy,bodyType){
+    clearBodyAt(cx,cy);
+    const blocked = !canPlaceBody(cx,cy+1);
+    stampBodyAt(cx,cy,bodyType);
+    return blocked;
+  }
+
+  function findBeingAt(x,y){
+    for(let i=0;i<beings.length;i++){
+      const b = beings[i];
+      const dx=x-b.x, dy=y-b.y;
+      if(Math.abs(dx)>BODY_HALF_WIDTH || dy>0 || dy<-(BODY_HEIGHT-1)) continue;
+      for(let k=0;k<BODY.length;k++){
+        if(BODY[k][0]===dx && BODY[k][1]===dy) return b;
+      }
+    }
+    return null;
+  }
+
+  function spawnBeing(x,y,team){
+    if(!canPlaceBody(x,y)) return null;
+    stampBodyAt(x,y,team);
+    const b = { x, y, team };
+    beings.push(b);
+    return b;
+  }
+
+  function spawnPlayer(){
+    const groundH = Math.max(3, Math.round(gridH*0.08));
+    const feetY = gridH-groundH-1;
+    let spawnX = Math.round(gridW*0.20);
+    if(!canPlaceBody(spawnX,feetY)){
+      let found = false;
+      for(let dx=1; dx<gridW && !found; dx++){
+        for(const sx of [spawnX-dx, spawnX+dx]){
+          if(canPlaceBody(sx,feetY)){ spawnX=sx; found=true; break; }
+        }
+      }
+      if(!found) return;
+    }
+    playerX = spawnX; playerY = feetY;
+    stampBodyAt(playerX, playerY, T.PLAYER);
+    playerAlive = true;
+    playerJumpTicks = 0;
+    playerMoveCooldown = 0;
+    playerFallCooldown = 0;
+    drownTicks = 0;
+    updatePlayerHUD();
+  }
+
+  function recruitAt(gx,gy){
+    if(!canPlaceBody(gx,gy)) return;
+    if(playerAlive){
+      clearBodyAt(playerX,playerY);
+      stampBodyAt(playerX,playerY,T.HUMAN);
+      beings.push({ x:playerX, y:playerY, team:T.HUMAN });
+    }
+    playerX = gx; playerY = gy;
+    stampBodyAt(playerX, playerY, T.PLAYER);
+    playerAlive = true;
+    playerJumpTicks = 0;
+    playerMoveCooldown = 0;
+    playerFallCooldown = 0;
+    drownTicks = 0;
+    respawnTimer = 0;
+    updatePlayerHUD();
+    showBanner('Control transferred');
+  }
+
+  function placePortal(gx,gy,portalType){
+    if(!inBounds(gx,gy)) return;
+    // an oval standing taller than it is wide, like a Portal-gun gateway,
+    // with a bright rim band around a darker "event horizon" core
+    const rx = Math.max(brushRadius, 2);
+    const ry = rx * 1.6;
+    const rx2 = rx*rx, ry2 = ry*ry;
+    const cells = [];
+    const rMax = Math.ceil(Math.max(rx,ry));
+    for(let dy=-rMax; dy<=rMax; dy++){
+      for(let dx=-rMax; dx<=rMax; dx++){
+        const norm = (dx*dx)/rx2 + (dy*dy)/ry2;
+        if(norm>1) continue;
+        const x=gx+dx, y=gy+dy;
+        if(!inBounds(x,y)) continue;
+        if(type[idx(x,y)]===T.PLAYER) continue;
+        cells.push([x,y, norm>0.5]);
+      }
+    }
+    if(cells.length===0) return;
+    if(portalType===T.PORTALBLUE){
+      for(let k=0;k<bluePortalCells.length;k++){
+        const [ox,oy] = bluePortalCells[k];
+        if(type[idx(ox,oy)]===T.PORTALBLUE) type[idx(ox,oy)] = T.EMPTY;
+      }
+      bluePortalPos = { x:gx, y:gy };
+      bluePortalCells = cells.map(function(c){ return [c[0],c[1]]; });
+    } else {
+      for(let k=0;k<orangePortalCells.length;k++){
+        const [ox,oy] = orangePortalCells[k];
+        if(type[idx(ox,oy)]===T.PORTALORANGE) type[idx(ox,oy)] = T.EMPTY;
+      }
+      orangePortalPos = { x:gx, y:gy };
+      orangePortalCells = cells.map(function(c){ return [c[0],c[1]]; });
+    }
+    for(let k=0;k<cells.length;k++){
+      const [x,y,isRim] = cells[k];
+      type[idx(x,y)] = portalType;
+      life[idx(x,y)] = (isRim ? 100 : 0) + (Math.random()*40|0);
+    }
+  }
+
+  function setupGrid(){
+    const w = Math.max(40, Math.floor(viewport.clientWidth/CELL));
+    const h = Math.max(30, Math.floor(viewport.clientHeight/CELL));
+    allocateGrid(w,h);
+    buildStarterScene();
+  }
+
+  // ---------------- movement primitives ----------------
+  function canDisplaceInto(movingT, targetT){
+    if(targetT === T.EMPTY) return true;
+    const dm = DENSITY[movingT], dt = DENSITY[targetT];
+    if(dm===undefined || dt===undefined) return false;
+    return dm > dt;
+  }
+
+  function trySwap(x,y,nx,ny){
+    if(!inBounds(nx,ny)) return false;
+    const i = idx(x,y), j = idx(nx,ny);
+    if(moved[i] || moved[j]) return false;
+    if(!canDisplaceInto(type[i], type[j])) return false;
+    const tt=type[i], tl=life[i];
+    type[i]=type[j]; life[i]=life[j];
+    type[j]=tt; life[j]=tl;
+    moved[i]=1; moved[j]=1;
+    return true;
+  }
+
+  function updatePowder(x,y){
+    if(trySwap(x,y,x,y+1)) return;
+    if(Math.random()<0.5){
+      if(trySwap(x,y,x-1,y+1)) return;
+      if(trySwap(x,y,x+1,y+1)) return;
+    } else {
+      if(trySwap(x,y,x+1,y+1)) return;
+      if(trySwap(x,y,x-1,y+1)) return;
+    }
+  }
+
+  function flowHorizontal(x,y,dir,maxDist){
+    const i = idx(x,y);
+    let cx = x, steps = 0;
+    while(steps<maxDist){
+      const nx = cx+dir;
+      if(!inBounds(nx,y)) break;
+      const j = idx(nx,y);
+      if(type[j]!==T.EMPTY || moved[j]) break;
+      cx = nx; steps++;
+    }
+    if(steps===0) return false;
+    const j = idx(cx,y);
+    type[j]=type[i]; life[j]=life[i];
+    type[i]=T.EMPTY; life[i]=0;
+    moved[i]=1; moved[j]=1;
+    return true;
+  }
+
+  function updateLiquid(x,y,dispersion){
+    if(trySwap(x,y,x,y+1)) return;
+    if(Math.random()<0.5){
+      if(trySwap(x,y,x-1,y+1)) return;
+      if(trySwap(x,y,x+1,y+1)) return;
+    } else {
+      if(trySwap(x,y,x+1,y+1)) return;
+      if(trySwap(x,y,x-1,y+1)) return;
+    }
+    const dir = Math.random()<0.5?-1:1;
+    if(flowHorizontal(x,y,dir,dispersion)) return;
+    flowHorizontal(x,y,-dir,dispersion);
+  }
+
+  const ORTHO_NBRS = [[0,-1],[0,1],[-1,0],[1,0]];
+
+  function updateWater(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      if(type[idx(nx,ny)]===T.ICE && Math.random()<0.012){
+        type[i]=T.ICE; life[i]=0;
+        return;
+      }
+    }
+    updateLiquid(x,y,7);
+  }
+
+  function updateSand(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      if(type[idx(nx,ny)]===T.WATER && Math.random()<0.01){
+        type[i]=T.MUD; life[i]=0;
+        return;
+      }
+    }
+    updatePowder(x,y);
+  }
+
+  function updateConcrete(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      if(type[idx(nx,ny)]===T.WATER && Math.random()<0.02){
+        type[i]=T.STONE; life[i]=0;
+        return;
+      }
+    }
+    updatePowder(x,y);
+  }
+
+  function updateSpark(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<FIRE_NBRS.length;k++){
+      const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      const nt = type[j];
+      if(nt===T.BOMB){ explode(nx,ny,9); }
+      else if(nt===T.GUNPOWDER){ explode(nx,ny,3); }
+      else if(nt===T.NITRO){ explode(nx,ny,6); }
+      else if(nt===T.WOOD && Math.random()<0.5){ type[j]=T.FIRE; life[j]=60+(Math.random()*40|0); }
+      else if((nt===T.OIL || nt===T.NAPALM) && Math.random()<0.7){ type[j]=T.FIRE; life[j]=70+(Math.random()*40|0); }
+      else if(nt===T.PLANT && Math.random()<0.5){ type[j]=T.FIRE; life[j]=40+(Math.random()*30|0); }
+      else if(nt===T.FUSE){ type[j]=T.FIRE; life[j]=10+(Math.random()*4|0); }
+    }
+    type[i]=T.EMPTY; life[i]=0;
+  }
+
+  function updateOxygen(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      if(type[j]===T.FIRE){
+        if(Math.random()<0.3) life[j] = Math.min(120, life[j]+8);
+        if(Math.random()<0.35){ type[i]=T.FIRE; life[i]=20+(Math.random()*20|0); return; }
+      }
+    }
+    updateGas(x,y,0);
+  }
+
+  function updateNitro(x,y){
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const nt = type[idx(nx,ny)];
+      if((nt===T.FIRE || nt===T.LAVA || nt===T.ACID) && Math.random()<0.8){ explode(x,y,6); return; }
+    }
+    if(Math.random()<0.0004){ explode(x,y,6); return; }
+    updateLiquid(x,y,3);
+  }
+
+  function updateCrystal(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      if(type[idx(nx,ny)]===T.LAVA && Math.random()<0.02){
+        type[i]=T.LAVA; life[i]=0;
+        return;
+      }
+    }
+  }
+
+  function dissolveNeighbors(x,y){
+    const i = idx(x,y);
+    const nbrs = [[x,y-1],[x,y+1],[x-1,y],[x+1,y]];
+    for(let k=0;k<nbrs.length;k++){
+      const nx=nbrs[k][0], ny=nbrs[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      const nt = type[j];
+      if(nt===T.STONE || nt===T.SAND || nt===T.WOOD || nt===T.BOMB || nt===T.PLANT || nt===T.GUNPOWDER || nt===T.RUST ||
+         nt===T.HUMAN || nt===T.ZOMBIE || nt===T.PLAYER){
+        if(Math.random()<0.05){
+          if(nt===T.PLAYER || nt===T.HUMAN || nt===T.ZOMBIE) killBeing(nx,ny);
+          else { type[j]=T.EMPTY; life[j]=0; }
+          if(life[i]>0) life[i]--;
+          if(life[i]<=0){ type[i]=T.EMPTY; return; }
+        }
+      }
+    }
+    if(Math.random()<0.004){
+      if(life[i]>0) life[i]--;
+      if(life[i]<=0) type[i]=T.EMPTY;
+    }
+  }
+
+  function updateAcid(x,y){
+    dissolveNeighbors(x,y);
+    if(type[idx(x,y)]!==T.ACID) return;
+    updateLiquid(x,y,5);
+  }
+
+  const FIRE_NBRS = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+
+  function updateFire(x,y){
+    const i = idx(x,y);
+    if(life[i]>0) life[i]--;
+    if(life[i]<=0){
+      if(Math.random()<0.5){ type[i]=T.SMOKE; life[i]=40+(Math.random()*30|0); }
+      else { type[i]=T.EMPTY; life[i]=0; }
+      return;
+    }
+    let extinguished = false;
+    for(let k=0;k<FIRE_NBRS.length;k++){
+      const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      const nt = type[j];
+      if(nt===T.WOOD && Math.random()<0.025){ type[j]=T.FIRE; life[j]=60+(Math.random()*40|0); }
+      else if(nt===T.OIL && Math.random()<0.06){ type[j]=T.FIRE; life[j]=50+(Math.random()*30|0); }
+      else if(nt===T.NAPALM && Math.random()<0.09){ type[j]=T.FIRE; life[j]=120+(Math.random()*60|0); }
+      else if(nt===T.PLANT && Math.random()<0.04){ type[j]=T.FIRE; life[j]=40+(Math.random()*30|0); }
+      else if(nt===T.FUSE && Math.random()<0.9){ type[j]=T.FIRE; life[j]=10+(Math.random()*4|0); }
+      else if(nt===T.ICE && Math.random()<0.05){ type[j]=T.WATER; life[j]=0; }
+      else if(nt===T.SNOW && Math.random()<0.2){ type[j]=T.WATER; life[j]=0; }
+      else if(nt===T.GUNPOWDER && Math.random()<0.6){ explode(nx,ny,3); }
+      else if(nt===T.NITRO && Math.random()<0.7){ explode(nx,ny,6); }
+      else if((nt===T.HUMAN || nt===T.ZOMBIE || nt===T.PLAYER) && Math.random()<0.05){ killBeing(nx,ny); }
+      else if(nt===T.WATER){
+        extinguished = true;
+        if(Math.random()<0.3){ type[j]=T.STEAM; life[j]=30+(Math.random()*20|0); }
+      }
+      else if(nt===T.HONEY){
+        extinguished = true;
+      }
+    }
+    if(extinguished && Math.random()<0.6){
+      type[i]=T.SMOKE; life[i]=20+(Math.random()*20|0);
+      return;
+    }
+    if(Math.random()<0.15){
+      const ux = x+(Math.random()<0.5?-1:1), uy = y-1;
+      if(inBounds(ux,uy) && type[idx(ux,uy)]===T.EMPTY && Math.random()<0.4){
+        const uj = idx(ux,uy);
+        type[uj]=T.FIRE; life[uj]=Math.max(10, life[i]*0.5|0);
+      }
+    }
+  }
+
+  function updateLava(x,y){
+    const i = idx(x,y);
+    life[i] = (life[i]+1)%30;
+    let cooled = false;
+    for(let k=0;k<FIRE_NBRS.length;k++){
+      const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      const nt = type[j];
+      if(nt===T.WATER){
+        if(Math.random()<0.35){ type[j]=T.STEAM; life[j]=30+(Math.random()*20|0); }
+        if(!cooled && Math.random()<0.12){ type[i]=T.STONE; life[i]=0; cooled=true; }
+      } else if(nt===T.ICE){
+        if(Math.random()<0.5){ type[j]=T.WATER; life[j]=0; }
+        if(!cooled && Math.random()<0.18){ type[i]=T.STONE; life[i]=0; cooled=true; }
+      } else if(nt===T.SNOW){
+        if(Math.random()<0.7){ type[j]=T.WATER; life[j]=0; }
+        if(!cooled && Math.random()<0.1){ type[i]=T.STONE; life[i]=0; cooled=true; }
+      } else if(nt===T.WOOD && Math.random()<0.05){ type[j]=T.FIRE; life[j]=60+(Math.random()*40|0); }
+      else if(nt===T.OIL && Math.random()<0.12){ type[j]=T.FIRE; life[j]=50+(Math.random()*30|0); }
+      else if(nt===T.NAPALM && Math.random()<0.18){ type[j]=T.FIRE; life[j]=120+(Math.random()*60|0); }
+      else if(nt===T.PLANT && Math.random()<0.08){ type[j]=T.FIRE; life[j]=40+(Math.random()*30|0); }
+      else if(nt===T.GUNPOWDER && Math.random()<0.8){ explode(nx,ny,3); }
+      else if(nt===T.NITRO && Math.random()<0.85){ explode(nx,ny,6); }
+      else if(nt===T.SAND && Math.random()<0.03){ type[j]=T.GLASS; life[j]=0; }
+      else if((nt===T.HUMAN || nt===T.ZOMBIE || nt===T.PLAYER) && Math.random()<0.12){ killBeing(nx,ny); }
+    }
+    if(cooled) return;
+    updateLiquid(x,y,2);
+  }
+
+  function updateSnow(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<FIRE_NBRS.length;k++){
+      const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const nt = type[idx(nx,ny)];
+      if((nt===T.FIRE || nt===T.LAVA) && Math.random()<0.25){
+        type[i]=T.WATER; life[i]=0; return;
+      }
+    }
+    updatePowder(x,y);
+  }
+
+  function updateGunpowder(x,y){
+    for(let k=0;k<FIRE_NBRS.length;k++){
+      const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const nt = type[idx(nx,ny)];
+      if((nt===T.FIRE || nt===T.LAVA) && Math.random()<0.9){
+        explode(x,y,3);
+        return;
+      }
+    }
+    updatePowder(x,y);
+  }
+
+  function updateCure(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      if(type[idx(nx,ny)]===T.ZOMBIE && Math.random()<0.08){
+        const b = findBeingAt(nx,ny);
+        if(b && b.team===T.ZOMBIE){
+          clearBodyAt(b.x,b.y);
+          b.team = T.HUMAN;
+          stampBodyAt(b.x,b.y,T.HUMAN);
+          playCure();
+          if(life[i]>0) life[i]--;
+          if(life[i]<=0){ type[i]=T.EMPTY; return; }
+        }
+      }
+    }
+    if(Math.random()<0.006){
+      if(life[i]>0) life[i]--;
+      if(life[i]<=0){ type[i]=T.EMPTY; return; }
+    }
+    updateLiquid(x,y,5);
+  }
+
+  function updateSodium(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      if(type[j]===T.WATER && Math.random()<0.5){
+        type[j] = T.STEAM; life[j] = 30+(Math.random()*20|0);
+        if(Math.random()<0.25){ explode(x,y,2); }
+        else { type[i]=T.FIRE; life[i]=40+(Math.random()*20|0); }
+        return;
+      }
+    }
+    updatePowder(x,y);
+  }
+
+  function updateBase(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      if(type[j]===T.ACID && Math.random()<0.3){
+        type[j] = Math.random()<0.15 ? T.SAND : T.WATER; life[j]=0;
+        type[i] = Math.random()<0.15 ? T.SAND : T.WATER; life[i]=0;
+        return;
+      }
+    }
+    updateLiquid(x,y,5);
+  }
+
+  function updateBakingSoda(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      if(type[j]===T.ACID && Math.random()<0.25){
+        type[j]=T.STEAM; life[j]=25+(Math.random()*15|0);
+        type[i]=T.STEAM; life[i]=25+(Math.random()*15|0);
+        return;
+      }
+    }
+    updatePowder(x,y);
+  }
+
+  function updateThermite(x,y){
+    const i = idx(x,y);
+    let ignited = false;
+    for(let k=0;k<FIRE_NBRS.length;k++){
+      const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const nt = type[idx(nx,ny)];
+      if((nt===T.FIRE || nt===T.LAVA) && Math.random()<0.5) ignited = true;
+    }
+    if(ignited){
+      for(let k=0;k<FIRE_NBRS.length;k++){
+        const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+        if(!inBounds(nx,ny)) continue;
+        const j = idx(nx,ny);
+        if(type[j]===T.STONE && Math.random()<0.3){ type[j]=T.LAVA; life[j]=0; }
+      }
+      type[i]=T.LAVA; life[i]=Math.random()*30|0;
+      return;
+    }
+    updatePowder(x,y);
+  }
+
+  function updateAmmonia(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      if(type[j]===T.BLEACH && Math.random()<0.3){
+        type[j]=T.TOXICGAS; life[j]=60+(Math.random()*30|0);
+        type[i]=T.TOXICGAS; life[i]=60+(Math.random()*30|0);
+        return;
+      }
+    }
+    updateLiquid(x,y,5);
+  }
+
+  function updateBleach(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      if(type[j]===T.AMMONIA && Math.random()<0.3){
+        type[j]=T.TOXICGAS; life[j]=60+(Math.random()*30|0);
+        type[i]=T.TOXICGAS; life[i]=60+(Math.random()*30|0);
+        return;
+      }
+    }
+    updateLiquid(x,y,5);
+  }
+
+  function updateToxicGas(x,y){
+    const i = idx(x,y);
+    if(life[i]>0) life[i]--;
+    if(life[i]<=0){ type[i]=T.EMPTY; return; }
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const nt = type[idx(nx,ny)];
+      if((nt===T.HUMAN || nt===T.ZOMBIE) && Math.random()<0.02){ killBeing(nx,ny); }
+      else if(nt===T.PLAYER && Math.random()<0.012){ killPlayer('poisoned'); return; }
+    }
+    if(trySwap(x,y,x,y-1)) return;
+    if(Math.random()<0.5){
+      if(trySwap(x,y,x-1,y-1)) return;
+      if(trySwap(x,y,x+1,y-1)) return;
+    } else {
+      if(trySwap(x,y,x+1,y-1)) return;
+      if(trySwap(x,y,x-1,y-1)) return;
+    }
+    if(Math.random()<0.3){
+      const dir = Math.random()<0.5?-1:1;
+      trySwap(x,y,x+dir,y);
+    }
+  }
+
+  function updateYeast(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      if(type[j]===T.PEROXIDE && Math.random()<0.4){
+        type[j]=T.FOAM; life[j]=90+(Math.random()*40|0);
+        type[i]=T.FOAM; life[i]=90+(Math.random()*40|0);
+        return;
+      }
+    }
+    updatePowder(x,y);
+  }
+
+  function updatePeroxide(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      if(type[j]===T.YEAST && Math.random()<0.4){
+        type[j]=T.FOAM; life[j]=90+(Math.random()*40|0);
+        type[i]=T.FOAM; life[i]=90+(Math.random()*40|0);
+        return;
+      }
+    }
+    updateLiquid(x,y,4);
+  }
+
+  function updateFoam(x,y){
+    const i = idx(x,y);
+    if(life[i]>0) life[i]--;
+    if(life[i]<=0){ type[i]=T.EMPTY; return; }
+    if(trySwap(x,y,x,y-1)) return;
+    if(Math.random()<0.5){
+      if(trySwap(x,y,x-1,y-1)) return;
+      if(trySwap(x,y,x+1,y-1)) return;
+    } else {
+      if(trySwap(x,y,x+1,y-1)) return;
+      if(trySwap(x,y,x-1,y-1)) return;
+    }
+    if(Math.random()<0.4){
+      const dir = Math.random()<0.5?-1:1;
+      trySwap(x,y,x+dir,y);
+    }
+  }
+
+  function updateIron(x,y){
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      if(type[idx(nx,ny)]===T.WATER && Math.random()<0.01){
+        type[idx(x,y)]=T.RUST; life[idx(x,y)]=0;
+        return;
+      }
+    }
+    for(let k=0;k<FIRE_NBRS.length;k++){
+      const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const nt = type[idx(nx,ny)];
+      if((nt===T.FIRE || nt===T.LAVA) && Math.random()<0.1){
+        type[idx(x,y)]=T.LAVA; life[idx(x,y)]=0;
+        return;
+      }
+    }
+  }
+
+  function updateDryIce(x,y){
+    let warm = false;
+    for(let k=0;k<FIRE_NBRS.length;k++){
+      const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const nt = type[idx(nx,ny)];
+      if(nt===T.FIRE || nt===T.LAVA || nt===T.WATER) warm = true;
+    }
+    if(Math.random() < (warm ? 0.06 : 0.004)){
+      type[idx(x,y)] = T.STEAM; life[idx(x,y)] = 40+(Math.random()*30|0);
+    }
+  }
+
+  function isPortable(t){
+    return t!==T.EMPTY && t!==T.PORTALBLUE && t!==T.PORTALORANGE &&
+      t!==T.STONE && t!==T.WOOD && t!==T.GLASS && t!==T.IRON && t!==T.RUST &&
+      t!==T.PLAYER && t!==T.HUMAN && t!==T.ZOMBIE && t!==T.CLONE && t!==T.VOID && t!==T.FUSE &&
+      t!==T.FAN && t!==T.HEATER && t!==T.COOLER && t!==T.WATERSOURCE && t!==T.LAVASOURCE && t!==T.CRYSTAL;
+  }
+
+  function updateFan(x,y){
+    const nx=x, ny=y-1;
+    if(!inBounds(nx,ny)) return;
+    const j = idx(nx,ny);
+    if(!isPortable(type[j])) return;
+    const uy=y-2;
+    if(!inBounds(nx,uy)) return;
+    const uj = idx(nx,uy);
+    if(type[uj]===T.EMPTY){
+      type[uj]=type[j]; life[uj]=life[j];
+      type[j]=T.EMPTY; life[j]=0;
+    }
+  }
+
+  function updateHeater(x,y){
+    const i = idx(x,y);
+    life[i] = (life[i]+1)%30;
+    for(let k=0;k<FIRE_NBRS.length;k++){
+      const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      const nt = type[j];
+      if((nt===T.ICE || nt===T.SNOW) && Math.random()<0.05){ type[j]=T.WATER; life[j]=0; }
+      else if(nt===T.WATER && Math.random()<0.03){ type[j]=T.STEAM; life[j]=30+(Math.random()*20|0); }
+      else if(nt===T.WOOD && Math.random()<0.01){ type[j]=T.FIRE; life[j]=60+(Math.random()*40|0); }
+      else if(nt===T.OIL && Math.random()<0.015){ type[j]=T.FIRE; life[j]=50+(Math.random()*30|0); }
+      else if(nt===T.GUNPOWDER && Math.random()<0.03){ explode(nx,ny,3); }
+    }
+  }
+
+  function updateCooler(x,y){
+    const i = idx(x,y);
+    life[i] = (life[i]+1)%30;
+    for(let k=0;k<FIRE_NBRS.length;k++){
+      const nx=x+FIRE_NBRS[k][0], ny=y+FIRE_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      const nt = type[j];
+      if(nt===T.FIRE && Math.random()<0.15){ type[j]=T.SMOKE; life[j]=20+(Math.random()*20|0); }
+      else if(nt===T.WATER && Math.random()<0.02){ type[j]=T.ICE; life[j]=0; }
+      else if(nt===T.LAVA && Math.random()<0.03){ type[j]=T.STONE; life[j]=0; }
+      else if(nt===T.STEAM && Math.random()<0.06){ type[j]=T.WATER; life[j]=0; }
+    }
+  }
+
+  function updateWaterSource(x,y){
+    const empties = [];
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(inBounds(nx,ny) && type[idx(nx,ny)]===T.EMPTY) empties.push(idx(nx,ny));
+    }
+    if(empties.length && Math.random()<0.9){
+      const j = empties[Math.random()*empties.length|0];
+      type[j] = T.WATER; life[j] = 0;
+    }
+  }
+
+  function updateLavaSource(x,y){
+    const empties = [];
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(inBounds(nx,ny) && type[idx(nx,ny)]===T.EMPTY) empties.push(idx(nx,ny));
+    }
+    if(empties.length && Math.random()<0.9){
+      const j = empties[Math.random()*empties.length|0];
+      type[j] = T.LAVA; life[j] = Math.random()*30|0;
+    }
+  }
+
+  function findEmptyNear(cx,cy){
+    for(let r=0; r<=3; r++){
+      for(let dy=-r; dy<=r; dy++){
+        for(let dx=-r; dx<=r; dx++){
+          if(Math.max(Math.abs(dx),Math.abs(dy))!==r) continue;
+          const x=cx+dx, y=cy+dy;
+          if(inBounds(x,y) && type[idx(x,y)]===T.EMPTY) return [x,y];
+        }
+      }
+    }
+    return null;
+  }
+
+  function findBodySpotNear(cx,cy){
+    for(let r=0; r<=8; r++){
+      for(let dy=-r; dy<=r; dy++){
+        for(let dx=-r; dx<=r; dx++){
+          if(Math.max(Math.abs(dx),Math.abs(dy))!==r) continue;
+          const x=cx+dx, y=cy+dy;
+          if(canPlaceBody(x,y)) return [x,y];
+        }
+      }
+    }
+    return null;
+  }
+
+  function updatePortal(x,y,myType){
+    const i = idx(x,y);
+    const isRim = life[i]>=100;
+    life[i] = (isRim ? 100 : 0) + (life[i]%100+1)%40;
+    const otherPos = myType===T.PORTALBLUE ? orangePortalPos : bluePortalPos;
+    if(!otherPos) return;
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      const nt = type[j];
+
+      if(nt===T.PLAYER && playerAlive){
+        const dest = findBodySpotNear(otherPos.x, otherPos.y);
+        if(dest){
+          clearBodyAt(playerX, playerY);
+          playerX = dest[0]; playerY = dest[1];
+          stampBodyAt(playerX, playerY, T.PLAYER);
+          showBanner('Warped!');
+          playWarp();
+        }
+        return;
+      }
+      if(nt===T.HUMAN || nt===T.ZOMBIE){
+        const b = findBeingAt(nx,ny);
+        if(b){
+          const dest = findBodySpotNear(otherPos.x, otherPos.y);
+          if(dest){
+            clearBodyAt(b.x, b.y);
+            b.x = dest[0]; b.y = dest[1];
+            stampBodyAt(b.x, b.y, b.team);
+          }
+        }
+        return;
+      }
+      if(isPortable(nt)){
+        const dest = findEmptyNear(otherPos.x, otherPos.y);
+        if(dest){
+          const di = idx(dest[0],dest[1]);
+          type[di] = nt; life[di] = life[j];
+          type[j] = T.EMPTY; life[j] = 0;
+        }
+        return;
+      }
+    }
+  }
+
+  function hasWaterNeighbor(x,y){
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(inBounds(nx,ny) && type[idx(nx,ny)]===T.WATER) return true;
+    }
+    return false;
+  }
+
+  function updatePlant(x,y){
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      if(type[j]===T.EMPTY && Math.random()<0.02 && hasWaterNeighbor(nx,ny)){
+        type[j]=T.PLANT; life[j]=0;
+      }
+    }
+  }
+
+  function updateClone(x,y){
+    const i = idx(x,y);
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const nt = type[idx(nx,ny)];
+      if(nt!==T.EMPTY && nt!==T.CLONE && nt!==T.VOID && nt!==T.PLAYER && nt!==T.HUMAN && nt!==T.ZOMBIE){ life[i]=nt; break; }
+    }
+    if(life[i]===0) return;
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      if(type[j]===T.EMPTY && Math.random()<0.15){
+        type[j]=life[i]; life[j]=initialLife(life[i]);
+      }
+    }
+  }
+
+  function updateVoid(x,y){
+    for(let k=0;k<ORTHO_NBRS.length;k++){
+      const nx=x+ORTHO_NBRS[k][0], ny=y+ORTHO_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      const j = idx(nx,ny);
+      const nt = type[j];
+      if(nt===T.EMPTY || nt===T.VOID) continue;
+      if(nt===T.HUMAN || nt===T.ZOMBIE || nt===T.PLAYER){ killBeing(nx,ny); continue; }
+      type[j]=T.EMPTY; life[j]=0;
+      back[j]=0; backLife[j]=0;
+    }
+  }
+
+  // ---------------- living things ----------------
+  function killBeing(x,y){
+    const t = type[idx(x,y)];
+    if(t===T.PLAYER){ killPlayer('burned'); return; }
+    if(t!==T.HUMAN && t!==T.ZOMBIE) return;
+    const b = findBeingAt(x,y);
+    if(!b) return;
+    clearBodyAt(b.x,b.y);
+    const i2 = beings.indexOf(b);
+    if(i2>=0) beings.splice(i2,1);
+  }
+
+  function beingsTouching(ax,ay,bx,by){
+    return Math.abs(ax-bx) <= BODY_HALF_WIDTH*2+1 && Math.abs(ay-by) <= BODY_HEIGHT;
+  }
+
+  function findNearestBeingTarget(z){
+    let best = null, bestD2 = Infinity;
+    for(let i=0;i<beings.length;i++){
+      const h = beings[i];
+      if(h.team!==T.HUMAN) continue;
+      const dx=h.x-z.x, dy=h.y-z.y;
+      if(Math.abs(dx)>60) continue;
+      const d2 = dx*dx+dy*dy;
+      if(d2<bestD2){ bestD2=d2; best=h; }
+    }
+    if(playerAlive){
+      const dx=playerX-z.x, dy=playerY-z.y;
+      if(Math.abs(dx)<=60){
+        // the player is the zombies' preferred prey: treat them as closer than they really are
+        const d2 = (dx*dx+dy*dy)*0.5;
+        if(d2<bestD2){ bestD2=d2; best={x:playerX,y:playerY}; }
+      }
+    }
+    return best;
+  }
+
+  function updateBeings(){
+    // movement: gravity first, then wander/chase for whoever's grounded
+    for(let i=0;i<beings.length;i++){
+      const b = beings[i];
+      if(tryBodyMove(b.x,b.y,b.x,b.y+1,b.team)){ b.y++; continue; }
+
+      if(b.team===T.ZOMBIE){
+        const target = findNearestBeingTarget(b);
+        let dir = null;
+        if(target && Math.random()<0.92){ dir = target.x===b.x ? (Math.random()<0.5?-1:1) : (target.x<b.x?-1:1); }
+        else if(Math.random()<0.35){ dir = Math.random()<0.5?-1:1; }
+        if(dir!==null && tryBodyMove(b.x,b.y,b.x+dir,b.y,b.team)) b.x += dir;
+      } else {
+        if(Math.random()<0.03){
+          const dir = Math.random()<0.5?-1:1;
+          if(tryBodyMove(b.x,b.y,b.x+dir,b.y,b.team)) b.x += dir;
+        }
+      }
+    }
+
+    // infection: any zombie touching a human or the player has a chance to spread the bite
+    for(let i=0;i<beings.length;i++){
+      const z = beings[i];
+      if(z.team!==T.ZOMBIE) continue;
+      for(let j=0;j<beings.length;j++){
+        const h = beings[j];
+        if(h.team!==T.HUMAN) continue;
+        if(beingsTouching(z.x,z.y,h.x,h.y) && Math.random()<0.02){
+          clearBodyAt(h.x,h.y);
+          h.team = T.ZOMBIE;
+          stampBodyAt(h.x,h.y,T.ZOMBIE);
+        }
+      }
+      if(playerAlive && beingsTouching(z.x,z.y,playerX,playerY) && Math.random()<0.01){
+        killPlayer('infected');
+      }
+    }
+  }
+
+  function showBanner(text){
+    bannerEl.textContent = text;
+    bannerEl.classList.add('show');
+    clearTimeout(showBanner._t);
+    showBanner._t = setTimeout(function(){ bannerEl.classList.remove('show'); }, 2200);
+  }
+
+  function updatePlayerHUD(){
+    rPlayerEl.textContent = playerAlive ? 'Alive' : 'Down';
+  }
+
+  const DEATH_MESSAGES = {
+    infected: 'You were bitten — turning...',
+    drowned: 'You drowned — respawning...',
+    poisoned: 'You succumbed to the fumes — respawning...',
+    burned: 'You burned to death — respawning...'
+  };
+
+  function killPlayer(reason){
+    if(!playerAlive) return;
+    const turned = reason==='infected';
+    const smokeless = turned || reason==='drowned' || reason==='poisoned';
+    const px = playerX, py = playerY;
+    if(turned) playInfected(); else playHurt();
+    clearBodyAt(px,py);
+    if(turned){
+      stampBodyAt(px,py,T.ZOMBIE);
+      beings.push({ x:px, y:py, team:T.ZOMBIE });
+    } else if(!smokeless){
+      for(let k=0;k<BODY.length;k++){
+        const x=px+BODY[k][0], y=py+BODY[k][1];
+        if(!inBounds(x,y)) continue;
+        if(Math.random()<0.3){ type[idx(x,y)]=T.SMOKE; life[idx(x,y)]=20+(Math.random()*20|0); }
+      }
+    }
+    playerAlive = false;
+    respawnTimer = 90;
+    updatePlayerHUD();
+    showBanner(DEATH_MESSAGES[reason] || 'You died — respawning...');
+  }
+
+  function isHeadSubmerged(){
+    // samples a 2-row band just above the head rather than a single row: falling-sand
+    // water settles unevenly and a single cell can flicker in and out tick to tick,
+    // which would otherwise make the drown timer stall out instead of accumulating
+    const headTopY = playerY - (BODY_HEIGHT-1);
+    let count = 0, total = 0;
+    for(let dy=-2; dy<=-1; dy++){
+      const y = headTopY + dy;
+      for(let dx=-1; dx<=1; dx++){
+        const x = playerX+dx;
+        total++;
+        if(inBounds(x,y) && type[idx(x,y)]===T.WATER) count++;
+      }
+    }
+    return count >= total-1;
+  }
+
+  // samples water along the body's silhouette (just outside it, since the body's own
+  // cells are stamped as T.PLAYER and hide whatever they're standing in) to gauge how
+  // submerged the player currently is.
+  function waterAroundBody(){
+    let count = 0;
+    const leftX = playerX - BODY_HALF_WIDTH - 1;
+    const rightX = playerX + BODY_HALF_WIDTH + 1;
+    for(let dy=-(BODY_HEIGHT-1); dy<=0; dy++){
+      const y = playerY + dy;
+      if(inBounds(leftX,y) && type[idx(leftX,y)]===T.WATER) count++;
+      if(inBounds(rightX,y) && type[idx(rightX,y)]===T.WATER) count++;
+    }
+    if(inBounds(playerX, playerY+1) && type[idx(playerX,playerY+1)]===T.WATER) count++;
+    return count;
+  }
+
+  function isPlayerInWater(){
+    return waterAroundBody() >= 2;
+  }
+
+  function attackNearby(){
+    if(!playerAlive) return;
+    let hit = false;
+    for(let b=0;b<BODY.length;b++){
+      const cx=playerX+BODY[b][0], cy=playerY+BODY[b][1];
+      for(let k=0;k<FIRE_NBRS.length;k++){
+        const nx=cx+FIRE_NBRS[k][0], ny=cy+FIRE_NBRS[k][1];
+        if(!inBounds(nx,ny)) continue;
+        if(type[idx(nx,ny)]===T.ZOMBIE){ killBeing(nx,ny); hit=true; }
+      }
+    }
+    if(hit) triggerFlash();
+  }
+
+  function updatePlayer(){
+    if(!playerAlive){
+      if(respawnTimer>0){
+        respawnTimer--;
+        if(respawnTimer<=0) spawnPlayer();
+      }
+      return;
+    }
+
+    // hazard check: nearby fire/lava can kill (zombie contact is handled in updateBeings)
+    for(let b=0;b<BODY.length;b++){
+      const cx=playerX+BODY[b][0], cy=playerY+BODY[b][1];
+      for(let k=0;k<FIRE_NBRS.length;k++){
+        const nx=cx+FIRE_NBRS[k][0], ny=cy+FIRE_NBRS[k][1];
+        if(!inBounds(nx,ny)) continue;
+        const nt = type[idx(nx,ny)];
+        if((nt===T.FIRE || nt===T.LAVA) && Math.random()<0.025){ killPlayer('burned'); return; }
+      }
+    }
+
+    // drowning: fully submerged for too long
+    if(isHeadSubmerged()){
+      drownTicks++;
+      if(drownTicks===120) showBanner('Holding breath...');
+      if(drownTicks>240){ killPlayer('drowned'); return; }
+    } else if(drownTicks>0){
+      drownTicks -= 2;
+      if(drownTicks<0) drownTicks = 0;
+    }
+
+    // horizontal movement
+    let dir = 0;
+    if(keysDown.left) dir -= 1;
+    if(keysDown.right) dir += 1;
+    if(dir!==0){
+      if(playerMoveCooldown>0) playerMoveCooldown--;
+      else if(tryBodyMove(playerX,playerY,playerX+dir,playerY,T.PLAYER)){
+        playerX += dir;
+        playerMoveCooldown = 2;
+      }
+    }
+
+    // vertical: jump/swim arc, else gravity (buoyant and slow to sink in water)
+    const inWater = isPlayerInWater();
+    if(playerJumpTicks>0){
+      if(playerFallCooldown>0){ playerFallCooldown--; }
+      else if(tryBodyMove(playerX,playerY,playerX,playerY-1,T.PLAYER)){
+        playerY -= 1;
+        playerJumpTicks--;
+        playerFallCooldown = inWater ? 3 : 2;
+      } else { playerJumpTicks = 0; }
+    } else {
+      if(playerFallCooldown>0){ playerFallCooldown--; }
+      else {
+        if(tryBodyMove(playerX,playerY,playerX,playerY+1,T.PLAYER)) playerY += 1;
+        playerFallCooldown = inWater ? 4 : 1;
+      }
+    }
+  }
+
+  function tryJump(){
+    if(!playerAlive || playerJumpTicks>0) return;
+    if(isGrounded(playerX,playerY,T.PLAYER)){
+      playerJumpTicks = 11;
+      playerFallCooldown = 0;
+      playJump();
+    } else if(isPlayerInWater()){
+      // a swim stroke: shorter than a real jump, but can be tapped again as soon as it ends,
+      // letting the player paddle back up to the surface instead of just sinking
+      playerJumpTicks = 4;
+      playerFallCooldown = 0;
+      playJump();
+    }
+  }
+
+  function updateGas(x,y,condenseChance){
+    const i = idx(x,y);
+    if(life[i]>0) life[i]--;
+    if(condenseChance && Math.random()<condenseChance){
+      type[i]=T.WATER; life[i]=0; return;
+    }
+    if(life[i]<=0){ type[i]=T.EMPTY; return; }
+    if(trySwap(x,y,x,y-1)) return;
+    if(Math.random()<0.5){
+      if(trySwap(x,y,x-1,y-1)) return;
+      if(trySwap(x,y,x+1,y-1)) return;
+    } else {
+      if(trySwap(x,y,x+1,y-1)) return;
+      if(trySwap(x,y,x-1,y-1)) return;
+    }
+    if(Math.random()<0.3){
+      const dir = Math.random()<0.5?-1:1;
+      trySwap(x,y,x+dir,y);
+    }
+  }
+
+  const BOMB_NBRS = FIRE_NBRS;
+  function updateBomb(x,y){
+    const i = idx(x,y);
+    life[i] = (life[i]+1)%20;
+    for(let k=0;k<BOMB_NBRS.length;k++){
+      const nx=x+BOMB_NBRS[k][0], ny=y+BOMB_NBRS[k][1];
+      if(!inBounds(nx,ny)) continue;
+      if(type[idx(nx,ny)]===T.FIRE){ explode(x,y); return; }
+    }
+    updatePowder(x,y);
+  }
+
+  function triggerShake(radius){
+    shakeFrames = 14;
+    shakeMag = Math.min(10, radius*0.9);
+  }
+  function triggerFlash(){
+    flashEl.style.transition = 'none';
+    flashEl.style.opacity = '0.9';
+    requestAnimationFrame(function(){
+      flashEl.style.transition = 'opacity .5s ease-out';
+      flashEl.style.opacity = '0';
+    });
+  }
+
+  function explode(cx,cy,radius){
+    const R = radius || 9, R2 = R*R, innerR2 = (R*0.55)*(R*0.55);
+    const chained = [];
+    for(let dy=-R; dy<=R; dy++){
+      for(let dx=-R; dx<=R; dx++){
+        const d2 = dx*dx+dy*dy;
+        if(d2>R2) continue;
+        const nx=cx+dx, ny=cy+dy;
+        if(!inBounds(nx,ny)) continue;
+        const j = idx(nx,ny);
+        const t = type[j];
+        if((t===T.BOMB || t===T.GUNPOWDER || t===T.NITRO) && !(dx===0&&dy===0)) chained.push([nx,ny,t]);
+        if(t===T.PLAYER || t===T.HUMAN || t===T.ZOMBIE){ killBeing(nx,ny); moved[j]=1; continue; }
+        if(t===T.GLASS && back[j]!==T.EMPTY){
+          // the blast shatters the pane and spills whatever was sealed inside
+          type[j]=back[j]; life[j]=backLife[j];
+          back[j]=0; backLife[j]=0;
+          moved[j]=1; continue;
+        }
+        if(d2<=innerR2){
+          if(Math.random()<0.12){ type[j]=T.FIRE; life[j]=20+(Math.random()*20|0); }
+          else { type[j]=T.EMPTY; life[j]=0; }
+        } else {
+          if(t===T.STONE || t===T.IRON || t===T.CRYSTAL){
+            if(Math.random()<0.15){ type[j]=T.EMPTY; life[j]=0; }
+          } else if(Math.random()<0.2){ type[j]=T.SMOKE; life[j]=30+(Math.random()*30|0); }
+          else { type[j]=T.EMPTY; life[j]=0; }
+        }
+        moved[j]=1;
+      }
+    }
+    triggerShake(Math.min(R,9));
+    triggerFlash();
+    playExplosion(R);
+    for(let k=0;k<chained.length;k++){
+      const nx=chained[k][0], ny=chained[k][1], expected=chained[k][2];
+      if(type[idx(nx,ny)]===expected) explode(nx,ny, expected===T.BOMB?9:(expected===T.NITRO?6:3));
+    }
+  }
+
+  function stepCell(x,y){
+    const i = idx(x,y);
+    if(moved[i]) return;
+    switch(type[i]){
+      case T.SAND: updateSand(x,y); return;
+      case T.BOMB: updateBomb(x,y); return;
+      case T.WATER: updateWater(x,y); return;
+      case T.OIL: updateLiquid(x,y,3); return;
+      case T.LAVA: updateLava(x,y); return;
+      case T.ACID: updateAcid(x,y); return;
+      case T.FIRE: updateFire(x,y); return;
+      case T.SMOKE: updateGas(x,y,0); return;
+      case T.STEAM: updateGas(x,y,0.012); return;
+      case T.PLANT: updatePlant(x,y); return;
+      case T.CLONE: updateClone(x,y); return;
+      case T.VOID: updateVoid(x,y); return;
+      case T.SNOW: updateSnow(x,y); return;
+      case T.GUNPOWDER: updateGunpowder(x,y); return;
+      case T.CURE: updateCure(x,y); return;
+      case T.SODIUM: updateSodium(x,y); return;
+      case T.BASE: updateBase(x,y); return;
+      case T.BAKINGSODA: updateBakingSoda(x,y); return;
+      case T.THERMITE: updateThermite(x,y); return;
+      case T.AMMONIA: updateAmmonia(x,y); return;
+      case T.BLEACH: updateBleach(x,y); return;
+      case T.TOXICGAS: updateToxicGas(x,y); return;
+      case T.YEAST: updateYeast(x,y); return;
+      case T.PEROXIDE: updatePeroxide(x,y); return;
+      case T.FOAM: updateFoam(x,y); return;
+      case T.IRON: updateIron(x,y); return;
+      case T.DRYICE: updateDryIce(x,y); return;
+      case T.PORTALBLUE: updatePortal(x,y,T.PORTALBLUE); return;
+      case T.PORTALORANGE: updatePortal(x,y,T.PORTALORANGE); return;
+      case T.FAN: updateFan(x,y); return;
+      case T.HEATER: updateHeater(x,y); return;
+      case T.COOLER: updateCooler(x,y); return;
+      case T.WATERSOURCE: updateWaterSource(x,y); return;
+      case T.LAVASOURCE: updateLavaSource(x,y); return;
+      case T.MUD: updateLiquid(x,y,2); return;
+      case T.CONCRETE: updateConcrete(x,y); return;
+      case T.NAPALM: updateLiquid(x,y,1); return;
+      case T.SPARK: updateSpark(x,y); return;
+      case T.OXYGEN: updateOxygen(x,y); return;
+      case T.NITRO: updateNitro(x,y); return;
+      case T.CRYSTAL: updateCrystal(x,y); return;
+      case T.HONEY: updateLiquid(x,y,1); return;
+      default: return; // empty, stone, wood, ice, fuse, glass, rust, human/zombie/player (driven separately)
+    }
+  }
+
+  function simulate(){
+    moved.fill(0);
+    frameParity ^= 1;
+    for(let y=gridH-1;y>=0;y--){
+      if(frameParity){ for(let x=0;x<gridW;x++) stepCell(x,y); }
+      else { for(let x=gridW-1;x>=0;x--) stepCell(x,y); }
+    }
+    updateBeings();
+    updatePlayer();
+  }
+
+  // ---------------- rendering ----------------
+  function colorFor(t,l,n,out,i){
+    switch(t){
+      case T.EMPTY:
+        out[0]=BG[0]; out[1]=BG[1]; out[2]=BG[2]; out[3]=255; return;
+      case T.SAND:
+        out[0]=216+n*0.7; out[1]=184+n*0.6; out[2]=119+n*0.5; out[3]=255; return;
+      case T.WATER:
+        out[0]=40+n*0.3; out[1]=118+n*0.3; out[2]=172+n*0.3; out[3]=232; return;
+      case T.STONE:
+        out[0]=118+n*1.3; out[1]=121+n*1.3; out[2]=116+n*1.3; out[3]=255; return;
+      case T.WOOD:
+        out[0]=107+n*0.5; out[1]=74+n*0.35; out[2]=44+n*0.25; out[3]=255; return;
+      case T.FIRE: {
+        const f = Math.max(0, Math.min(1, l/60));
+        out[0]=255; out[1]=104+140*f+n*0.4; out[2]=36+40*f; out[3]=255; return;
+      }
+      case T.BOMB: {
+        if((l%20)<4){ out[0]=255; out[1]=178; out[2]=56; }
+        else { out[0]=30+n*0.3; out[1]=32+n*0.3; out[2]=28+n*0.3; }
+        out[3]=255; return;
+      }
+      case T.OIL:
+        out[0]=88+n*0.4; out[1]=66+n*0.3; out[2]=40+n*0.25; out[3]=232; return;
+      case T.ACID: {
+        const f = Math.max(0.35, Math.min(1, l/40));
+        out[0]=(176+n*0.5)*f; out[1]=(222+n*0.5)*f; out[2]=(58+n*0.5)*f; out[3]=228; return;
+      }
+      case T.SMOKE: {
+        const a = Math.max(0, Math.min(190, l*3));
+        out[0]=92+n*0.5; out[1]=92+n*0.5; out[2]=88+n*0.5; out[3]=a; return;
+      }
+      case T.STEAM: {
+        const a = Math.max(0, Math.min(170, l*2.6));
+        out[0]=207; out[1]=216; out[2]=212; out[3]=a; return;
+      }
+      case T.ICE:
+        out[0]=176+n*0.4; out[1]=214+n*0.4; out[2]=230+n*0.4; out[3]=245; return;
+      case T.LAVA: {
+        const glow = 0.85+0.15*Math.sin(l*0.42);
+        out[0]=255*glow; out[1]=(90+n*0.5)*glow; out[2]=(20+n*0.3)*glow; out[3]=255; return;
+      }
+      case T.PLANT:
+        out[0]=54+n*0.5; out[1]=150+n*0.6; out[2]=64+n*0.4; out[3]=255; return;
+      case T.FUSE:
+        out[0]=196+n*0.4; out[1]=168+n*0.35; out[2]=102+n*0.3; out[3]=255; return;
+      case T.CLONE:
+        out[0]=190+n*0.4; out[1]=90+n*0.3; out[2]=220+n*0.4; out[3]=255; return;
+      case T.VOID:
+        out[0]=40+n*0.3; out[1]=14+n*0.15; out[2]=54+n*0.35; out[3]=255; return;
+      case T.HUMAN: {
+        const c = HUMAN_COLORS[l] || HUMAN_COLORS[2];
+        out[0]=c[0]+n*0.3; out[1]=c[1]+n*0.3; out[2]=c[2]+n*0.3; out[3]=255; return;
+      }
+      case T.ZOMBIE: {
+        const c = ZOMBIE_COLORS[l] || ZOMBIE_COLORS[2];
+        out[0]=c[0]+n*0.4; out[1]=c[1]+n*0.4; out[2]=c[2]+n*0.4; out[3]=255; return;
+      }
+      case T.PLAYER: {
+        const c = PLAYER_COLORS[l] || PLAYER_COLORS[2];
+        out[0]=c[0]+n*0.25; out[1]=c[1]+n*0.25; out[2]=c[2]+n*0.25; out[3]=255; return;
+      }
+      case T.SNOW:
+        out[0]=236+n*0.25; out[1]=242+n*0.25; out[2]=246+n*0.2; out[3]=255; return;
+      case T.GLASS: {
+        // panes read as a visible edge around a nearly-invisible, truly see-through middle;
+        // anything sealed behind the glass shows through, tinted by the pane
+        const gx = i % gridW, gy = (i / gridW) | 0;
+        let edge = false;
+        for(let k=0;k<ORTHO_NBRS.length;k++){
+          const nx=gx+ORTHO_NBRS[k][0], ny=gy+ORTHO_NBRS[k][1];
+          if(!inBounds(nx,ny) || type[idx(nx,ny)]!==T.GLASS){ edge=true; break; }
+        }
+        const bt = back[i];
+        if(bt && bt!==T.EMPTY){
+          colorFor(bt, backLife[i], n, out, i);
+          out[0] = out[0]*0.8 + 212*0.2;
+          out[1] = out[1]*0.8 + 226*0.2;
+          out[2] = out[2]*0.8 + 232*0.2;
+          out[3] = edge ? 255 : 205;
+          return;
+        }
+        if(edge){
+          const glint = n>6 ? 45 : 0;
+          out[0]=205+n*0.5+glint; out[1]=228+n*0.45+glint; out[2]=236+n*0.4+glint; out[3]=175;
+        } else {
+          out[0]=190+n*0.4; out[1]=215+n*0.4; out[2]=225+n*0.4; out[3]=36;
+        }
+        return;
+      }
+      case T.GUNPOWDER:
+        out[0]=86+n*0.9; out[1]=84+n*0.85; out[2]=70+n*0.7; out[3]=255; return;
+      case T.CURE: {
+        const f = Math.max(0.4, Math.min(1, l/15));
+        out[0]=(110+n*0.4)*f; out[1]=(230+n*0.4)*f; out[2]=(190+n*0.4)*f; out[3]=232; return;
+      }
+      case T.SODIUM:
+        out[0]=205+n*0.6; out[1]=208+n*0.6; out[2]=214+n*0.6; out[3]=255; return;
+      case T.BASE:
+        out[0]=120+n*0.3; out[1]=140+n*0.3; out[2]=220+n*0.3; out[3]=228; return;
+      case T.BAKINGSODA:
+        out[0]=245+n*0.2; out[1]=245+n*0.2; out[2]=238+n*0.2; out[3]=255; return;
+      case T.THERMITE:
+        out[0]=150+n*0.6; out[1]=88+n*0.5; out[2]=66+n*0.4; out[3]=255; return;
+      case T.AMMONIA:
+        out[0]=200+n*0.3; out[1]=220+n*0.3; out[2]=140+n*0.3; out[3]=225; return;
+      case T.BLEACH:
+        out[0]=225+n*0.2; out[1]=235+n*0.2; out[2]=240+n*0.2; out[3]=225; return;
+      case T.TOXICGAS: {
+        const a = Math.max(0, Math.min(190, l*2.2));
+        out[0]=180+n*0.5; out[1]=210+n*0.5; out[2]=60+n*0.4; out[3]=a; return;
+      }
+      case T.YEAST:
+        out[0]=222+n*0.4; out[1]=198+n*0.35; out[2]=150+n*0.3; out[3]=255; return;
+      case T.PEROXIDE:
+        out[0]=235+n*0.2; out[1]=245+n*0.2; out[2]=250+n*0.15; out[3]=220; return;
+      case T.FOAM: {
+        const a = Math.max(0, Math.min(235, l*2.6));
+        out[0]=245; out[1]=240; out[2]=225; out[3]=a; return;
+      }
+      case T.IRON:
+        out[0]=140+n*1.1; out[1]=148+n*1.1; out[2]=158+n*1.1; out[3]=255; return;
+      case T.RUST:
+        out[0]=150+n*0.7; out[1]=80+n*0.5; out[2]=40+n*0.3; out[3]=255; return;
+      case T.DRYICE:
+        out[0]=210+n*0.3; out[1]=236+n*0.3; out[2]=242+n*0.3; out[3]=255; return;
+      case T.PORTALBLUE: {
+        const isRim = l>=100, pulse = l%100;
+        if(isRim){
+          const glow = 0.72+0.28*Math.sin(pulse*0.32);
+          out[0]=70*glow+n*0.3; out[1]=185*glow+n*0.3; out[2]=255*glow; out[3]=255;
+        } else {
+          const swirl = 0.5+0.5*Math.sin(pulse*0.25 + n*0.4);
+          out[0]=8+16*swirl; out[1]=22+38*swirl; out[2]=48+72*swirl; out[3]=255;
+        }
+        return;
+      }
+      case T.PORTALORANGE: {
+        const isRim = l>=100, pulse = l%100;
+        if(isRim){
+          const glow = 0.72+0.28*Math.sin(pulse*0.32);
+          out[0]=255*glow; out[1]=150*glow+n*0.3; out[2]=40*glow+n*0.3; out[3]=255;
+        } else {
+          const swirl = 0.5+0.5*Math.sin(pulse*0.25 + n*0.4);
+          out[0]=48+72*swirl; out[1]=24+34*swirl; out[2]=8+12*swirl; out[3]=255;
+        }
+        return;
+      }
+      case T.FAN:
+        out[0]=150+n*0.7; out[1]=190+n*0.6; out[2]=198+n*0.6; out[3]=255; return;
+      case T.HEATER: {
+        const glow = 0.75+0.25*Math.sin(l*0.42);
+        out[0]=205*glow; out[1]=95*glow+n*0.3; out[2]=60*glow+n*0.3; out[3]=255; return;
+      }
+      case T.COOLER: {
+        const glow = 0.75+0.25*Math.sin(l*0.42);
+        out[0]=110*glow+n*0.3; out[1]=170*glow+n*0.3; out[2]=215*glow; out[3]=255; return;
+      }
+      case T.WATERSOURCE:
+        out[0]=95+n*0.6; out[1]=140+n*0.6; out[2]=165+n*0.6; out[3]=255; return;
+      case T.LAVASOURCE: {
+        const glow = 0.8+0.2*Math.sin((n+l)*0.4);
+        out[0]=130*glow; out[1]=75*glow+n*0.3; out[2]=58*glow+n*0.3; out[3]=255; return;
+      }
+      case T.MUD:
+        out[0]=92+n*0.4; out[1]=72+n*0.35; out[2]=50+n*0.25; out[3]=238; return;
+      case T.CONCRETE:
+        out[0]=168+n*0.6; out[1]=168+n*0.6; out[2]=160+n*0.6; out[3]=255; return;
+      case T.NAPALM:
+        out[0]=120+n*0.4; out[1]=58+n*0.3; out[2]=30+n*0.2; out[3]=235; return;
+      case T.SPARK: {
+        const glow = 0.7+0.3*Math.sin(n*0.9+performance.now()*0.05);
+        out[0]=235*glow; out[1]=245*glow; out[2]=255; out[3]=255; return;
+      }
+      case T.OXYGEN: {
+        const a = Math.max(0, Math.min(160, l*1.6));
+        out[0]=196+n*0.3; out[1]=214+n*0.3; out[2]=255; out[3]=a; return;
+      }
+      case T.NITRO: {
+        const shimmer = 0.85+0.15*Math.sin(n*0.5+l*0.6);
+        out[0]=219*shimmer; out[1]=229*shimmer; out[2]=110*shimmer; out[3]=232; return;
+      }
+      case T.CRYSTAL: {
+        const sparkle = n>7 ? 30 : 0;
+        out[0]=190+n*0.5+sparkle; out[1]=205+n*0.5+sparkle; out[2]=235+n*0.4+sparkle; out[3]=255; return;
+      }
+      case T.HONEY:
+        out[0]=225+n*0.3; out[1]=165+n*0.3; out[2]=40+n*0.2; out[3]=226; return;
+      default:
+        out[0]=BG[0]; out[1]=BG[1]; out[2]=BG[2]; out[3]=255; return;
+    }
+  }
+
+  const px = [0,0,0,0];
+  function render(){
+    const n = gridW*gridH;
+    for(let i=0;i<n;i++){
+      colorFor(type[i], life[i], noise[i], px, i);
+      const o = i*4;
+      imgBuf[o]=px[0]; imgBuf[o+1]=px[1]; imgBuf[o+2]=px[2]; imgBuf[o+3]=px[3];
+    }
+    ctx.putImageData(imgData,0,0);
+  }
+
+  function applyShake(){
+    if(shakeFrames>0){
+      shakeFrames--;
+      const m = shakeMag * (shakeFrames/14);
+      const dx = (Math.random()*2-1)*m, dy = (Math.random()*2-1)*m;
+      canvas.style.transform = 'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px)';
+    } else if(canvas.style.transform){
+      canvas.style.transform = '';
+    }
+  }
+
+  // ---------------- painting ----------------
+  let drawing = false;
+  let lastGX = null, lastGY = null;
+
+  function clientToGrid(clientX, clientY){
+    const rect = canvas.getBoundingClientRect();
+    const relX = (clientX - rect.left) / rect.width;
+    const relY = (clientY - rect.top) / rect.height;
+    return [ Math.floor(relX*gridW), Math.floor(relY*gridH) ];
+  }
+
+  function initialLife(t){
+    if(t===T.FIRE) return 60+(Math.random()*30|0);
+    if(t===T.ACID) return 40;
+    if(t===T.BOMB) return Math.random()*20|0;
+    if(t===T.LAVA) return Math.random()*30|0;
+    if(t===T.CURE) return 15;
+    if(t===T.TOXICGAS) return 70+(Math.random()*30|0);
+    if(t===T.FOAM) return 90+(Math.random()*40|0);
+    if(t===T.OXYGEN) return 140+(Math.random()*40|0);
+    return 0;
+  }
+
+  function paintAt(gx,gy){
+    if(currentTool!==T.EMPTY) playPlace();
+    if(currentTool===T.HUMAN || currentTool===T.ZOMBIE){
+      spawnBeing(gx,gy,currentTool);
+      return;
+    }
+    if(currentTool===T.RECRUIT){
+      recruitAt(gx,gy);
+      return;
+    }
+    if(currentTool===T.PORTALBLUE || currentTool===T.PORTALORANGE){
+      placePortal(gx,gy,currentTool);
+      return;
+    }
+    const r = brushRadius;
+    const r2 = r*r + 0.6;
+    for(let dy=-r; dy<=r; dy++){
+      for(let dx=-r; dx<=r; dx++){
+        if(dx*dx+dy*dy>r2) continue;
+        const x=gx+dx, y=gy+dy;
+        if(!inBounds(x,y)) continue;
+        const i = idx(x,y);
+        const t = type[i];
+        if(t===T.PLAYER) continue;
+        if(t===T.HUMAN || t===T.ZOMBIE){
+          if(currentTool===T.EMPTY) killBeing(x,y);
+          continue;
+        }
+        if(currentTool===T.GLASS){
+          if(t===T.GLASS) continue; // already sealed here; don't disturb what's trapped inside
+          back[i] = t; backLife[i] = life[i];
+          type[i] = T.GLASS; life[i] = 0;
+          continue;
+        }
+        back[i] = 0; backLife[i] = 0;
+        type[i] = currentTool;
+        life[i] = initialLife(currentTool);
+      }
+    }
+  }
+
+  function paintLine(x0,y0,x1,y1){
+    const steps = Math.max(1, Math.max(Math.abs(x1-x0), Math.abs(y1-y0)));
+    for(let s=0;s<=steps;s++){
+      const t = s/steps;
+      paintAt(Math.round(x0+(x1-x0)*t), Math.round(y0+(y1-y0)*t));
+    }
+  }
+
+  canvas.addEventListener('pointerdown', function(e){
+    drawing = true;
+    canvas.setPointerCapture(e.pointerId);
+    const g = clientToGrid(e.clientX, e.clientY);
+    lastGX = g[0]; lastGY = g[1];
+    paintAt(g[0], g[1]);
+    hintEl.style.opacity = '0';
+  });
+  canvas.addEventListener('pointermove', function(e){
+    if(!drawing) return;
+    const g = clientToGrid(e.clientX, e.clientY);
+    paintLine(lastGX, lastGY, g[0], g[1]);
+    lastGX = g[0]; lastGY = g[1];
+  });
+  window.addEventListener('pointerup', function(){ drawing = false; });
+  canvas.addEventListener('pointerleave', function(){ /* keep drawing while captured */ });
+
+  viewport.addEventListener('wheel', function(e){
+    e.preventDefault();
+    brushRadius = Math.max(1, Math.min(10, brushRadius + (e.deltaY<0?1:-1)));
+    syncBrushUI();
+  }, { passive:false });
+
+  // ---------------- UI wiring ----------------
+  const swatchesEl = document.getElementById('swatches');
+  const rToolEl = document.getElementById('rTool');
+  const rRadiusEl = document.getElementById('rRadius');
+  const rCountEl = document.getElementById('rCount');
+  const rFpsEl = document.getElementById('rFps');
+  const brushSlider = document.getElementById('brush');
+  const brushVal = document.getElementById('brushVal');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const soundBtn = document.getElementById('soundBtn');
+
+  TOOLS.forEach(function(tool, i){
+    const btn = document.createElement('button');
+    btn.className = 'swatch' + (tool.t===currentTool ? ' active' : '');
+    btn.type = 'button';
+    btn.dataset.type = tool.t;
+    const numBadge = i<9 ? '<span class="num">'+(i+1)+'</span>' : '';
+    btn.innerHTML =
+      numBadge +
+      '<span class="chip" style="background:rgb('+tool.swatch.join(',')+')"></span>' +
+      '<span>'+tool.label+'</span>';
+    btn.addEventListener('click', function(){ selectTool(tool.t, tool.label); });
+    swatchesEl.appendChild(btn);
+  });
+
+  function selectTool(t, label){
+    currentTool = t;
+    rToolEl.textContent = label;
+    Array.prototype.forEach.call(swatchesEl.children, function(el){
+      el.classList.toggle('active', Number(el.dataset.type)===t);
+    });
+    playClick();
+  }
+
+  function syncBrushUI(){
+    brushSlider.value = brushRadius;
+    brushVal.textContent = brushRadius;
+    rRadiusEl.textContent = brushRadius;
+  }
+  brushSlider.addEventListener('input', function(){
+    brushRadius = Number(brushSlider.value);
+    syncBrushUI();
+  });
+
+  pauseBtn.addEventListener('click', function(){
+    paused = !paused;
+    pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+    pauseBtn.classList.toggle('primary', paused);
+    playClick();
+  });
+  clearBtn.addEventListener('click', function(){
+    type.fill(T.EMPTY); life.fill(0);
+    beings.length = 0;
+    bluePortalPos = null; orangePortalPos = null;
+    bluePortalCells = []; orangePortalCells = [];
+    playerAlive = false;
+    respawnTimer = 0;
+    spawnPlayer();
+    bannerEl.classList.remove('show');
+    playClick();
+  });
+  soundBtn.addEventListener('click', function(){
+    soundOn = !soundOn;
+    soundBtn.textContent = soundOn ? 'Sound: On' : 'Sound: Off';
+    if(soundOn) playClick();
+  });
+
+  const MOVE_KEYS = { arrowleft:'left', a:'left', arrowright:'right', d:'right' };
+  window.addEventListener('keydown', function(e){
+    const k = e.key.toLowerCase();
+    if(MOVE_KEYS[k]){
+      keysDown[MOVE_KEYS[k]] = true;
+      e.preventDefault();
+      return;
+    }
+    if(k==='w' || k==='arrowup'){
+      e.preventDefault();
+      tryJump();
+      return;
+    }
+    if(k==='f'){
+      e.preventDefault();
+      attackNearby();
+      return;
+    }
+    if(e.key>='1' && e.key<='9'){
+      const i = Number(e.key)-1;
+      if(TOOLS[i]) selectTool(TOOLS[i].t, TOOLS[i].label);
+    } else if(e.code==='Space'){
+      e.preventDefault();
+      pauseBtn.click();
+    } else if(k==='c'){
+      clearBtn.click();
+    }
+  });
+  window.addEventListener('keyup', function(e){
+    const k = e.key.toLowerCase();
+    if(MOVE_KEYS[k]) keysDown[MOVE_KEYS[k]] = false;
+  });
+  window.addEventListener('blur', function(){
+    keysDown.left = false; keysDown.right = false;
+  });
+
+  syncBrushUI();
+
+  // ---------------- resize ----------------
+  let resizeTimer = null;
+  function scheduleResize(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function(){
+      setupGrid();
+    }, 200);
+  }
+  new ResizeObserver(scheduleResize).observe(viewport);
+
+  // ---------------- main loop ----------------
+  let lastTime = performance.now();
+  let fpsAcc = 0, fpsFrames = 0, statTick = 0;
+
+  function frame(now){
+    const dt = now - lastTime;
+    lastTime = now;
+    fpsAcc += dt; fpsFrames++;
+    if(fpsAcc>500){
+      rFpsEl.textContent = Math.round(1000*fpsFrames/fpsAcc);
+      fpsAcc = 0; fpsFrames = 0;
+    }
+
+    if(!paused) simulate();
+    render();
+    applyShake();
+
+    statTick++;
+    if(statTick%10===0){
+      let count = 0;
+      for(let i=0;i<type.length;i++) if(type[i]!==T.EMPTY) count++;
+      rCountEl.textContent = count;
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  setupGrid();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

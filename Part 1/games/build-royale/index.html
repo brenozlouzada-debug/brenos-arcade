@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Royale — 2D Side-View Battle Royale</title>
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #0b0f14;
+  color: #eaf1f8;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  overflow: hidden;
+}
+
+.screen {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hidden { display: none !important; }
+
+.menu-box {
+  width: 520px;
+  max-width: 92vw;
+  background: linear-gradient(180deg, #141c26, #0d131a);
+  border: 1px solid #263241;
+  border-radius: 14px;
+  padding: 28px 32px 32px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.title {
+  text-align: center;
+  font-size: 40px;
+  letter-spacing: 4px;
+  margin: 0 0 6px;
+  color: #eaf1f8;
+}
+.title span { color: #4fd1a5; }
+.title.small { font-size: 28px; }
+
+.subtitle {
+  text-align: center;
+  color: #93a3b5;
+  font-size: 14px;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.menu-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 18px 0 6px;
+}
+
+.btn {
+  background: #1c2733;
+  color: #eaf1f8;
+  border: 1px solid #2f3d4d;
+  border-radius: 8px;
+  padding: 12px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+.btn:hover { background: #24313f; transform: translateY(-1px); }
+.btn-primary { background: #2f9e6e; border-color: #38b17c; }
+.btn-primary:hover { background: #38b17c; }
+
+.menu-panel {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #202b38;
+}
+.menu-panel h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: #6f8194;
+  text-transform: uppercase;
+}
+.menu-panel.help p {
+  font-size: 13px;
+  color: #b7c3d0;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+
+.difficulty-row { display: flex; gap: 8px; }
+.diff-btn {
+  flex: 1;
+  background: #1c2733;
+  border: 1px solid #2f3d4d;
+  color: #93a3b5;
+  padding: 10px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.diff-btn.active { background: #2f9e6e; color: #fff; border-color: #38b17c; }
+
+/* GAME SCREEN */
+#game-screen { position: relative; width: 960px; height: 600px; margin: 0 auto; }
+#game-canvas {
+  display: block;
+  background: #7fb7e6;
+  border-radius: 4px;
+  cursor: crosshair;
+}
+
+.hud { position: absolute; inset: 0; pointer-events: none; font-weight: 700; }
+
+.hud-top-left, .hud-top-right {
+  position: absolute;
+  top: 14px;
+  padding: 6px 14px;
+  background: rgba(10,14,20,0.55);
+  border-radius: 6px;
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+.hud-top-left { left: 14px; color: #eaf1f8; }
+.hud-top-right { right: 14px; color: #ffd166; }
+
+.hud-feed {
+  position: absolute;
+  top: 52px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+.feed-item {
+  background: rgba(10,14,20,0.6);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #cfd8e3;
+  animation: fadeout 4s forwards;
+}
+@keyframes fadeout {
+  0% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.hud-bottom {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.health-wrap { width: 220px; }
+.health-label { font-size: 11px; color: #eaf1f8; margin-bottom: 4px; letter-spacing: 1px; }
+.health-bar {
+  width: 100%;
+  height: 18px;
+  background: rgba(10,14,20,0.6);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.health-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #4fd1a5, #2f9e6e);
+  transition: width 0.15s ease;
+}
+
+.build-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.wood-count { font-size: 13px; color: #d8b978; }
+.build-slots { display: flex; gap: 6px; pointer-events: none; }
+.build-slot {
+  width: 52px;
+  height: 44px;
+  background: rgba(10,14,20,0.6);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #93a3b5;
+}
+.build-slot span { font-size: 8px; letter-spacing: 0.5px; margin-top: 2px; }
+.build-slot #slot5-main { font-size: 13px; font-weight: 700; margin-top: 0; color: inherit; }
+.build-slot.active { border-color: #4fd1a5; color: #eaf1f8; }
+
+.overlay-message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6,9,13,0.72);
+}
+.overlay-box {
+  background: #141c26;
+  border: 1px solid #263241;
+  border-radius: 14px;
+  padding: 30px 40px;
+  text-align: center;
+  min-width: 320px;
+}
+#overlay-title { font-size: 30px; letter-spacing: 2px; margin-bottom: 8px; color: #4fd1a5; }
+#overlay-subtitle { color: #b7c3d0; font-size: 14px; margin-bottom: 6px; }
+
+</style>
+</head>
+<body>
+<a href="../../index.html" title="Back to Arcade" style="position:fixed;top:10px;left:10px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:rgba(0,0,0,0.6);color:#fff;font:14px/1 system-ui,-apple-system,sans-serif;border-radius:50%;text-decoration:none;opacity:0.4;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">&larr;</a>
+
+<!-- START SCREEN -->
+<div id="start-screen" class="screen">
+  <div class="menu-box">
+    <h1 class="title">BUILD <span>ROYALE</span></h1>
+    <p class="subtitle">A 2D side-view battle royale. Build walls, ramps and floors for cover — everyone else is armed and shooting.</p>
+
+    <div class="menu-panel">
+      <h3>Bots</h3>
+      <div class="difficulty-row" id="bot-count-row">
+        <button class="diff-btn" data-count="4">4</button>
+        <button class="diff-btn active" data-count="7">7</button>
+        <button class="diff-btn" data-count="10">10</button>
+      </div>
+    </div>
+
+    <div class="menu-buttons">
+      <button id="btn-play" class="btn btn-primary">Drop In</button>
+    </div>
+
+    <div class="menu-panel help">
+      <h3>How to Play</h3>
+      <p><b>Move:</b> A/D or ←/→ &nbsp; <b>Jump:</b> W / Space &nbsp; <b>Aim &amp; Shoot:</b> Mouse + Left Click</p>
+      <p><b>Build:</b> 1 Wall &nbsp; 2 Floor &nbsp; 3 Ramp &nbsp; 4 Pistol &nbsp; 5 Picked-up weapon &nbsp; — building costs wood, structures can be shot down.</p>
+      <p>You start with only a sidearm pistol — find <b>Rifle, SMG, Shotgun and Sniper</b> crates on the ground for a stronger weapon with limited ammo. Bots hunt for them too.</p>
+      <p>Watch the storm — the safe zone shrinks over time and damages anyone outside it. Last one standing wins.</p>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" class="screen hidden">
+  <canvas id="game-canvas" width="960" height="600"></canvas>
+
+  <div class="hud">
+    <div class="hud-top-left" id="hud-alive">ALIVE: 8</div>
+    <div class="hud-top-right" id="hud-kills">KILLS: 0</div>
+    <div class="hud-feed" id="hud-feed"></div>
+
+    <div class="hud-bottom">
+      <div class="health-wrap">
+        <div class="health-label">HP</div>
+        <div class="health-bar"><div id="health-fill" class="health-fill"></div></div>
+      </div>
+      <div class="build-wrap">
+        <div class="wood-count"><span id="wood-count">100</span> WOOD</div>
+        <div class="build-slots" id="build-slots">
+          <div class="build-slot active" data-slot="1">1<span>WALL</span></div>
+          <div class="build-slot" data-slot="2">2<span>FLOOR</span></div>
+          <div class="build-slot" data-slot="3">3<span>RAMP</span></div>
+          <div class="build-slot" data-slot="4">4<span>PISTOL</span></div>
+          <div class="build-slot" data-slot="5"><span id="slot5-main">—</span><span id="slot5-sub">EMPTY</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="overlay-message" class="overlay-message hidden">
+    <div class="overlay-box">
+      <div id="overlay-title">VICTORY ROYALE</div>
+      <div id="overlay-subtitle"></div>
+      <div class="menu-buttons">
+        <button id="btn-restart" class="btn btn-primary">Play Again</button>
+        <button id="btn-mainmenu" class="btn">Main Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// BUILD ROYALE — 2D side-view battle royale with building + AI
+// ============================================================
+
+// ---------- CONFIG ----------
+const TILE = 40;
+const GRAVITY = 2000;
+const MOVE_SPEED = 270;
+const JUMP_VEL = 680;
+const WORLD_W = 13000;
+const GROUND_Y = 520;
+const CANVAS_W = 960;
+const CANVAS_H = 600;
+
+const AGENT_W = 26, AGENT_H = 46;
+const BULLET_LIFE = 1.6;
+const BUILD_COOLDOWN = 0.35;
+
+const WEAPONS = {
+  pistol:  { name: 'Pistol',   short: 'PST', dmg: 14, fireRate: 0.32, bulletSpeed: 900,  spread: 0.02,  pellets: 1, color: '#dfe6ee', maxAmmo: Infinity, tracer: 2 },
+  rifle:   { name: 'Rifle',    short: 'RFL', dmg: 10, fireRate: 0.22, bulletSpeed: 1000, spread: 0.035, pellets: 1, color: '#ffd166', maxAmmo: 90,       tracer: 2 },
+  smg:     { name: 'SMG',      short: 'SMG', dmg: 7,  fireRate: 0.09, bulletSpeed: 950,  spread: 0.08,  pellets: 1, color: '#8de05d', maxAmmo: 120,      tracer: 2 },
+  shotgun: { name: 'Shotgun',  short: 'SHG', dmg: 9,  fireRate: 0.70, bulletSpeed: 820,  spread: 0.26,  pellets: 7, color: '#ff8c42', maxAmmo: 32,       tracer: 2.4 },
+  sniper:  { name: 'Sniper',   short: 'SNP', dmg: 65, fireRate: 1.15, bulletSpeed: 1700, spread: 0.006, pellets: 1, color: '#5de0c9', maxAmmo: 15,       tracer: 3.2 },
+};
+const WEAPON_PICKUP_TYPES = ['rifle', 'smg', 'shotgun', 'sniper'];
+
+const WOOD_START = 120;
+const WOOD_MAX = 200;
+const WOOD_REGEN = 3; // per second
+const COST = { wall: 15, floor: 10, ramp: 12 };
+const HP_MAX = { wall: 120, floor: 70, ramp: 70 };
+
+const DETECT_RANGE = 720;
+const ENGAGE_DIST = 320;
+
+const STORM_GRACE = 25;      // seconds before storm starts shrinking
+const STORM_SHRINK_TIME = 170; // seconds to fully shrink
+const STORM_FINAL_RADIUS = 420;
+const STORM_DAMAGE = 8; // per second
+
+const MESAS = [
+  { x: 700,   yTop: GROUND_Y - 160, w: 260 },
+  { x: 1400,  yTop: GROUND_Y - 100, w: 180 },
+  { x: 2100,  yTop: GROUND_Y - 220, w: 320 },
+  { x: 2800,  yTop: GROUND_Y - 140, w: 200 },
+  { x: 3500,  yTop: GROUND_Y - 180, w: 260 },
+  { x: 4300,  yTop: GROUND_Y - 120, w: 300 },
+  { x: 5000,  yTop: GROUND_Y - 240, w: 220 },
+  { x: 5700,  yTop: GROUND_Y - 160, w: 340 },
+  { x: 6500,  yTop: GROUND_Y - 100, w: 200 },
+  { x: 7200,  yTop: GROUND_Y - 200, w: 280 },
+  { x: 7900,  yTop: GROUND_Y - 140, w: 220 },
+  { x: 8600,  yTop: GROUND_Y - 220, w: 320 },
+  { x: 9300,  yTop: GROUND_Y - 160, w: 260 },
+  { x: 10000, yTop: GROUND_Y - 100, w: 180 },
+  { x: 10700, yTop: GROUND_Y - 220, w: 300 },
+  { x: 11400, yTop: GROUND_Y - 140, w: 260 },
+  { x: 12100, yTop: GROUND_Y - 180, w: 220 },
+];
+
+const BOT_NAMES = ['Raven','Ghost','Rex','Nyx','Zed','Loki','Vex','Cinder','Blitz','Rook','Sable','Talon'];
+const BOT_COLORS = ['#e05d5d','#e0a95d','#c95de0','#5de0c9','#e05dbb','#8de05d','#5d8de0','#e0d05d','#e0785d','#5de07f'];
+
+// ---------- DOM ----------
+const startScreen = document.getElementById('start-screen');
+const gameScreen = document.getElementById('game-screen');
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+
+const hudAlive = document.getElementById('hud-alive');
+const hudKills = document.getElementById('hud-kills');
+const hudFeed = document.getElementById('hud-feed');
+const healthFill = document.getElementById('health-fill');
+const woodCountEl = document.getElementById('wood-count');
+const buildSlots = document.getElementById('build-slots').children;
+
+const overlayMsg = document.getElementById('overlay-message');
+const overlayTitle = document.getElementById('overlay-title');
+const overlaySubtitle = document.getElementById('overlay-subtitle');
+
+let botCount = 7;
+document.querySelectorAll('#bot-count-row .diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#bot-count-row .diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    botCount = parseInt(btn.dataset.count, 10);
+  });
+});
+
+document.getElementById('btn-play').addEventListener('click', () => startMatch());
+document.getElementById('btn-restart').addEventListener('click', () => startMatch());
+document.getElementById('btn-mainmenu').addEventListener('click', () => {
+  overlayMsg.classList.add('hidden');
+  gameScreen.classList.add('hidden');
+  startScreen.classList.remove('hidden');
+});
+
+// ---------- UTIL ----------
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function rectsOverlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+function dist(x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); }
+function tileWorldRect(gx, gy) {
+  const x = gx * TILE;
+  const yBottom = GROUND_Y - gy * TILE;
+  const yTop = yBottom - TILE;
+  return { x, yTop, yBottom };
+}
+function groundTopAt(x) {
+  let top = GROUND_Y;
+  for (const m of MESAS) {
+    if (x >= m.x && x <= m.x + m.w && m.yTop < top) top = m.yTop;
+  }
+  return top;
+}
+
+// ---------- GAME STATE ----------
+let state = 'menu'; // menu | playing | ended
+let world, player, bots, bullets, particles, crates, structures, structureIndex, cameraX;
+let matchStartTime, feedItems;
+let keys = {};
+let mouseScreen = { x: CANVAS_W / 2, y: CANVAS_H / 2 };
+let mouseDown = false;
+
+function resetWorld() {
+  bullets = [];
+  particles = [];
+  structures = [];
+  structureIndex = new Map();
+  feedItems = [];
+
+  // terrain solids (ground + mesas), always present
+  world = {
+    terrainRects: [
+      { x: 0, y: GROUND_Y, w: WORLD_W, h: 400 },
+      ...MESAS.map(m => ({ x: m.x, y: m.yTop, w: m.w, h: (GROUND_Y - m.yTop) + 400 })),
+    ],
+  };
+
+  // loot crates: wood, health, or a weapon pickup
+  crates = [];
+  for (let i = 0; i < 30; i++) {
+    const x = 150 + Math.random() * (WORLD_W - 300);
+    const y = groundTopAt(x);
+    const roll = Math.random();
+    const type = roll < 0.35 ? 'wood' : roll < 0.6 ? 'health'
+      : WEAPON_PICKUP_TYPES[Math.floor(Math.random() * WEAPON_PICKUP_TYPES.length)];
+    crates.push({
+      x, y: y - 18, w: 22, h: 18,
+      type,
+      collected: false,
+    });
+  }
+
+  // player
+  const px = 200 + Math.random() * (WORLD_W - 400);
+  player = makeAgent('player', 'YOU', '#4fd1a5', px);
+
+  // bots
+  bots = [];
+  const names = [...BOT_NAMES].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < botCount; i++) {
+    const bx = 200 + Math.random() * (WORLD_W - 400);
+    const b = makeAgent('bot_' + i, names[i % names.length], BOT_COLORS[i % BOT_COLORS.length], bx);
+    b.isBot = true;
+    b.wanderDir = 0;
+    b.wanderTimer = 0;
+    b.jumpCooldown = 0;
+    b.targetId = null;
+    b.lastX = b.x;
+    b.stuckTimer = 0;
+    if (Math.random() < 0.35) {
+      const wt = WEAPON_PICKUP_TYPES[Math.floor(Math.random() * WEAPON_PICKUP_TYPES.length)];
+      b.primaryWeapon = wt;
+      b.primaryAmmo = WEAPONS[wt].maxAmmo;
+      b.activeWeapon = wt;
+    }
+    bots.push(b);
+  }
+
+  cameraX = clamp(player.x - CANVAS_W / 2, 0, WORLD_W - CANVAS_W);
+
+  // storm: pick a center anywhere within middle 60% of the map
+  const center = WORLD_W * (0.2 + Math.random() * 0.6);
+  world.stormCenter = center;
+  matchStartTime = performance.now();
+}
+
+function makeAgent(id, name, color, x) {
+  const y = groundTopAt(x) - AGENT_H;
+  return {
+    id, name, color,
+    x, y, w: AGENT_W, h: AGENT_H,
+    vx: 0, vy: 0,
+    facing: 1,
+    onGround: false,
+    hp: 100, maxHp: 100,
+    wood: WOOD_START,
+    alive: true,
+    fireCd: 0,
+    buildCd: 0,
+    buildMode: null, // null=weapon, 'wall'|'floor'|'ramp'
+    kills: 0,
+    aimX: x + 100, aimY: y,
+    hitFlash: 0,
+    activeWeapon: 'pistol',
+    primaryWeapon: null,
+    primaryAmmo: 0,
+  };
+}
+
+function currentWeapon(agent) {
+  return agent.activeWeapon === 'pistol' ? WEAPONS.pistol : WEAPONS[agent.primaryWeapon];
+}
+
+function tryCollectCrates(agent) {
+  for (const c of crates) {
+    if (c.collected) continue;
+    if (!rectsOverlap({ x: agent.x, y: agent.y, w: agent.w, h: agent.h }, c)) continue;
+    c.collected = true;
+    const isPlayer = agent === player;
+    if (c.type === 'wood') {
+      agent.wood = Math.min(WOOD_MAX, agent.wood + 50);
+      if (isPlayer) addFeed('Picked up wood');
+    } else if (c.type === 'health') {
+      agent.hp = Math.min(agent.maxHp, agent.hp + 40);
+      if (isPlayer) addFeed('Picked up health');
+    } else if (WEAPONS[c.type]) {
+      agent.primaryWeapon = c.type;
+      agent.primaryAmmo = WEAPONS[c.type].maxAmmo;
+      agent.activeWeapon = c.type;
+      if (isPlayer) { addFeed('Picked up ' + WEAPONS[c.type].name); setBuildMode('5'); }
+    }
+  }
+}
+
+// ---------- STRUCTURES ----------
+function placeStructure(agent, type) {
+  if (agent.wood < COST[type] || agent.buildCd > 0) return false;
+  const facing = agent.facing;
+  const targetWorldX = (agent.x + agent.w / 2) + facing * TILE;
+  const gx = Math.floor(targetWorldX / TILE);
+  const feetY = agent.y + agent.h;
+  const gy = clamp(Math.round((GROUND_Y - feetY) / TILE), 0, 18);
+  if (gx < 0 || gx > Math.floor(WORLD_W / TILE)) return false;
+
+  let occupies;
+  if (type === 'wall') occupies = [{ gx, gy }, { gx, gy: gy + 1 }];
+  else occupies = [{ gx, gy }];
+
+  for (const c of occupies) {
+    if (structureIndex.has(c.gx + ',' + c.gy)) return false;
+  }
+
+  const struct = {
+    type, gx, gy, occupies,
+    hp: HP_MAX[type], maxHp: HP_MAX[type],
+    highSide: type === 'ramp' ? facing : 0,
+  };
+  structures.push(struct);
+  for (const c of occupies) structureIndex.set(c.gx + ',' + c.gy, struct);
+
+  agent.wood -= COST[type];
+  agent.buildCd = BUILD_COOLDOWN;
+  return true;
+}
+
+function destroyStructure(struct) {
+  const idx = structures.indexOf(struct);
+  if (idx >= 0) structures.splice(idx, 1);
+  for (const c of struct.occupies) structureIndex.delete(c.gx + ',' + c.gy);
+  const r = tileWorldRect(struct.gx, struct.gy);
+  spawnParticles((r.x + TILE / 2), (r.yTop + r.yBottom) / 2, 10, '#a97c50');
+}
+
+// build per-frame collision helper lists
+function buildCollisionLists() {
+  const solids = [...world.terrainRects];
+  const oneways = [];
+  const blockRects = []; // for bullets: terrain + every structure tile, each tagged
+  for (const r of world.terrainRects) blockRects.push({ ...r, terrain: true });
+
+  for (const s of structures) {
+    if (s.type === 'wall') {
+      const rTop = tileWorldRect(s.gx, s.gy + 1);
+      const rBot = tileWorldRect(s.gx, s.gy);
+      const rect = { x: rTop.x, y: rTop.yTop, w: TILE, h: TILE * 2 };
+      solids.push(rect);
+      blockRects.push({ x: rBot.x, y: rBot.yTop, w: TILE, h: TILE, struct: s });
+      blockRects.push({ x: rTop.x, y: rTop.yTop, w: TILE, h: TILE, struct: s });
+    } else if (s.type === 'floor') {
+      const r = tileWorldRect(s.gx, s.gy);
+      oneways.push({ x0: r.x, x1: r.x + TILE, topYFn: () => r.yTop, struct: s });
+      blockRects.push({ x: r.x, y: r.yTop, w: TILE, h: TILE, struct: s });
+    } else if (s.type === 'ramp') {
+      const r = tileWorldRect(s.gx, s.gy);
+      const topYFn = (x) => {
+        const t = clamp((x - r.x) / TILE, 0, 1);
+        return s.highSide === 1 ? r.yBottom - t * TILE : r.yTop + t * TILE;
+      };
+      oneways.push({ x0: r.x, x1: r.x + TILE, topYFn, struct: s });
+      blockRects.push({ x: r.x, y: r.yTop, w: TILE, h: TILE, struct: s });
+    }
+  }
+  // sight blockers: terrain + walls only (not thin floors/ramps)
+  const sightBlockers = [...world.terrainRects, ...solids.filter(r => !world.terrainRects.includes(r))];
+  return { solids, oneways, blockRects, sightBlockers };
+}
+
+// ---------- PHYSICS ----------
+function applyPhysics(e, dt, coll) {
+  e.vy += GRAVITY * dt;
+  if (e.vy > 1800) e.vy = 1800;
+
+  // horizontal
+  e.x += e.vx * dt;
+  for (const r of coll.solids) {
+    const box = { x: e.x, y: e.y, w: e.w, h: e.h };
+    if (rectsOverlap(box, r)) {
+      if (e.vx > 0) e.x = r.x - e.w;
+      else if (e.vx < 0) e.x = r.x + r.w;
+    }
+  }
+  e.x = clamp(e.x, 0, WORLD_W - e.w);
+
+  // vertical
+  const prevFeet = e.y + e.h;
+  e.y += e.vy * dt;
+  e.onGround = false;
+  for (const r of coll.solids) {
+    const box = { x: e.x, y: e.y, w: e.w, h: e.h };
+    if (rectsOverlap(box, r)) {
+      if (e.vy > 0) { e.y = r.y - e.h; e.vy = 0; e.onGround = true; }
+      else if (e.vy < 0) { e.y = r.y + r.h; e.vy = 0; }
+    }
+  }
+  for (const p of coll.oneways) {
+    if (e.x + e.w <= p.x0 || e.x >= p.x1) continue;
+    const topY = p.topYFn(e.x + e.w / 2);
+    const feet = e.y + e.h;
+    if (e.vy >= 0 && feet >= topY && prevFeet <= topY + 2) {
+      e.y = topY - e.h;
+      e.vy = 0;
+      e.onGround = true;
+    }
+  }
+  if (e.y + e.h > GROUND_Y + 380) { e.y = GROUND_Y + 380 - e.h; e.vy = 0; e.onGround = true; }
+}
+
+function checkLOS(x0, y0, x1, y1, blockers) {
+  const steps = 18;
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    const px = x0 + (x1 - x0) * t;
+    const py = y0 + (y1 - y0) * t;
+    for (const r of blockers) {
+      if (px > r.x && px < r.x + r.w && py > r.y && py < r.y + r.h) return false;
+    }
+  }
+  return true;
+}
+
+// ---------- COMBAT ----------
+function fireBullet(agent, aimX, aimY, coll) {
+  const wpn = currentWeapon(agent);
+  if (!wpn) { agent.activeWeapon = 'pistol'; return; }
+
+  const ex = agent.x + agent.w / 2 + agent.facing * (agent.w / 2 + 6);
+  const ey = agent.y + agent.h * 0.42;
+  const baseAngle = Math.atan2(aimY - ey, aimX - ex);
+
+  for (let i = 0; i < wpn.pellets; i++) {
+    const angle = baseAngle + (Math.random() - 0.5) * wpn.spread;
+    bullets.push({
+      x: ex, y: ey, vx: Math.cos(angle) * wpn.bulletSpeed, vy: Math.sin(angle) * wpn.bulletSpeed,
+      life: BULLET_LIFE, ownerId: agent.id, color: wpn.color,
+      dmg: wpn.dmg, structDmg: Math.round(wpn.dmg * 2.3), tracer: wpn.tracer,
+    });
+  }
+  agent.fireCd = wpn.fireRate;
+
+  if (agent.activeWeapon !== 'pistol') {
+    agent.primaryAmmo--;
+    if (agent.primaryAmmo <= 0) {
+      agent.primaryWeapon = null;
+      agent.activeWeapon = 'pistol';
+      if (agent === player) { addFeed('Out of ammo — switched to pistol'); setBuildMode('4'); }
+    }
+  }
+}
+
+function updateBullets(dt, coll, allAgents) {
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+    b.life -= dt;
+    let removed = false;
+
+    if (b.life <= 0 || b.x < 0 || b.x > WORLD_W || b.y > GROUND_Y + 400 || b.y < -400) {
+      bullets.splice(i, 1); continue;
+    }
+
+    // vs agents
+    for (const a of allAgents) {
+      if (!a.alive || a.id === b.ownerId) continue;
+      if (b.x > a.x && b.x < a.x + a.w && b.y > a.y && b.y < a.y + a.h) {
+        a.hp -= b.dmg;
+        a.hitFlash = 0.15;
+        spawnParticles(b.x, b.y, 6, '#ff5555');
+        bullets.splice(i, 1);
+        removed = true;
+        if (a.hp <= 0) killAgent(a, b.ownerId);
+        break;
+      }
+    }
+    if (removed) continue;
+
+    // vs structures / terrain
+    for (const r of coll.blockRects) {
+      if (b.x > r.x && b.x < r.x + r.w && b.y > r.y && b.y < r.y + r.h) {
+        if (r.struct) {
+          r.struct.hp -= b.structDmg;
+          spawnParticles(b.x, b.y, 5, '#a97c50');
+          if (r.struct.hp <= 0) destroyStructure(r.struct);
+        } else {
+          spawnParticles(b.x, b.y, 4, '#cccccc');
+        }
+        bullets.splice(i, 1);
+        removed = true;
+        break;
+      }
+    }
+  }
+}
+
+function killAgent(agent, killerId) {
+  if (!agent.alive) return;
+  agent.alive = false;
+  spawnParticles(agent.x + agent.w / 2, agent.y + agent.h / 2, 22, agent.color);
+  const killer = killerId === 'player' ? player : bots.find(b => b.id === killerId);
+  const killerName = killer ? killer.name : 'The storm';
+  if (killerId === 'player') player.kills++;
+  addFeed(`${killerName} eliminated ${agent.name}`);
+}
+
+// ---------- PARTICLES / FEED ----------
+function spawnParticles(x, y, n, color) {
+  for (let i = 0; i < n; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 260,
+      vy: (Math.random() - 0.8) * 260,
+      life: 0.4 + Math.random() * 0.3,
+      color,
+      size: 2 + Math.random() * 3,
+    });
+  }
+}
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.vy += 900 * dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.life -= dt;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+function addFeed(text) {
+  feedItems.push({ text, t: 0 });
+  const div = document.createElement('div');
+  div.className = 'feed-item';
+  div.textContent = text;
+  hudFeed.appendChild(div);
+  setTimeout(() => div.remove(), 4000);
+  while (hudFeed.children.length > 5) hudFeed.removeChild(hudFeed.firstChild);
+}
+
+// ---------- STORM ----------
+function getStorm() {
+  const elapsed = (performance.now() - matchStartTime) / 1000;
+  const fullMin = 0, fullMax = WORLD_W;
+  const finalMin = world.stormCenter - STORM_FINAL_RADIUS;
+  const finalMax = world.stormCenter + STORM_FINAL_RADIUS;
+  let t = clamp((elapsed - STORM_GRACE) / STORM_SHRINK_TIME, 0, 1);
+  const minX = fullMin + (finalMin - fullMin) * t;
+  const maxX = fullMax + (finalMax - fullMax) * t;
+  return { minX, maxX };
+}
+
+// ---------- AI ----------
+function updateBot(bot, dt, coll, allAgents) {
+  if (!bot.alive) return;
+
+  bot.fireCd -= dt;
+  bot.buildCd -= dt;
+  bot.jumpCooldown -= dt;
+  bot.hitFlash -= dt;
+  bot.wood = Math.min(WOOD_MAX, bot.wood + WOOD_REGEN * dt);
+  tryCollectCrates(bot);
+
+  const eyeX = bot.x + bot.w / 2, eyeY = bot.y + bot.h * 0.4;
+  const botWpn = currentWeapon(bot);
+  const engageDist = botWpn === WEAPONS.shotgun ? 150 : botWpn === WEAPONS.sniper ? 560 : ENGAGE_DIST;
+
+  // find nearest visible target
+  let best = null, bestDist = Infinity;
+  for (const a of allAgents) {
+    if (a === bot || !a.alive) continue;
+    const d = dist(eyeX, eyeY, a.x + a.w / 2, a.y + a.h * 0.4);
+    if (d < DETECT_RANGE && d < bestDist) {
+      if (checkLOS(eyeX, eyeY, a.x + a.w / 2, a.y + a.h * 0.4, coll.sightBlockers)) {
+        best = a; bestDist = d;
+      }
+    }
+  }
+
+  if (best) {
+    const tx = best.x + best.w / 2, ty = best.y + best.h * 0.4;
+    const dx = tx - eyeX;
+    bot.facing = dx >= 0 ? 1 : -1;
+
+    if (Math.abs(dx) > engageDist + 40) bot.vx = bot.facing * MOVE_SPEED;
+    else if (Math.abs(dx) < engageDist - 60) bot.vx = -bot.facing * MOVE_SPEED;
+    else bot.vx = 0;
+
+    // shoot
+    if (bot.fireCd <= 0) {
+      const spread = 0.09;
+      const angle = Math.atan2(ty - eyeY, tx - eyeX) + (Math.random() - 0.5) * spread;
+      const aimX = eyeX + Math.cos(angle) * 500;
+      const aimY = eyeY + Math.sin(angle) * 500;
+      fireBullet(bot, aimX, aimY, coll);
+      bot.fireCd += Math.random() * 0.2;
+    }
+
+    // build cover if hurt and no wall between
+    if (bot.hp < bot.maxHp * 0.65 && bot.buildCd <= 0 && bot.wood >= COST.wall && Math.random() < 0.02) {
+      placeStructure(bot, 'wall');
+    }
+
+    // jump over obstacles occasionally
+    if (bot.onGround && bot.jumpCooldown <= 0 && Math.random() < 0.01) {
+      bot.vy = -JUMP_VEL; bot.jumpCooldown = 0.5;
+    }
+  } else {
+    // wander
+    bot.wanderTimer -= dt;
+    if (bot.wanderTimer <= 0) {
+      bot.wanderDir = Math.floor(Math.random() * 3) - 1;
+      bot.wanderTimer = 1 + Math.random() * 2.5;
+    }
+    bot.vx = bot.wanderDir * MOVE_SPEED * 0.55;
+    if (bot.vx !== 0) bot.facing = bot.vx > 0 ? 1 : -1;
+    if (bot.onGround && bot.jumpCooldown <= 0 && Math.random() < 0.004) {
+      bot.vy = -JUMP_VEL; bot.jumpCooldown = 0.6;
+    }
+  }
+
+  // stuck detection -> jump
+  if (bot.onGround && Math.abs(bot.vx) > 10) {
+    if (Math.abs(bot.x - bot.lastX) < 2) {
+      bot.stuckTimer += dt;
+      if (bot.stuckTimer > 0.25 && bot.jumpCooldown <= 0) {
+        bot.vy = -JUMP_VEL; bot.jumpCooldown = 0.5; bot.stuckTimer = 0;
+      }
+    } else bot.stuckTimer = 0;
+  }
+  bot.lastX = bot.x;
+
+  applyPhysics(bot, dt, coll);
+
+  // storm damage
+  const storm = getStorm();
+  if (bot.x < storm.minX || bot.x > storm.maxX) {
+    bot.hp -= STORM_DAMAGE * dt;
+    if (bot.hp <= 0) killAgent(bot, null);
+  }
+}
+
+// ---------- INPUT ----------
+window.addEventListener('keydown', (e) => {
+  keys[e.key.toLowerCase()] = true;
+  if (['1', '2', '3', '4', '5'].includes(e.key)) setBuildMode(e.key);
+  if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) e.preventDefault();
+});
+window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouseScreen.x = (e.clientX - rect.left) * (CANVAS_W / rect.width);
+  mouseScreen.y = (e.clientY - rect.top) * (CANVAS_H / rect.height);
+});
+canvas.addEventListener('mousedown', (e) => { if (e.button === 0) mouseDown = true; });
+window.addEventListener('mouseup', (e) => { if (e.button === 0) mouseDown = false; });
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+function setBuildMode(key) {
+  if (!player) return;
+  if (key === '5') {
+    if (!player.primaryWeapon) return; // no primary weapon picked up yet
+    player.buildMode = null;
+    player.activeWeapon = player.primaryWeapon;
+  } else {
+    const map = { '1': 'wall', '2': 'floor', '3': 'ramp', '4': null };
+    player.buildMode = map[key];
+    if (key === '4') player.activeWeapon = 'pistol';
+  }
+  syncBuildSlotUI();
+}
+
+function syncBuildSlotUI() {
+  let activeKey;
+  if (player.buildMode === 'wall') activeKey = '1';
+  else if (player.buildMode === 'floor') activeKey = '2';
+  else if (player.buildMode === 'ramp') activeKey = '3';
+  else activeKey = player.activeWeapon === 'pistol' ? '4' : '5';
+
+  for (const slot of buildSlots) {
+    slot.classList.toggle('active', slot.dataset.slot === activeKey);
+  }
+
+  const primaryMain = document.getElementById('slot5-main');
+  const primarySub = document.getElementById('slot5-sub');
+  if (player.primaryWeapon) {
+    const w = WEAPONS[player.primaryWeapon];
+    primaryMain.textContent = w.short;
+    primarySub.textContent = player.primaryAmmo;
+  } else {
+    primaryMain.textContent = '—';
+    primarySub.textContent = 'EMPTY';
+  }
+}
+
+// ---------- MAIN UPDATE ----------
+function updatePlayer(dt, coll, allAgents) {
+  const left = keys['a'] || keys['arrowleft'];
+  const right = keys['d'] || keys['arrowright'];
+  const jump = keys['w'] || keys[' '] || keys['arrowup'];
+
+  player.vx = 0;
+  if (left) player.vx -= MOVE_SPEED;
+  if (right) player.vx += MOVE_SPEED;
+  if (jump && player.onGround) player.vy = -JUMP_VEL;
+
+  const worldMouseX = mouseScreen.x + cameraX;
+  const worldMouseY = mouseScreen.y;
+  player.aimX = worldMouseX; player.aimY = worldMouseY;
+  player.facing = worldMouseX >= player.x + player.w / 2 ? 1 : -1;
+
+  player.fireCd -= dt;
+  player.buildCd -= dt;
+  player.hitFlash -= dt;
+  player.wood = Math.min(WOOD_MAX, player.wood + WOOD_REGEN * dt);
+
+  if (mouseDown) {
+    if (player.buildMode) {
+      if (player.buildCd <= 0) placeStructure(player, player.buildMode);
+    } else {
+      if (player.fireCd <= 0) fireBullet(player, worldMouseX, worldMouseY, coll);
+    }
+  }
+
+  applyPhysics(player, dt, coll);
+
+  const storm = getStorm();
+  if (player.x < storm.minX || player.x > storm.maxX) {
+    player.hp -= STORM_DAMAGE * dt;
+    if (player.hp <= 0) killAgent(player, null);
+  }
+
+  tryCollectCrates(player);
+}
+
+let aliveCountLast = 0;
+function update(dt) {
+  if (state !== 'playing') return;
+
+  const coll = buildCollisionLists();
+  const allAgents = [player, ...bots];
+
+  updatePlayer(dt, coll, allAgents);
+  for (const b of bots) updateBot(b, dt, coll, allAgents);
+
+  updateBullets(dt, coll, allAgents);
+  updateParticles(dt);
+
+  cameraX = clamp(player.x + player.w / 2 - CANVAS_W / 2, 0, WORLD_W - CANVAS_W);
+
+  // HUD
+  healthFill.style.width = Math.max(0, player.hp) + '%';
+  woodCountEl.textContent = Math.floor(player.wood);
+  syncBuildSlotUI();
+  const aliveCount = allAgents.filter(a => a.alive).length;
+  hudAlive.textContent = 'ALIVE: ' + aliveCount;
+  hudKills.textContent = 'KILLS: ' + player.kills;
+
+  // win/lose
+  if (!player.alive) {
+    endMatch(false, aliveCount);
+  } else if (aliveCount <= 1) {
+    endMatch(true, aliveCount);
+  }
+}
+
+function endMatch(won, aliveCount) {
+  state = 'ended';
+  overlayTitle.textContent = won ? 'VICTORY ROYALE' : 'ELIMINATED';
+  overlayTitle.style.color = won ? '#4fd1a5' : '#e05d5d';
+  const elapsed = Math.floor((performance.now() - matchStartTime) / 1000);
+  overlaySubtitle.textContent = `Kills: ${player.kills} · Survived ${elapsed}s · ${aliveCount} remaining`;
+  overlayMsg.classList.remove('hidden');
+}
+
+// ---------- RENDER ----------
+function worldToScreenX(x) { return x - cameraX; }
+
+function render() {
+  ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // sky
+  const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+  grad.addColorStop(0, '#6fa8dc');
+  grad.addColorStop(1, '#bfe3f0');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // distant parallax hills
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  for (let i = 0; i < 8; i++) {
+    const bx = (i * 500 - cameraX * 0.3) % (CANVAS_W + 400) - 200;
+    ctx.beginPath();
+    ctx.ellipse(bx, GROUND_Y - 10, 160, 60, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  if (state === 'playing' || state === 'ended') {
+    // storm overlay
+    const storm = getStorm();
+    ctx.fillStyle = 'rgba(120,40,200,0.35)';
+    const smx = worldToScreenX(storm.minX), smX = worldToScreenX(storm.maxX);
+    ctx.fillRect(0, 0, Math.max(0, smx), CANVAS_H);
+    ctx.fillRect(Math.min(CANVAS_W, smX), 0, CANVAS_W - Math.min(CANVAS_W, smX), CANVAS_H);
+    ctx.strokeStyle = '#c084fc';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(smx, 0); ctx.lineTo(smx, CANVAS_H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(smX, 0); ctx.lineTo(smX, CANVAS_H); ctx.stroke();
+
+    // terrain
+    ctx.fillStyle = '#5a8f4f';
+    for (const r of world.terrainRects) {
+      ctx.fillRect(worldToScreenX(r.x), r.y, r.w, 6);
+      ctx.fillStyle = '#7a5a3a';
+      ctx.fillRect(worldToScreenX(r.x), r.y + 6, r.w, r.h - 6);
+      ctx.fillStyle = '#5a8f4f';
+    }
+
+    // crates
+    for (const c of crates) {
+      if (c.collected) continue;
+      const sx = worldToScreenX(c.x);
+      if (sx < -30 || sx > CANVAS_W + 30) continue;
+      const wpn = WEAPONS[c.type];
+      ctx.fillStyle = c.type === 'wood' ? '#c9974f' : c.type === 'health' ? '#e05d5d' : wpn.color;
+      ctx.fillRect(sx, c.y, c.w, c.h);
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+      ctx.strokeRect(sx, c.y, c.w, c.h);
+      if (wpn) {
+        ctx.fillStyle = '#1b2430';
+        ctx.font = 'bold 8px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(wpn.short, sx + c.w / 2, c.y + c.h - 5);
+      }
+    }
+
+    // structures
+    for (const s of structures) {
+      drawStructure(s);
+    }
+
+    // bullets
+    for (const b of bullets) {
+      const sx = worldToScreenX(b.x);
+      ctx.strokeStyle = b.color;
+      ctx.lineWidth = b.tracer || 2;
+      ctx.beginPath();
+      ctx.moveTo(sx - b.vx * 0.012, b.y - b.vy * 0.012);
+      ctx.lineTo(sx, b.y);
+      ctx.stroke();
+    }
+
+    // agents
+    for (const a of [...bots, player]) drawAgent(a);
+
+    // particles
+    for (const p of particles) {
+      ctx.globalAlpha = clamp(p.life * 2, 0, 1);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(worldToScreenX(p.x), p.y, p.size, p.size);
+      ctx.globalAlpha = 1;
+    }
+
+    // build ghost preview
+    if (state === 'playing' && player.buildMode) drawBuildGhost();
+
+    // crosshair
+    if (state === 'playing') {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(mouseScreen.x, mouseScreen.y, 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(mouseScreen.x - 4, mouseScreen.y); ctx.lineTo(mouseScreen.x + 4, mouseScreen.y);
+      ctx.moveTo(mouseScreen.x, mouseScreen.y - 4); ctx.lineTo(mouseScreen.x, mouseScreen.y + 4);
+      ctx.stroke();
+    }
+
+    // hit flash
+    if (player.hitFlash > 0) {
+      ctx.fillStyle = `rgba(255,0,0,${player.hitFlash * 0.5})`;
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    }
+  }
+}
+
+function drawStructure(s) {
+  const r = tileWorldRect(s.gx, s.gy);
+  const sx = worldToScreenX(r.x);
+  if (sx < -TILE || sx > CANVAS_W + TILE) return;
+  const dmgAlpha = clamp(s.hp / s.maxHp, 0.25, 1);
+  ctx.globalAlpha = dmgAlpha;
+  if (s.type === 'wall') {
+    ctx.fillStyle = '#9c6b3e';
+    ctx.fillRect(sx, r.yTop - TILE, TILE, TILE * 2);
+    ctx.strokeStyle = '#6b4726';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(sx, r.yTop - TILE, TILE, TILE * 2);
+  } else if (s.type === 'floor') {
+    ctx.fillStyle = '#b0824f';
+    ctx.fillRect(sx, r.yTop, TILE, 10);
+    ctx.strokeStyle = '#6b4726';
+    ctx.strokeRect(sx, r.yTop, TILE, 10);
+  } else if (s.type === 'ramp') {
+    ctx.fillStyle = '#b0824f';
+    ctx.beginPath();
+    if (s.highSide === 1) {
+      ctx.moveTo(sx, r.yBottom);
+      ctx.lineTo(sx + TILE, r.yTop);
+      ctx.lineTo(sx + TILE, r.yBottom);
+    } else {
+      ctx.moveTo(sx, r.yTop);
+      ctx.lineTo(sx + TILE, r.yBottom);
+      ctx.lineTo(sx, r.yBottom);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#6b4726';
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawBuildGhost() {
+  const facing = player.facing;
+  const targetWorldX = (player.x + player.w / 2) + facing * TILE;
+  const gx = Math.floor(targetWorldX / TILE);
+  const feetY = player.y + player.h;
+  const gy = clamp(Math.round((GROUND_Y - feetY) / TILE), 0, 18);
+  const r = tileWorldRect(gx, gy);
+  const sx = worldToScreenX(r.x);
+  const affordable = player.wood >= COST[player.buildMode];
+  ctx.globalAlpha = 0.45;
+  ctx.fillStyle = affordable ? '#4fd1a5' : '#e05d5d';
+  if (player.buildMode === 'wall') ctx.fillRect(sx, r.yTop - TILE, TILE, TILE * 2);
+  else ctx.fillRect(sx, r.yTop, TILE, TILE);
+  ctx.globalAlpha = 1;
+}
+
+function shadeColor(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) + amt, g = ((n >> 8) & 0xff) + amt, b = (n & 0xff) + amt;
+  r = clamp(r, 0, 255); g = clamp(g, 0, 255); b = clamp(b, 0, 255);
+  return `rgb(${r},${g},${b})`;
+}
+
+function drawAgent(a) {
+  if (!a.alive) return;
+  const sx = worldToScreenX(a.x);
+  if (sx < -60 || sx > CANVAS_W + 60) return;
+
+  const cx = sx + a.w / 2;
+  const feetY = a.y + a.h;
+
+  // hp bar
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(sx - 2, a.y - 14, a.w + 4, 6);
+  ctx.fillStyle = a.hp > 40 ? '#4fd1a5' : '#e05d5d';
+  ctx.fillRect(sx - 2, a.y - 14, (a.w + 4) * clamp(a.hp / a.maxHp, 0, 1), 6);
+
+  // name
+  if (a.isBot) {
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(a.name, cx, a.y - 18);
+  }
+
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.beginPath();
+  ctx.ellipse(cx, feetY + 2, a.w * 0.62, 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const flash = a.hitFlash > 0;
+  const bodyColor = flash ? '#ffffff' : a.color;
+  const darkColor = flash ? '#eeeeee' : shadeColor(a.color, -55);
+  const skin = flash ? '#ffffff' : '#e8b087';
+
+  ctx.save();
+  ctx.translate(cx, feetY);
+  ctx.scale(a.facing, 1);
+
+  const moving = Math.abs(a.vx) > 8 && a.onGround;
+  const walkPhase = (performance.now() / 1000) * 10 + (a.x % 6.28);
+  const swing = moving ? Math.sin(walkPhase) * 8 : 0;
+
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = darkColor;
+  ctx.lineWidth = 6.5;
+
+  // legs
+  if (a.onGround) {
+    ctx.beginPath();
+    ctx.moveTo(0, -19); ctx.lineTo(-4 - swing * 0.5, -1);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, -19); ctx.lineTo(4 + swing * 0.5, -1);
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(0, -19); ctx.lineTo(-6, -8);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, -19); ctx.lineTo(7, -9);
+    ctx.stroke();
+  }
+
+  // back arm (behind torso)
+  ctx.strokeStyle = darkColor;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(-2, -31); ctx.lineTo(-7 + swing * 0.3, -20);
+  ctx.stroke();
+
+  // torso (jacket)
+  ctx.fillStyle = bodyColor;
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+  ctx.lineWidth = 1.5;
+  roundRectPath(-9, -36, 18, 18, 4);
+  ctx.fill();
+  ctx.stroke();
+
+  // belt
+  ctx.fillStyle = darkColor;
+  ctx.fillRect(-9, -20, 18, 3);
+
+  // backpack
+  ctx.fillStyle = darkColor;
+  roundRectPath(-13, -33, 6, 13, 2);
+  ctx.fill();
+
+  // front arm (over torso, toward gun grip)
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(3, -31); ctx.lineTo(9, -25);
+  ctx.stroke();
+
+  // neck + head
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.arc(1, -41, 8.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // cap
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.arc(1, -41, 8.7, Math.PI * 0.95, Math.PI * 1.85);
+  ctx.lineTo(9, -44.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(7, -43.5, 4, 1.6, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // eye
+  ctx.fillStyle = '#20242c';
+  ctx.beginPath();
+  ctx.arc(5, -40.5, 1.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+
+  // gun (drawn in world space so aiming angle is exact)
+  const gx0 = cx, gy0 = a.y + a.h * 0.42;
+  let angle;
+  if (a === player) angle = Math.atan2(player.aimY - gy0, (player.aimX - cameraX) - gx0);
+  else angle = a.facing > 0 ? -0.05 : Math.PI + 0.05;
+  ctx.save();
+  ctx.translate(gx0, gy0);
+  ctx.rotate(angle);
+  ctx.fillStyle = '#2b2f36';
+  ctx.fillRect(0, -2.5, 24, 5);
+  ctx.fillRect(-3, -1.5, 8, 7);
+  ctx.fillStyle = '#111';
+  ctx.fillRect(20, -3.5, 5, 3);
+  ctx.restore();
+}
+
+function roundRectPath(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// ---------- LOOP ----------
+let lastTime = 0;
+function loop(now) {
+  const dt = Math.min((now - lastTime) / 1000, 1 / 30) || 0;
+  lastTime = now;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+function startMatch() {
+  startScreen.classList.add('hidden');
+  overlayMsg.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  resetWorld();
+  setBuildMode('4');
+  state = 'playing';
+}
+
+requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>
