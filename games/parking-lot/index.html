@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Parking Lot Jam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&family=Overpass+Mono:wght@400;600&family=Zilla+Slab:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+:root{
+  --paper:#E9E7E1;
+  --card:#F6F5F1;
+  --ink:#1B1A17;
+  --ink-soft:#6A665E;
+  --ink-faint:#928D84;
+  --rule:#D2CEC5;
+  --rule-soft:#E0DCD4;
+  --asphalt:#4B4C4F;
+  --asphalt-deep:#3C3D40;
+  --kerb:#D8D4CB;
+  --paint:rgba(244,242,235,.42);
+  --paint-strong:rgba(246,244,238,.8);
+  --yellow:#F0B41F;
+  --yellow-ink:#3A2B00;
+  --target:#D33B2E;
+  --shadow:rgba(20,18,14,.16);
+  --focus:#2F6FE0;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#131412;
+    --card:#1C1E1B;
+    --ink:#ECE9E1;
+    --ink-soft:#9B968B;
+    --ink-faint:#74706A;
+    --rule:#31342F;
+    --rule-soft:#262924;
+    --asphalt:#2C2D2F;
+    --asphalt-deep:#232426;
+    --kerb:#2A2C28;
+    --paint:rgba(228,226,218,.28);
+    --paint-strong:rgba(232,230,222,.6);
+    --yellow:#E9B02A;
+    --yellow-ink:#2A1F00;
+    --target:#DE4235;
+    --shadow:rgba(0,0,0,.45);
+    --focus:#6C9CF0;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#131412;
+  --card:#1C1E1B;
+  --ink:#ECE9E1;
+  --ink-soft:#9B968B;
+  --ink-faint:#74706A;
+  --rule:#31342F;
+  --rule-soft:#262924;
+  --asphalt:#2C2D2F;
+  --asphalt-deep:#232426;
+  --kerb:#2A2C28;
+  --paint:rgba(228,226,218,.28);
+  --paint-strong:rgba(232,230,222,.6);
+  --yellow:#E9B02A;
+  --yellow-ink:#2A1F00;
+  --target:#DE4235;
+  --shadow:rgba(0,0,0,.45);
+  --focus:#6C9CF0;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Overpass","Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:clamp(14px,3vw,34px) 14px 48px;
+  display:flex;
+  justify-content:center;
+}
+.shell{width:100%;max-width:560px;display:flex;flex-direction:column;gap:18px}
+
+/* ---- sign header ---- */
+.sign{
+  display:flex;align-items:center;gap:12px;
+  padding-bottom:14px;border-bottom:1.5px solid var(--rule);
+}
+.pbadge{
+  width:38px;height:38px;flex:none;border-radius:7px;
+  background:var(--ink);color:var(--paper);
+  display:grid;place-items:center;
+  font-weight:800;font-size:23px;line-height:1;
+}
+.wordmark{display:flex;flex-direction:column;gap:2px;margin-right:auto}
+.wordmark h1{
+  margin:0;font-size:clamp(19px,4.6vw,23px);font-weight:800;
+  letter-spacing:-.015em;line-height:1;text-wrap:balance;
+}
+.wordmark p{
+  margin:0;font-family:"Zilla Slab",Georgia,serif;font-style:italic;
+  font-size:13px;color:var(--ink-soft);line-height:1.2;
+}
+.gauges{display:flex;gap:8px;flex:none}
+.gauge{
+  min-width:62px;padding:5px 9px 6px;border:1.5px solid var(--rule);border-radius:6px;
+  background:var(--card);text-align:center;
+}
+.gauge b{
+  display:block;font-family:"Overpass Mono",ui-monospace,monospace;
+  font-size:17px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums;
+}
+.gauge span{
+  display:block;font-family:"Overpass Mono",ui-monospace,monospace;
+  font-size:9px;letter-spacing:.14em;color:var(--ink-faint);margin-top:2px;
+}
+.gauge.over b{color:var(--target)}
+
+/* ---- the lot ---- */
+.yard{position:relative}
+.exit-tag{
+  position:absolute;right:-2px;top:-11px;z-index:4;
+  display:flex;align-items:center;gap:5px;
+  font-family:"Overpass Mono",ui-monospace,monospace;
+  font-size:10px;letter-spacing:.18em;color:var(--ink-soft);
+}
+.exit-tag i{width:20px;height:1.5px;background:var(--yellow);display:block}
+.frame{
+  position:relative;padding:11px;border-radius:13px;
+  background:var(--kerb);
+  box-shadow:0 1px 0 var(--rule-soft), 0 10px 22px -18px var(--shadow);
+}
+.lot{
+  position:relative;width:100%;aspect-ratio:1;border-radius:4px;
+  background-color:var(--asphalt);
+  background-image:
+    repeating-linear-gradient(to right, var(--paint) 0 1.5px, transparent 1.5px var(--cellpx,60px)),
+    repeating-linear-gradient(to bottom, var(--paint) 0 1.5px, transparent 1.5px var(--cellpx,60px));
+  overflow:visible;
+  touch-action:none;
+}
+.lot::after{
+  content:"";position:absolute;inset:0;border-radius:4px;pointer-events:none;
+  box-shadow:inset 0 0 0 1.5px var(--paint), inset 0 2px 14px rgba(0,0,0,.28);
+}
+.gate{
+  position:absolute;right:-11px;width:11px;z-index:1;
+  background:var(--asphalt);
+}
+.gate::before{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(135deg,var(--yellow) 0 2px,transparent 2px 6px);
+  opacity:.9;
+}
+.markings{position:absolute;inset:0;pointer-events:none;z-index:0}
+
+/* ---- vehicles ---- */
+.car{
+  position:absolute;z-index:2;border:0;padding:0;
+  border-radius:12px;
+  background:transparent;
+  --shade:color-mix(in srgb, var(--body) 84%, #000);
+  --shade2:color-mix(in srgb, var(--body) 64%, #000);
+  --sheen:color-mix(in srgb, var(--body) 84%, #fff);
+  cursor:grab;
+  transition:transform .16s cubic-bezier(.3,1.2,.5,1), filter .16s ease;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.34));
+  touch-action:none;
+  outline:none;
+}
+.car .veh{position:absolute;left:50%;top:50%;translate:-50% -50%;overflow:visible}
+.car.v .veh{rotate:90deg}
+.car:focus-visible{box-shadow:0 0 0 3px var(--paper),0 0 0 5.5px var(--focus)}
+.car.dragging{cursor:grabbing;transition:none;filter:drop-shadow(0 10px 10px rgba(0,0,0,.5));z-index:5}
+.car.stuck{animation:nudge .3s ease}
+.car.target{--body:var(--target);--glass:rgba(58,10,6,.42)}
+.car.truck{border-radius:10px}
+.car.exiting{transition:transform .55s cubic-bezier(.4,0,.75,1),opacity .55s ease;opacity:0}
+@keyframes nudge{
+  0%,100%{translate:0 0}
+  30%{translate:2px 0}
+  70%{translate:-2px 0}
+}
+.car.v.stuck{animation:nudgev .3s ease}
+@keyframes nudgev{
+  0%,100%{translate:0 0}
+  30%{translate:0 2px}
+  70%{translate:0 -2px}
+}
+
+.car .star{
+  position:absolute;left:50%;top:50%;translate:-50% -50%;
+  height:50%;aspect-ratio:1;z-index:1;pointer-events:none;
+  fill:#FFF1EC;stroke:rgba(74,14,9,.4);stroke-width:1.1;stroke-linejoin:round;
+}
+.car.hint{box-shadow:0 0 0 2.5px var(--yellow)}
+.ghost{
+  position:absolute;z-index:6;pointer-events:none;
+  border:2.5px dashed var(--yellow);border-radius:9px;
+  display:grid;place-items:center;animation:ghost 1.5s ease-in-out infinite;
+}
+.ghost svg{width:34%;max-width:24px;fill:none;stroke:var(--yellow);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+@keyframes ghost{0%,100%{opacity:.4}50%{opacity:1}}
+.ticker{
+  margin:-8px 0 0;min-height:1.2em;text-align:center;
+  font-family:"Overpass Mono",ui-monospace,monospace;font-size:11px;
+  letter-spacing:.07em;color:var(--ink-soft);
+}
+
+/* ---- cleared overlay ---- */
+.cleared{
+  position:absolute;inset:11px;z-index:9;border-radius:4px;
+  background:color-mix(in srgb, var(--card) 92%, transparent);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  text-align:center;padding:20px;
+}
+.cleared[hidden]{display:none}
+.cleared h2{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em}
+.cleared .tally{
+  font-family:"Overpass Mono",ui-monospace,monospace;font-size:13px;color:var(--ink-soft);
+  font-variant-numeric:tabular-nums;
+}
+.cleared .verdict{
+  font-family:"Zilla Slab",Georgia,serif;font-style:italic;font-size:14px;color:var(--ink-soft);
+  margin:2px 0 12px;
+}
+
+/* ---- controls ---- */
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+button{font-family:inherit;font-size:14px;cursor:pointer}
+.btn{
+  flex:1 1 92px;padding:10px 12px;border-radius:7px;border:1.5px solid var(--rule);
+  background:var(--card);color:var(--ink);font-weight:600;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:border-color .12s ease, background .12s ease;
+}
+.btn:hover:not(:disabled){border-color:var(--ink-faint)}
+.btn:disabled{opacity:.42;cursor:default}
+.btn:focus-visible{outline:2.5px solid var(--focus);outline-offset:2px}
+.btn.ico{flex:0 0 auto;padding-inline:13px}
+.btn.ico .ico-off{display:none}
+.btn.ico.off .ico-on{display:none}
+.btn.ico.off .ico-off{display:block}
+.btn.ico .ico-dark{display:none}
+.btn.ico.dark .ico-light{display:none}
+.btn.ico.dark .ico-dark{display:block}
+.btn.key{background:var(--yellow);border-color:var(--yellow);color:var(--yellow-ink)}
+.btn.key:hover{background:color-mix(in srgb,var(--yellow) 88%,#000)}
+.btn svg{width:15px;height:15px;flex:none}
+
+/* ---- lot picker ---- */
+.picker{display:flex;flex-direction:column;gap:9px}
+.picker h3{
+  margin:0;font-family:"Overpass Mono",ui-monospace,monospace;
+  font-size:10px;font-weight:400;letter-spacing:.18em;color:var(--ink-faint);
+}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(40px,1fr));gap:6px}
+.chip{
+  padding:7px 0 8px;border-radius:6px;border:1.5px solid var(--rule);
+  background:transparent;color:var(--ink-soft);
+  font-family:"Overpass Mono",ui-monospace,monospace;font-size:13px;
+  font-variant-numeric:tabular-nums;position:relative;
+  transition:border-color .12s ease,color .12s ease;
+}
+.chip:hover{border-color:var(--ink-faint);color:var(--ink)}
+.chip:focus-visible{outline:2.5px solid var(--focus);outline-offset:2px}
+.chip.done{color:var(--ink);border-color:var(--ink-faint)}
+.chip.done::after{
+  content:"";position:absolute;left:50%;translate:-50% 0;bottom:3.5px;
+  width:12px;height:1.5px;background:var(--yellow);
+}
+.chip.current{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip.current::after{background:var(--yellow)}
+
+/* ---- footnote ---- */
+.rules{
+  font-family:"Zilla Slab",Georgia,serif;font-size:14px;line-height:1.65;
+  color:var(--ink-soft);margin:0;max-width:60ch;
+}
+.rules b{font-weight:500;color:var(--ink)}
+@media (prefers-reduced-motion:reduce){
+  .car,.car.exiting{transition:none}
+  .car.stuck,.car.v.stuck,.ghost{animation:none}
+  .ghost{opacity:.9}
+}
+</style>
+</head>
+<body>
+<a href="../../index.html" title="Back to Arcade" style="position:fixed;top:10px;left:10px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:rgba(0,0,0,0.6);color:#fff;font:14px/1 system-ui,-apple-system,sans-serif;border-radius:50%;text-decoration:none;opacity:0.4;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">&larr;</a>
+
+<div class="shell">
+  <header class="sign">
+    <div class="pbadge" aria-hidden="true">P</div>
+    <div class="wordmark">
+      <h1>Parking Lot Jam</h1>
+      <p>Get the red one out.</p>
+    </div>
+    <div class="gauges">
+      <div class="gauge"><b id="gMoves">0</b><span>MOVES</span></div>
+      <div class="gauge"><b id="gPar">0</b><span>PAR</span></div>
+    </div>
+  </header>
+
+  <div class="yard">
+    <div class="exit-tag"><i></i>EXIT</div>
+    <div class="frame">
+      <div class="lot" id="lot">
+        <svg class="markings" id="markings" viewBox="0 0 600 600" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="gate" id="gate"></div>
+      </div>
+      <div class="cleared" id="cleared" hidden>
+        <h2>Lot cleared</h2>
+        <div class="tally" id="clearedTally">14 moves · par 12</div>
+        <div class="verdict" id="clearedVerdict">Two more than the attendant would need.</div>
+        <button class="btn key" id="btnNext" style="flex:0 0 auto;padding-inline:22px">Next lot</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btnUndo" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg>
+      Undo
+    </button>
+    <button class="btn" id="btnHint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21.5h4"/><path d="M12 2.5a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6v.5h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 2.5z"/></svg>
+      Hint
+    </button>
+    <button class="btn" id="btnReset">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      Reset
+    </button>
+    <button class="btn ico" id="btnSound" aria-pressed="true" aria-label="Sound on" title="Sound on">
+      <svg class="ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+      <svg class="ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="m16 9.5 5 5"/><path d="m21 9.5-5 5"/></svg>
+    </button>
+    <button class="btn ico" id="btnTheme" aria-pressed="false" aria-label="Switch to night lot" title="Night lot">
+      <svg class="ico-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg>
+      <svg class="ico-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+    </button>
+  </div>
+
+  <p class="ticker" id="ticker" aria-live="polite"></p>
+
+  <section class="picker">
+    <h3 id="pickerLabel">LOTS</h3>
+    <div class="chips" id="chips" role="group" aria-labelledby="pickerLabel"></div>
+  </section>
+
+  <p class="rules">
+    Every car rolls only along the lane it is pointing down — <b>no turning, no lifting</b>.
+    Drag a car with the pointer, or tab to one and steer it with the arrow keys.
+    The gap in the east wall is the only way out, and the red car is the only one allowed through it.
+  </p>
+</div>
+
+<script>
+const LEVELS = [{"par":1,"cars":[{"r":2,"c":3,"len":2,"dir":"h"},{"r":1,"c":2,"len":2,"dir":"h"},{"r":2,"c":2,"len":2,"dir":"v"},{"r":5,"c":0,"len":2,"dir":"h"},{"r":0,"c":1,"len":2,"dir":"v"},{"r":4,"c":0,"len":2,"dir":"h"}]},{"par":2,"cars":[{"r":2,"c":1,"len":2,"dir":"h"},{"r":2,"c":4,"len":2,"dir":"v"},{"r":1,"c":2,"len":3,"dir":"h"},{"r":0,"c":5,"len":2,"dir":"v"},{"r":4,"c":2,"len":2,"dir":"h"},{"r":5,"c":2,"len":2,"dir":"h"}]},{"par":3,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":2,"c":4,"len":2,"dir":"v"},{"r":0,"c":2,"len":2,"dir":"h"},{"r":3,"c":5,"len":3,"dir":"v"},{"r":0,"c":5,"len":2,"dir":"v"},{"r":5,"c":0,"len":2,"dir":"h"},{"r":1,"c":3,"len":3,"dir":"v"}]},{"par":4,"cars":[{"r":2,"c":1,"len":2,"dir":"h"},{"r":5,"c":2,"len":3,"dir":"h"},{"r":2,"c":5,"len":3,"dir":"v"},{"r":4,"c":3,"len":2,"dir":"h"},{"r":1,"c":4,"len":2,"dir":"v"},{"r":3,"c":3,"len":2,"dir":"h"},{"r":4,"c":1,"len":2,"dir":"h"},{"r":0,"c":2,"len":3,"dir":"h"}]},{"par":5,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":0,"c":1,"len":3,"dir":"h"},{"r":3,"c":0,"len":3,"dir":"h"},{"r":3,"c":3,"len":2,"dir":"v"},{"r":2,"c":5,"len":3,"dir":"v"},{"r":4,"c":1,"len":2,"dir":"h"},{"r":1,"c":3,"len":2,"dir":"v"},{"r":0,"c":4,"len":3,"dir":"v"}]},{"par":6,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":0,"c":3,"len":3,"dir":"v"},{"r":4,"c":1,"len":2,"dir":"h"},{"r":5,"c":3,"len":3,"dir":"h"},{"r":3,"c":0,"len":3,"dir":"v"},{"r":0,"c":1,"len":2,"dir":"v"},{"r":3,"c":2,"len":2,"dir":"h"},{"r":0,"c":4,"len":2,"dir":"h"},{"r":3,"c":4,"len":2,"dir":"v"}]},{"par":7,"cars":[{"r":2,"c":2,"len":2,"dir":"h"},{"r":1,"c":4,"len":3,"dir":"v"},{"r":2,"c":5,"len":3,"dir":"v"},{"r":5,"c":2,"len":2,"dir":"h"},{"r":0,"c":1,"len":2,"dir":"h"},{"r":5,"c":4,"len":2,"dir":"h"},{"r":3,"c":0,"len":3,"dir":"v"},{"r":1,"c":0,"len":2,"dir":"v"},{"r":1,"c":1,"len":2,"dir":"v"}]},{"par":8,"cars":[{"r":2,"c":2,"len":2,"dir":"h"},{"r":3,"c":4,"len":2,"dir":"h"},{"r":4,"c":0,"len":2,"dir":"v"},{"r":3,"c":3,"len":2,"dir":"v"},{"r":0,"c":3,"len":2,"dir":"v"},{"r":3,"c":1,"len":3,"dir":"v"},{"r":1,"c":5,"len":2,"dir":"v"},{"r":0,"c":0,"len":3,"dir":"v"},{"r":5,"c":3,"len":3,"dir":"h"},{"r":0,"c":4,"len":3,"dir":"v"}]},{"par":9,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":3,"c":3,"len":2,"dir":"h"},{"r":0,"c":1,"len":2,"dir":"h"},{"r":2,"c":5,"len":2,"dir":"v"},{"r":4,"c":3,"len":3,"dir":"h"},{"r":1,"c":3,"len":2,"dir":"v"},{"r":0,"c":0,"len":2,"dir":"v"},{"r":2,"c":2,"len":2,"dir":"v"},{"r":5,"c":0,"len":3,"dir":"h"},{"r":0,"c":4,"len":3,"dir":"v"}]},{"par":10,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":1,"c":2,"len":3,"dir":"v"},{"r":5,"c":0,"len":3,"dir":"h"},{"r":0,"c":4,"len":2,"dir":"h"},{"r":2,"c":3,"len":2,"dir":"v"},{"r":0,"c":0,"len":2,"dir":"v"},{"r":1,"c":5,"len":2,"dir":"v"},{"r":4,"c":4,"len":2,"dir":"v"},{"r":3,"c":5,"len":2,"dir":"v"},{"r":1,"c":4,"len":2,"dir":"v"},{"r":0,"c":3,"len":2,"dir":"v"}]},{"par":11,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":5,"c":1,"len":2,"dir":"h"},{"r":4,"c":4,"len":2,"dir":"h"},{"r":1,"c":1,"len":3,"dir":"h"},{"r":4,"c":3,"len":2,"dir":"v"},{"r":4,"c":0,"len":2,"dir":"v"},{"r":0,"c":4,"len":3,"dir":"v"},{"r":0,"c":0,"len":3,"dir":"h"},{"r":4,"c":1,"len":2,"dir":"h"},{"r":2,"c":5,"len":2,"dir":"v"},{"r":3,"c":1,"len":3,"dir":"h"}]},{"par":12,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":5,"c":0,"len":3,"dir":"h"},{"r":3,"c":5,"len":3,"dir":"v"},{"r":1,"c":2,"len":2,"dir":"v"},{"r":2,"c":4,"len":2,"dir":"v"},{"r":4,"c":2,"len":3,"dir":"h"},{"r":0,"c":1,"len":2,"dir":"h"},{"r":0,"c":3,"len":2,"dir":"h"},{"r":3,"c":2,"len":2,"dir":"h"},{"r":5,"c":3,"len":2,"dir":"h"},{"r":4,"c":0,"len":2,"dir":"h"}]},{"par":13,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":2,"c":3,"len":2,"dir":"v"},{"r":4,"c":3,"len":2,"dir":"v"},{"r":2,"c":4,"len":3,"dir":"v"},{"r":1,"c":2,"len":2,"dir":"h"},{"r":3,"c":0,"len":2,"dir":"v"},{"r":3,"c":5,"len":2,"dir":"v"},{"r":0,"c":0,"len":2,"dir":"v"},{"r":0,"c":5,"len":2,"dir":"v"},{"r":3,"c":2,"len":3,"dir":"v"},{"r":0,"c":1,"len":2,"dir":"v"},{"r":5,"c":0,"len":2,"dir":"h"}]},{"par":14,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":2,"c":5,"len":2,"dir":"v"},{"r":0,"c":2,"len":2,"dir":"v"},{"r":4,"c":2,"len":2,"dir":"h"},{"r":0,"c":0,"len":2,"dir":"v"},{"r":0,"c":3,"len":2,"dir":"h"},{"r":2,"c":4,"len":3,"dir":"v"},{"r":5,"c":2,"len":3,"dir":"h"},{"r":1,"c":3,"len":2,"dir":"h"},{"r":3,"c":1,"len":3,"dir":"v"},{"r":0,"c":5,"len":2,"dir":"v"},{"r":2,"c":3,"len":2,"dir":"v"}]},{"par":15,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":4,"c":1,"len":2,"dir":"h"},{"r":2,"c":4,"len":3,"dir":"v"},{"r":3,"c":3,"len":3,"dir":"v"},{"r":1,"c":2,"len":2,"dir":"v"},{"r":3,"c":0,"len":2,"dir":"h"},{"r":0,"c":1,"len":3,"dir":"h"},{"r":1,"c":5,"len":2,"dir":"v"},{"r":4,"c":0,"len":2,"dir":"v"},{"r":5,"c":1,"len":2,"dir":"h"},{"r":0,"c":4,"len":2,"dir":"v"},{"r":3,"c":5,"len":3,"dir":"v"}]},{"par":16,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":0,"c":0,"len":2,"dir":"v"},{"r":4,"c":1,"len":3,"dir":"h"},{"r":5,"c":3,"len":2,"dir":"h"},{"r":1,"c":3,"len":2,"dir":"v"},{"r":0,"c":1,"len":3,"dir":"h"},{"r":5,"c":0,"len":3,"dir":"h"},{"r":1,"c":4,"len":2,"dir":"v"},{"r":4,"c":5,"len":2,"dir":"v"},{"r":3,"c":2,"len":2,"dir":"h"},{"r":1,"c":2,"len":2,"dir":"v"},{"r":1,"c":5,"len":2,"dir":"v"},{"r":3,"c":4,"len":2,"dir":"h"}]},{"par":17,"cars":[{"r":2,"c":1,"len":2,"dir":"h"},{"r":2,"c":4,"len":2,"dir":"v"},{"r":0,"c":0,"len":3,"dir":"v"},{"r":4,"c":3,"len":3,"dir":"h"},{"r":1,"c":5,"len":2,"dir":"v"},{"r":1,"c":2,"len":2,"dir":"h"},{"r":2,"c":3,"len":2,"dir":"v"},{"r":5,"c":3,"len":3,"dir":"h"},{"r":3,"c":0,"len":3,"dir":"h"},{"r":0,"c":1,"len":2,"dir":"h"},{"r":4,"c":2,"len":2,"dir":"v"},{"r":5,"c":0,"len":2,"dir":"h"},{"r":0,"c":3,"len":2,"dir":"h"}]},{"par":18,"cars":[{"r":2,"c":3,"len":2,"dir":"h"},{"r":4,"c":3,"len":2,"dir":"v"},{"r":3,"c":4,"len":2,"dir":"v"},{"r":0,"c":2,"len":2,"dir":"h"},{"r":3,"c":0,"len":2,"dir":"h"},{"r":4,"c":0,"len":3,"dir":"h"},{"r":0,"c":0,"len":2,"dir":"h"},{"r":0,"c":5,"len":3,"dir":"v"},{"r":1,"c":0,"len":2,"dir":"v"},{"r":3,"c":2,"len":2,"dir":"h"},{"r":1,"c":2,"len":3,"dir":"h"},{"r":5,"c":4,"len":2,"dir":"h"},{"r":5,"c":1,"len":2,"dir":"h"}]},{"par":19,"cars":[{"r":2,"c":1,"len":2,"dir":"h"},{"r":1,"c":5,"len":3,"dir":"v"},{"r":1,"c":2,"len":2,"dir":"h"},{"r":4,"c":4,"len":2,"dir":"h"},{"r":1,"c":0,"len":2,"dir":"v"},{"r":2,"c":3,"len":2,"dir":"v"},{"r":5,"c":1,"len":3,"dir":"h"},{"r":3,"c":0,"len":3,"dir":"v"},{"r":3,"c":2,"len":2,"dir":"v"},{"r":1,"c":4,"len":2,"dir":"v"},{"r":0,"c":1,"len":3,"dir":"h"},{"r":3,"c":1,"len":2,"dir":"v"},{"r":5,"c":4,"len":2,"dir":"h"}]},{"par":20,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":3,"c":5,"len":2,"dir":"v"},{"r":0,"c":2,"len":2,"dir":"h"},{"r":4,"c":3,"len":2,"dir":"h"},{"r":4,"c":0,"len":2,"dir":"v"},{"r":1,"c":2,"len":2,"dir":"v"},{"r":1,"c":4,"len":2,"dir":"v"},{"r":3,"c":2,"len":2,"dir":"v"},{"r":4,"c":1,"len":2,"dir":"v"},{"r":0,"c":5,"len":2,"dir":"v"},{"r":5,"c":3,"len":3,"dir":"h"},{"r":1,"c":3,"len":3,"dir":"v"}]},{"par":21,"cars":[{"r":2,"c":1,"len":2,"dir":"h"},{"r":3,"c":2,"len":2,"dir":"v"},{"r":3,"c":4,"len":2,"dir":"h"},{"r":0,"c":2,"len":2,"dir":"v"},{"r":4,"c":4,"len":2,"dir":"h"},{"r":5,"c":2,"len":2,"dir":"h"},{"r":1,"c":3,"len":3,"dir":"v"},{"r":0,"c":4,"len":3,"dir":"v"},{"r":2,"c":0,"len":2,"dir":"v"},{"r":0,"c":0,"len":2,"dir":"h"},{"r":0,"c":5,"len":2,"dir":"v"}]},{"par":23,"cars":[{"r":2,"c":2,"len":2,"dir":"h"},{"r":0,"c":2,"len":2,"dir":"h"},{"r":3,"c":1,"len":3,"dir":"h"},{"r":4,"c":2,"len":2,"dir":"v"},{"r":1,"c":1,"len":2,"dir":"v"},{"r":5,"c":0,"len":2,"dir":"h"},{"r":1,"c":5,"len":3,"dir":"v"},{"r":5,"c":4,"len":2,"dir":"h"},{"r":1,"c":0,"len":3,"dir":"v"},{"r":0,"c":4,"len":3,"dir":"v"},{"r":4,"c":4,"len":2,"dir":"h"},{"r":4,"c":3,"len":2,"dir":"v"}]},{"par":25,"cars":[{"r":2,"c":1,"len":2,"dir":"h"},{"r":0,"c":5,"len":2,"dir":"v"},{"r":3,"c":0,"len":2,"dir":"v"},{"r":5,"c":2,"len":3,"dir":"h"},{"r":0,"c":4,"len":2,"dir":"v"},{"r":3,"c":2,"len":2,"dir":"v"},{"r":0,"c":0,"len":2,"dir":"h"},{"r":4,"c":4,"len":2,"dir":"h"},{"r":0,"c":3,"len":2,"dir":"v"},{"r":1,"c":0,"len":3,"dir":"h"},{"r":3,"c":3,"len":2,"dir":"v"},{"r":2,"c":4,"len":2,"dir":"v"}]},{"par":29,"cars":[{"r":2,"c":0,"len":2,"dir":"h"},{"r":1,"c":2,"len":3,"dir":"h"},{"r":4,"c":4,"len":2,"dir":"h"},{"r":0,"c":0,"len":2,"dir":"h"},{"r":4,"c":2,"len":2,"dir":"v"},{"r":3,"c":0,"len":2,"dir":"v"},{"r":5,"c":0,"len":2,"dir":"h"},{"r":0,"c":2,"len":3,"dir":"h"},{"r":2,"c":5,"len":2,"dir":"v"},{"r":3,"c":3,"len":3,"dir":"v"},{"r":2,"c":4,"len":2,"dir":"v"},{"r":3,"c":1,"len":2,"dir":"h"},{"r":0,"c":5,"len":2,"dir":"v"}]}];
+
+const N = 6, EXIT_ROW = 2;
+const CAR_PAINT = ['#5B87AE','#3E9079','#B7B1A5','#7E5FA8','#C36F3B','#8FAF4B','#BE6086','#4FA3B8'];
+const CAR_NAME = ['blue','green','silver','plum','orange','olive','rose','teal'];
+const TRUCK_PAINT = ['#DCD5C6','#476582','#8A5E3C','#6F7D86'];
+const TRUCK_NAME = ['cream','navy','brown','slate'];
+const STAR = '<svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.75 5.86 6.25.85-4.55 4.26 1.12 6.43L12 17.16l-5.57 3.04 1.12-6.43L3 9.51l6.25-.85z"/></svg>';
+const GLASS = 'rgba(18,22,28,.46)';
+
+let actx = null, noiseBuf = null, muted = false;
+try { muted = localStorage.getItem('plj.muted') === '1'; } catch (e) {}
+
+function audio() {
+  if (muted) return null;
+  if (!actx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    actx = new AC();
+  }
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+
+function grit(ctx) {
+  if (noiseBuf) return noiseBuf;
+  const len = Math.floor(ctx.sampleRate * 0.6);
+  noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const data = noiseBuf.getChannelData(0);
+  for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+  return noiseBuf;
+}
+
+function sndRoll(steps) {
+  const ctx = audio(); if (!ctx) return;
+  const t = ctx.currentTime;
+  const dur = Math.min(0.36, 0.13 + Math.abs(steps) * 0.055);
+  const src = ctx.createBufferSource();
+  src.buffer = grit(ctx); src.loop = true;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.Q.value = 1.2;
+  bp.frequency.setValueAtTime(430, t);
+  bp.frequency.linearRampToValueAtTime(250, t + dur);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.14, t + 0.035);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp).connect(g).connect(ctx.destination);
+  src.start(t); src.stop(t + dur + 0.03);
+  const o = ctx.createOscillator(), og = ctx.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(148, t + dur * 0.85);
+  o.frequency.exponentialRampToValueAtTime(72, t + dur + 0.1);
+  og.gain.setValueAtTime(0.0001, t + dur * 0.85);
+  og.gain.exponentialRampToValueAtTime(0.2, t + dur * 0.9);
+  og.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.13);
+  o.connect(og).connect(ctx.destination);
+  o.start(t + dur * 0.84); o.stop(t + dur + 0.15);
+}
+
+function sndBump() {
+  const ctx = audio(); if (!ctx) return;
+  const t = ctx.currentTime;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'triangle';
+  o.frequency.setValueAtTime(116, t);
+  o.frequency.exponentialRampToValueAtTime(58, t + 0.11);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.11, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+  o.connect(g).connect(ctx.destination);
+  o.start(t); o.stop(t + 0.15);
+}
+
+function honk(ctx, t, dur, f1, f2, vol) {
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 2300;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.022);
+  g.gain.setValueAtTime(vol, t + dur - 0.05);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  for (const f of [f1, f2]) {
+    const o = ctx.createOscillator();
+    o.type = 'sawtooth'; o.frequency.value = f;
+    o.connect(lp); o.start(t); o.stop(t + dur + 0.03);
+  }
+  lp.connect(g).connect(ctx.destination);
+}
+
+function sndWin() {
+  const ctx = audio(); if (!ctx) return;
+  const t = ctx.currentTime + 0.14;
+  honk(ctx, t, 0.13, 392, 494, 0.12);
+  honk(ctx, t + 0.2, 0.28, 440, 554, 0.12);
+  const src = ctx.createBufferSource();
+  src.buffer = grit(ctx); src.loop = true;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.Q.value = 0.9;
+  bp.frequency.setValueAtTime(320, t + 0.1);
+  bp.frequency.exponentialRampToValueAtTime(880, t + 0.95);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t + 0.1);
+  g.gain.exponentialRampToValueAtTime(0.09, t + 0.36);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 1);
+  src.connect(bp).connect(g).connect(ctx.destination);
+  src.start(t + 0.1); src.stop(t + 1.05);
+}
+
+const lot = document.getElementById('lot');
+const gate = document.getElementById('gate');
+const markings = document.getElementById('markings');
+const gMoves = document.getElementById('gMoves');
+const gPar = document.getElementById('gPar');
+const cleared = document.getElementById('cleared');
+const clearedTally = document.getElementById('clearedTally');
+const clearedVerdict = document.getElementById('clearedVerdict');
+const chipsEl = document.getElementById('chips');
+const btnUndo = document.getElementById('btnUndo');
+const btnReset = document.getElementById('btnReset');
+const btnNext = document.getElementById('btnNext');
+const btnHint = document.getElementById('btnHint');
+const ticker = document.getElementById('ticker');
+
+let levelIndex = 0, cars = [], history = [], moves = 0, won = false, drag = null;
+let hintCar = null, hintSteps = 0, ghostEl = null, hintsUsed = 0;
+let progress = {solved: [], best: {}};
+
+try {
+  const raw = localStorage.getItem('plj.progress.v2');
+  if (raw) progress = Object.assign({solved: [], best: {}}, JSON.parse(raw));
+} catch (e) {}
+
+function save() {
+  try { localStorage.setItem('plj.progress.v2', JSON.stringify(progress)); } catch (e) {}
+}
+
+function cellSize() { return lot.getBoundingClientRect().width / N; }
+
+function paintMarkings() {
+  const u = 600 / N;
+  const parts = [];
+  parts.push(`<rect x="5" y="5" width="590" height="590" fill="none" stroke="var(--paint-strong)" stroke-width="3" rx="6"/>`);
+  for (let r = 0; r < N; r++) {
+    for (const side of [0, 1]) {
+      const x = side ? 595 : 5, dir = side ? -1 : 1;
+      if (r === EXIT_ROW && side) continue;
+      parts.push(`<line x1="${x}" y1="${r * u + u * 0.18}" x2="${x + dir * 16}" y2="${r * u + u * 0.18}" stroke="var(--paint)" stroke-width="3"/>`);
+    }
+  }
+  const ey = EXIT_ROW * u;
+  parts.push(`<rect x="${5 * u}" y="${ey + 3}" width="${u - 5}" height="${u - 6}" fill="none" stroke="var(--yellow)" stroke-width="2.5" stroke-dasharray="7 6" opacity=".62"/>`);
+  parts.push(`<path d="M${5 * u + u * 0.42} ${ey + u * 0.3} l${u * 0.16} ${u * 0.2} l${-u * 0.16} ${u * 0.2}" fill="none" stroke="var(--yellow)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>`);
+  parts.push(`<path d="M${5 * u + u * 0.62} ${ey + u * 0.3} l${u * 0.16} ${u * 0.2} l${-u * 0.16} ${u * 0.2}" fill="none" stroke="var(--yellow)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/>`);
+  markings.innerHTML = parts.join('');
+}
+
+function loadLevel(i) {
+  levelIndex = (i + LEVELS.length) % LEVELS.length;
+  const lvl = LEVELS[levelIndex];
+  cars = lvl.cars.map((c, idx) => ({
+    r: c.r, c: c.c, len: c.len, dir: c.dir, id: idx,
+    name: idx === 0 ? 'red' : (c.len === 3 ? TRUCK_NAME[idx % TRUCK_NAME.length] : CAR_NAME[idx % CAR_NAME.length]),
+    paint: idx === 0 ? null : (c.len === 3 ? TRUCK_PAINT[idx % TRUCK_PAINT.length] : CAR_PAINT[idx % CAR_PAINT.length])
+  }));
+  history = []; moves = 0; won = false; drag = null; hintsUsed = 0;
+  clearHint();
+  ticker.textContent = '';
+  cleared.hidden = true;
+  build();
+  layout();
+  syncHud();
+  paintChips();
+}
+
+function build() {
+  lot.querySelectorAll('.car').forEach(el => el.remove());
+  for (const car of cars) {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'car ' + car.dir + (car.id === 0 ? ' target' : '') + (car.len === 3 ? ' truck' : '');
+    el.style.setProperty('--len', car.len);
+    if (car.id !== 0) {
+      el.style.setProperty('--body', car.paint);
+      el.style.setProperty('--glass', GLASS);
+    }
+    el.innerHTML = vehicleSVG(car) + (car.id === 0 ? STAR : '');
+    el.setAttribute('aria-label', describe(car));
+    el.addEventListener('pointerdown', e => startDrag(e, car));
+    el.addEventListener('keydown', e => onKey(e, car));
+    car.el = el;
+    lot.appendChild(el);
+  }
+}
+
+function vehicleSVG(car) {
+  const w = car.len * 100;
+  const open = '<svg class="veh" viewBox="0 0 ' + w + ' 100" preserveAspectRatio="none" aria-hidden="true">';
+  if (car.len === 3) {
+    return open +
+      '<rect x="5" y="9" width="200" height="82" rx="10" fill="var(--shade)" stroke="rgba(0,0,0,.34)" stroke-width="2"/>' +
+      '<rect x="12" y="23" width="3" height="54" rx="1.5" fill="rgba(0,0,0,.24)"/>' +
+      '<rect x="45" y="19" width="3" height="62" rx="1.5" fill="rgba(0,0,0,.16)"/>' +
+      '<rect x="95" y="19" width="3" height="62" rx="1.5" fill="rgba(0,0,0,.16)"/>' +
+      '<rect x="145" y="19" width="3" height="62" rx="1.5" fill="rgba(0,0,0,.16)"/>' +
+      '<rect x="30" y="13" width="150" height="3" rx="1.5" fill="rgba(255,255,255,.14)"/>' +
+      '<rect x="198" y="9" width="97" height="82" rx="18" fill="var(--body)" stroke="rgba(0,0,0,.34)" stroke-width="2"/>' +
+      '<rect x="214" y="22" width="42" height="56" rx="10" fill="var(--shade)"/>' +
+      '<path d="M256 22 L286 14 L286 86 L256 78 Z" fill="var(--glass)"/>' +
+      '<rect x="250" y="2" width="18" height="9" rx="4" fill="var(--shade)"/>' +
+      '<rect x="250" y="89" width="18" height="9" rx="4" fill="var(--shade)"/>' +
+      '<rect x="278" y="24" width="11" height="14" rx="5" fill="rgba(255,246,216,.92)"/>' +
+      '<rect x="278" y="62" width="11" height="14" rx="5" fill="rgba(255,246,216,.92)"/>' +
+      '</svg>';
+  }
+  return open +
+    '<rect x="5" y="9" width="190" height="82" rx="20" fill="var(--body)" stroke="rgba(0,0,0,.34)" stroke-width="2"/>' +
+    '<rect x="154" y="20" width="34" height="60" rx="12" fill="var(--sheen)" opacity=".3"/>' +
+    '<rect x="20" y="22" width="32" height="56" rx="11" fill="var(--shade2)" opacity=".4"/>' +
+    '<rect x="74" y="21" width="60" height="58" rx="12" fill="var(--shade)"/>' +
+    '<path d="M134 21 L152 13 L152 87 L134 79 Z" fill="var(--glass)"/>' +
+    '<path d="M74 21 L58 14 L58 86 L74 79 Z" fill="var(--glass)"/>' +
+    '<rect x="140" y="3" width="16" height="8" rx="4" fill="var(--shade)"/>' +
+    '<rect x="140" y="89" width="16" height="8" rx="4" fill="var(--shade)"/>' +
+    '<rect x="176" y="20" width="12" height="16" rx="5" fill="rgba(255,246,216,.92)"/>' +
+    '<rect x="176" y="64" width="12" height="16" rx="5" fill="rgba(255,246,216,.92)"/>' +
+    '<rect x="10" y="22" width="9" height="14" rx="4" fill="rgba(255,104,80,.8)"/>' +
+    '<rect x="10" y="64" width="9" height="14" rx="4" fill="rgba(255,104,80,.8)"/>' +
+    '<rect x="70" y="13" width="66" height="3" rx="1.5" fill="rgba(255,255,255,.16)"/>' +
+    '</svg>';
+}
+
+function label(car) {
+  return car.name + ' ' + (car.len === 3 ? 'truck' : 'car');
+}
+
+function describe(car) {
+  const lane = car.dir === 'h' ? 'horizontal' : 'vertical';
+  return `${label(car)}, ${lane}, row ${car.r + 1} column ${car.c + 1}`;
+}
+
+function clearHint() {
+  if (hintCar && hintCar.el) hintCar.el.classList.remove('hint');
+  hintCar = null; hintSteps = 0;
+  if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+}
+
+function bestMove() {
+  const n = cars.length;
+  const spans = new Int32Array(n), pw = new Float64Array(n);
+  const cellsTab = [], loLead = [], hiLead = [];
+  for (let i = 0; i < n; i++) {
+    const car = cars[i], span = N - car.len + 1;
+    spans[i] = span;
+    const t = [], lo = new Int32Array(span), hi = new Int32Array(span);
+    for (let p = 0; p < span; p++) {
+      const arr = new Int32Array(car.len);
+      for (let j = 0; j < car.len; j++) {
+        const r = car.dir === 'h' ? car.r : p + j;
+        const c = car.dir === 'h' ? p + j : car.c;
+        arr[j] = r * N + c;
+      }
+      t.push(arr); lo[p] = arr[0]; hi[p] = arr[car.len - 1];
+    }
+    cellsTab.push(t); loLead.push(lo); hiLead.push(hi);
+  }
+  for (let i = n - 1, k = 1; i >= 0; i--, k *= 5) pw[i] = k;
+
+  const goal = N - cars[0].len;
+  const pos = new Int32Array(n);
+  let startKey = 0;
+  for (let i = 0; i < n; i++) {
+    const v = cars[i].dir === 'h' ? cars[i].c : cars[i].r;
+    pos[i] = v; startKey += v * pw[i];
+  }
+  if (pos[0] === goal) return null;
+
+  const seen = new Set([startKey]);
+  const qKey = [startKey], qRoot = [-1];
+  const occ = new Uint8Array(N * N);
+  const t0 = (window.performance || Date).now();
+  let head = 0;
+  while (head < qKey.length) {
+    const key = qKey[head], root = qRoot[head];
+    head++;
+    if ((head & 4095) === 0 && (window.performance || Date).now() - t0 > 4000) return -1;
+    let rem = key;
+    for (let i = n - 1; i >= 0; i--) { const v = rem % 5; pos[i] = v; rem = (rem - v) / 5; }
+    occ.fill(0);
+    for (let i = 0; i < n; i++) {
+      const cs = cellsTab[i][pos[i]];
+      for (let j = 0; j < cs.length; j++) occ[cs[j]] = 1;
+    }
+    for (let i = 0; i < n; i++) {
+      const p0 = pos[i], w = pw[i], lo = loLead[i], hi = hiLead[i];
+      for (let p = p0 - 1; p >= 0; p--) {
+        if (occ[lo[p]]) break;
+        const nk = key + (p - p0) * w;
+        if (!seen.has(nk)) {
+          const code = root < 0 ? i * 16 + (p - p0 + 8) : root;
+          if (i === 0 && p === goal) return code;
+          seen.add(nk); qKey.push(nk); qRoot.push(code);
+        }
+      }
+      for (let p = p0 + 1; p < spans[i]; p++) {
+        if (occ[hi[p]]) break;
+        const nk = key + (p - p0) * w;
+        if (!seen.has(nk)) {
+          const code = root < 0 ? i * 16 + (p - p0 + 8) : root;
+          if (i === 0 && p === goal) return code;
+          seen.add(nk); qKey.push(nk); qRoot.push(code);
+        }
+      }
+    }
+  }
+  return -1;
+}
+
+function showHint() {
+  if (won) return;
+  clearHint();
+  let code;
+  try { code = bestMove(); } catch (e) { code = -1; }
+  {
+    if (code === null) { ticker.textContent = 'The red car is already at the gate.'; return; }
+    if (code < 0) { ticker.textContent = 'Too tangled to read — make a move and ask again.'; return; }
+    const car = cars[code >> 4], steps = (code & 15) - 8;
+    hintsUsed++;
+    hintCar = car;
+    hintSteps = steps;
+    car.el.classList.add('hint');
+    layout();
+    const dir = car.dir === 'h' ? (steps > 0 ? 'right' : 'left') : (steps > 0 ? 'down' : 'up');
+    ticker.textContent = 'Slide the ' + label(car) + ' ' + dir + ' ' + Math.abs(steps) + '.';
+  }
+}
+
+function layout() {
+  const cell = cellSize();
+  if (!(cell > 0)) return;
+  lot.style.setProperty('--cellpx', cell + 'px');
+  gate.style.top = (EXIT_ROW * cell) + 'px';
+  gate.style.height = cell + 'px';
+  for (const car of cars) {
+    const w = car.dir === 'h' ? car.len * cell : cell;
+    const h = car.dir === 'v' ? car.len * cell : cell;
+    const pad = Math.max(3, cell * 0.075);
+    const bw = w - pad * 2, bh = h - pad * 2;
+    car.el.style.width = bw + 'px';
+    car.el.style.height = bh + 'px';
+    const veh = car.el.querySelector('.veh');
+    if (veh) {
+      veh.style.width = (car.dir === 'v' ? bh : bw) + 'px';
+      veh.style.height = (car.dir === 'v' ? bw : bh) + 'px';
+    }
+    car.el.style.left = (car.c * cell + pad) + 'px';
+    car.el.style.top = (car.r * cell + pad) + 'px';
+    car.el.style.transform = 'translate(0,0)';
+    car.el.setAttribute('aria-label', describe(car));
+  }
+  if (hintCar) {
+    const car = hintCar, pad = Math.max(3, cell * 0.075);
+    const nr = car.dir === 'v' ? car.r + hintSteps : car.r;
+    const nc = car.dir === 'h' ? car.c + hintSteps : car.c;
+    if (!ghostEl) {
+      ghostEl = document.createElement('div');
+      ghostEl.className = 'ghost';
+      const rot = car.dir === 'h' ? (hintSteps > 0 ? 0 : 180) : (hintSteps > 0 ? 90 : 270);
+      ghostEl.innerHTML = '<svg viewBox="0 0 24 24" style="rotate:' + rot + 'deg"><path d="M9 5l7 7-7 7"/></svg>';
+      lot.appendChild(ghostEl);
+    }
+    ghostEl.style.width = ((car.dir === 'h' ? car.len * cell : cell) - pad * 2) + 'px';
+    ghostEl.style.height = ((car.dir === 'v' ? car.len * cell : cell) - pad * 2) + 'px';
+    ghostEl.style.left = (nc * cell + pad) + 'px';
+    ghostEl.style.top = (nr * cell + pad) + 'px';
+  }
+}
+
+function occupancy(skip) {
+  const grid = Array.from({length: N}, () => Array(N).fill(-1));
+  for (const car of cars) {
+    if (car === skip) continue;
+    for (let i = 0; i < car.len; i++) {
+      const r = car.dir === 'v' ? car.r + i : car.r;
+      const c = car.dir === 'h' ? car.c + i : car.c;
+      grid[r][c] = car.id;
+    }
+  }
+  return grid;
+}
+
+function travel(car) {
+  const grid = occupancy(car);
+  let back = 0, fwd = 0;
+  if (car.dir === 'h') {
+    while (car.c - back - 1 >= 0 && grid[car.r][car.c - back - 1] === -1) back++;
+    while (car.c + car.len + fwd < N && grid[car.r][car.c + car.len + fwd] === -1) fwd++;
+  } else {
+    while (car.r - back - 1 >= 0 && grid[car.r - back - 1][car.c] === -1) back++;
+    while (car.r + car.len + fwd < N && grid[car.r + car.len + fwd][car.c] === -1) fwd++;
+  }
+  return {back, fwd};
+}
+
+function startDrag(e, car) {
+  if (won || e.button > 0) return;
+  car.el.focus({preventScroll: true});
+  const cell = cellSize();
+  const {back, fwd} = travel(car);
+  if (back === 0 && fwd === 0) {
+    car.el.classList.remove('stuck');
+    void car.el.offsetWidth;
+    car.el.classList.add('stuck');
+    sndBump();
+    return;
+  }
+  car.el.setPointerCapture(e.pointerId);
+  car.el.classList.add('dragging');
+  drag = {
+    car, cell,
+    origin: car.dir === 'h' ? e.clientX : e.clientY,
+    min: -back * cell, max: fwd * cell, delta: 0
+  };
+}
+
+function onMove(e) {
+  if (!drag) return;
+  const raw = (drag.car.dir === 'h' ? e.clientX : e.clientY) - drag.origin;
+  drag.delta = Math.max(drag.min, Math.min(drag.max, raw));
+  const d = drag.delta;
+  drag.car.el.style.transform = drag.car.dir === 'h' ? `translate(${d}px,0)` : `translate(0,${d}px)`;
+}
+
+function endDrag() {
+  if (!drag) return;
+  const {car, cell, delta} = drag;
+  car.el.classList.remove('dragging');
+  drag = null;
+  const steps = Math.round(delta / cell);
+  if (steps === 0) { layout(); return; }
+  commit(car, steps);
+}
+
+function commit(car, steps) {
+  history.push({id: car.id, r: car.r, c: car.c});
+  if (car.dir === 'h') car.c += steps; else car.r += steps;
+  moves++;
+  sndRoll(steps);
+  clearHint();
+  ticker.textContent = '';
+  layout();
+  syncHud();
+  checkWin();
+}
+
+function onKey(e, car) {
+  if (won) return;
+  const map = {ArrowLeft: [-1, 'h'], ArrowRight: [1, 'h'], ArrowUp: [-1, 'v'], ArrowDown: [1, 'v']};
+  const m = map[e.key];
+  if (!m) return;
+  e.preventDefault();
+  if (m[1] !== car.dir) return;
+  const {back, fwd} = travel(car);
+  if (m[0] < 0 ? back === 0 : fwd === 0) {
+    car.el.classList.remove('stuck');
+    void car.el.offsetWidth;
+    car.el.classList.add('stuck');
+    sndBump();
+    return;
+  }
+  commit(car, m[0]);
+}
+
+function syncHud() {
+  const par = LEVELS[levelIndex].par;
+  gMoves.textContent = moves;
+  gPar.textContent = par;
+  gMoves.parentElement.classList.toggle('over', moves > par);
+  btnUndo.disabled = history.length === 0 || won;
+  btnHint.disabled = won;
+}
+
+function checkWin() {
+  const red = cars[0];
+  if (red.c + red.len !== N) return;
+  won = true;
+  sndWin();
+  const cell = cellSize();
+  red.el.classList.add('exiting');
+  red.el.style.transform = `translate(${cell * 2.2}px,0)`;
+  const par = LEVELS[levelIndex].par;
+  const prev = progress.best[levelIndex];
+  if (prev === undefined || moves < prev) progress.best[levelIndex] = moves;
+  if (!progress.solved.includes(levelIndex)) progress.solved.push(levelIndex);
+  save();
+  const best = progress.best[levelIndex];
+  clearedTally.textContent = `${moves} ${moves === 1 ? 'move' : 'moves'} · par ${par}` +
+    (best !== undefined && best !== moves ? ` · best ${best}` : '') +
+    (hintsUsed ? ` · ${hintsUsed} ${hintsUsed === 1 ? 'hint' : 'hints'}` : '');
+  clearedVerdict.textContent =
+    moves <= par ? 'Perfect. Not a wasted inch of asphalt.'
+    : moves <= par + 3 ? 'Out clean, with a little shuffling.'
+    : 'Out — after a few laps of the lot.';
+  setTimeout(() => {
+    cleared.hidden = false;
+    btnNext.focus({preventScroll: true});
+    paintChips();
+    syncHud();
+  }, 620);
+}
+
+function paintChips() {
+  chipsEl.innerHTML = '';
+  LEVELS.forEach((lvl, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip' + (progress.solved.includes(i) ? ' done' : '') + (i === levelIndex ? ' current' : '');
+    b.textContent = String(i + 1).padStart(2, '0');
+    const best = progress.best[i];
+    b.setAttribute('aria-label', `Lot ${i + 1}, par ${lvl.par}` + (best !== undefined ? `, best ${best} moves` : ''));
+    b.title = best !== undefined ? `Par ${lvl.par} · your best ${best}` : `Par ${lvl.par}`;
+    b.addEventListener('click', () => loadLevel(i));
+    chipsEl.appendChild(b);
+  });
+}
+
+const btnSound = document.getElementById('btnSound');
+
+function paintSound() {
+  btnSound.classList.toggle('off', muted);
+  btnSound.setAttribute('aria-pressed', String(!muted));
+  btnSound.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
+  btnSound.title = muted ? 'Sound off' : 'Sound on';
+}
+btnSound.addEventListener('click', () => {
+  muted = !muted;
+  try { localStorage.setItem('plj.muted', muted ? '1' : '0'); } catch (e) {}
+  paintSound();
+  if (!muted) sndRoll(1);
+});
+paintSound();
+
+const btnTheme = document.getElementById('btnTheme');
+
+function storedTheme() {
+  try { const t = localStorage.getItem('plj.theme'); return t === 'light' || t === 'dark' ? t : null; }
+  catch (e) { return null; }
+}
+function isDark() {
+  const t = document.documentElement.getAttribute('data-theme');
+  if (t === 'dark' || t === 'light') return t === 'dark';
+  return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+function paintTheme() {
+  const dark = isDark();
+  btnTheme.classList.toggle('dark', dark);
+  btnTheme.setAttribute('aria-pressed', String(dark));
+  btnTheme.setAttribute('aria-label', dark ? 'Switch to day lot' : 'Switch to night lot');
+  btnTheme.title = dark ? 'Day lot' : 'Night lot';
+}
+btnTheme.addEventListener('click', () => {
+  const next = isDark() ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('plj.theme', next); } catch (e) {}
+  paintTheme();
+});
+const savedTheme = storedTheme();
+if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+if (window.matchMedia) {
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  const onSystem = () => { if (!storedTheme()) paintTheme(); };
+  if (mq.addEventListener) mq.addEventListener('change', onSystem);
+}
+paintTheme();
+
+btnUndo.addEventListener('click', () => {
+  const last = history.pop();
+  if (!last) return;
+  const car = cars[last.id];
+  car.r = last.r; car.c = last.c;
+  moves = Math.max(0, moves - 1);
+  clearHint();
+  ticker.textContent = '';
+  layout(); syncHud();
+});
+btnHint.addEventListener('click', showHint);
+btnReset.addEventListener('click', () => loadLevel(levelIndex));
+btnNext.addEventListener('click', () => loadLevel(levelIndex + 1));
+
+window.addEventListener('pointermove', onMove);
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
+if (window.ResizeObserver) {
+  new ResizeObserver(() => { if (!won) layout(); }).observe(lot);
+} else {
+  window.addEventListener('resize', () => { if (!won) layout(); });
+}
+
+paintMarkings();
+loadLevel(0);
+</script>
+
+</body>
+</html>

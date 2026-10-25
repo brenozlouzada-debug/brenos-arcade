@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Head On — Arena Car Combat</title>
+<style>
+* { box-sizing: border-box; }
+
+:root {
+  --bg-dark: #14161c;
+  --bg-panel: #1d2029;
+  --accent: #ff5252;
+  --accent-2: #4fc3f7;
+  --text: #eef0f5;
+  --text-dim: #9aa0ae;
+  --border: #2c303c;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, #1c2029 0%, #0b0c10 100%);
+  color: var(--text);
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+.screen {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.hidden { display: none !important; }
+
+.menu-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 40px 40px;
+  width: 480px;
+  max-width: 92vw;
+  max-height: 94vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  text-align: center;
+}
+
+.title {
+  font-size: 46px;
+  letter-spacing: 4px;
+  margin: 0 0 4px;
+  font-weight: 800;
+}
+.title span { color: var(--accent); }
+.title.small { font-size: 30px; }
+
+.subtitle {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin: 0 0 24px;
+}
+
+.menu-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 18px 0;
+}
+
+.btn {
+  background: #2a2f3d;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+.btn:hover { background: #343a4a; }
+.btn:active { transform: scale(0.96); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #1a1a1a;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: #ff6e6e; }
+
+.menu-panel {
+  text-align: left;
+  background: #171a22;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-top: 16px;
+}
+.menu-panel h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.menu-panel.help p {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 6px 0;
+}
+.menu-panel.help b { color: var(--text); }
+
+.difficulty-row {
+  display: flex;
+  gap: 8px;
+}
+.diff-btn {
+  flex: 1;
+  padding: 10px 0;
+  background: #232733;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+.diff-btn:hover { color: var(--text); }
+.diff-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1a1a1a;
+}
+
+#preview-canvas {
+  background: #101319;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 18px;
+}
+
+.customize-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+.customize-form label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text-dim);
+  gap: 12px;
+}
+.customize-form input[type="text"] {
+  background: #232733;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 14px;
+  width: 160px;
+}
+.customize-form input[type="color"] {
+  width: 48px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatches {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  cursor: pointer;
+}
+.swatch:hover { border-color: var(--text); }
+
+/* ---- GAME SCREEN ---- */
+#game-screen {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 10px;
+  height: 100vh;
+  gap: 4px;
+}
+
+.hud {
+  width: min(960px, 94vw, 150vh);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 18px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+.hud-left, .hud-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  min-width: 140px;
+}
+.hud-right { justify-content: flex-end; }
+.score {
+  background: #232733;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 18px;
+  color: var(--accent-2);
+}
+.hud-mid {
+  text-align: center;
+}
+#hud-round {
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+#hud-timer {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+#game-canvas {
+  background: #0d1015;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  width: min(960px, 94vw, 150vh);
+  height: auto;
+  aspect-ratio: 960 / 600;
+  flex-shrink: 1;
+  min-height: 0;
+  outline: none;
+}
+
+.overlay-message {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.overlay-message:not(.hidden) { pointer-events: auto; }
+
+.overlay-box {
+  background: rgba(15, 17, 23, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 30px 50px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+
+#overlay-title, .overlay-title-static {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--accent);
+}
+#overlay-subtitle {
+  margin-top: 8px;
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+.overlay-subtitle-static {
+  margin-top: 10px;
+  font-size: 20px;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+#matchend-menu .menu-buttons { margin-top: 22px; }
+
+</style>
+</head>
+<body>
+<a href="../../index.html" title="Back to Arcade" style="position:fixed;top:10px;left:10px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:26px;height:26px;background:rgba(0,0,0,0.6);color:#fff;font:14px/1 system-ui,-apple-system,sans-serif;border-radius:50%;text-decoration:none;opacity:0.4;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4">&larr;</a>
+
+<!-- MAIN MENU -->
+<div id="menu-screen" class="screen">
+  <div class="menu-box">
+    <h1 class="title">HEAD <span>ON</span></h1>
+    <p class="subtitle">Ram their head. Guard your own. First to lead after 5 rounds wins.</p>
+
+    <div class="menu-buttons">
+      <button id="btn-play" class="btn btn-primary">Play Match</button>
+      <button id="btn-customize" class="btn">Customize Car</button>
+    </div>
+
+    <div class="menu-panel">
+      <h3>AI Difficulty</h3>
+      <div class="difficulty-row" id="difficulty-row">
+        <button class="diff-btn" data-diff="easy">Easy</button>
+        <button class="diff-btn" data-diff="medium">Medium</button>
+        <button class="diff-btn" data-diff="hard">Hard</button>
+      </div>
+    </div>
+
+    <div class="menu-panel help">
+      <h3>How to Play</h3>
+      <p><b>Move:</b> WASD / Arrow Keys &nbsp;•&nbsp; <b>Pause:</b> Esc</p>
+      <p>Hitting the opponent's <b>side or back</b> with <b>your own front</b> wrecks <b>you</b> — it's like slamming a wall. To score, make <i>them</i> hit <b>your</b> side or back with <b>their</b> front instead. Two fronts colliding head-on wrecks both — nobody scores. A front-first wall hit also wrecks you; reversing into a wall is safe.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOMIZATION SCREEN -->
+<div id="customize-screen" class="screen hidden">
+  <div class="menu-box">
+    <h1 class="title small">CUSTOMIZE</h1>
+
+    <canvas id="preview-canvas" width="260" height="260"></canvas>
+
+    <div class="customize-form">
+      <label>Driver Name
+        <input type="text" id="input-name" maxlength="14" placeholder="YOU">
+      </label>
+      <label>Body Color
+        <input type="color" id="input-body-color" value="#ff5252">
+      </label>
+      <label>Stripe Color
+        <input type="color" id="input-stripe-color" value="#ffffff">
+      </label>
+
+      <div class="swatches" id="swatches"></div>
+    </div>
+
+    <div class="menu-buttons">
+      <button id="btn-back-from-customize" class="btn btn-primary">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" class="screen hidden">
+  <div class="hud">
+    <div class="hud-left">
+      <span id="hud-player-name">YOU</span>
+      <span id="hud-player-score" class="score">0</span>
+    </div>
+    <div class="hud-mid">
+      <div id="hud-round">ROUND 1 / 5</div>
+      <div id="hud-timer">60</div>
+    </div>
+    <div class="hud-right">
+      <span id="hud-ai-score" class="score">0</span>
+      <span id="hud-ai-name">RIVAL</span>
+    </div>
+  </div>
+  <canvas id="game-canvas" width="960" height="600" tabindex="0"></canvas>
+
+  <div id="overlay-message" class="overlay-message hidden">
+    <div class="overlay-box">
+      <div id="overlay-title">GO!</div>
+      <div id="overlay-subtitle"></div>
+    </div>
+  </div>
+
+  <div id="pause-menu" class="overlay-message hidden">
+    <div class="overlay-box">
+      <div class="overlay-title-static">PAUSED</div>
+      <div class="menu-buttons">
+        <button id="btn-resume" class="btn btn-primary">Resume</button>
+        <button id="btn-quit" class="btn">Quit to Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="matchend-menu" class="overlay-message hidden">
+    <div class="overlay-box">
+      <div id="matchend-title" class="overlay-title-static">YOU WIN</div>
+      <div id="matchend-subtitle" class="overlay-subtitle-static">3 — 2</div>
+      <div class="menu-buttons">
+        <button id="btn-rematch" class="btn btn-primary">Rematch</button>
+        <button id="btn-mainmenu-end" class="btn">Main Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ============================== CONSTANTS ============================== */
+
+const ARENA = { x: 30, y: 30, w: 900, h: 540 };
+const CAR_LENGTH = 34;
+const CAR_WIDTH = 18;
+const CAR_RADIUS = 14;
+const FRONT_ANGLE_COS = Math.cos(50 * Math.PI / 180); // front-hit cone half-angle
+const CRASH_SPEED_THRESHOLD = 95;   // wall impact speed needed to crash
+const MIN_COLLISION_SPEED = 65;     // combined speed needed for a car-car hit to count
+const ROUND_TIME = 60;
+const MAX_ROUNDS = 5;
+
+const PLAYER_STATS = {
+  maxSpeed: 250, reverseMaxSpeed: 130, accel: 400, brake: 520, decel: 220, turnRate: 3.3
+};
+
+const AI_DIFFICULTY = {
+  easy:   { maxSpeed: 195, reverseMaxSpeed: 115, accel: 330, brake: 440, decel: 200, turnRate: 2.8,
+            predictionTime: 0.15, jitter: 0.6, wallMargin: 75, flank: false, flankRange: 0,
+            throttleFloor: 0.45, label: 'Easy' },
+  medium: { maxSpeed: 240, reverseMaxSpeed: 130, accel: 390, brake: 500, decel: 210, turnRate: 3.3,
+            predictionTime: 0.45, jitter: 0.2, wallMargin: 85, flank: true, flankRange: 260,
+            throttleFloor: 0.45, label: 'Medium' },
+  hard:   { maxSpeed: 340, reverseMaxSpeed: 170, accel: 620, brake: 650, decel: 240, turnRate: 5.0,
+            predictionTime: 0.95, jitter: 0.008, wallMargin: 115, flank: true, flankRange: 340,
+            throttleFloor: 0.72, label: 'Hard' }
+};
+
+const SPAWN_POINTS = [
+  { x: ARENA.x + 90, y: ARENA.y + 90 },
+  { x: ARENA.x + ARENA.w - 90, y: ARENA.y + 90 },
+  { x: ARENA.x + 90, y: ARENA.y + ARENA.h - 90 },
+  { x: ARENA.x + ARENA.w - 90, y: ARENA.y + ARENA.h - 90 }
+];
+const ARENA_CENTER = { x: ARENA.x + ARENA.w / 2, y: ARENA.y + ARENA.h / 2 };
+
+/* ============================== UTILITIES ============================== */
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const dist = (ax, ay, bx, by) => Math.hypot(bx - ax, by - ay);
+
+function normalizeAngle(a) {
+  while (a > Math.PI) a -= Math.PI * 2;
+  while (a < -Math.PI) a += Math.PI * 2;
+  return a;
+}
+
+function randRange(lo, hi) { return lo + Math.random() * (hi - lo); }
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+/* ============================== SETTINGS ============================== */
+
+const HEAD_CAP_COLOR = '#ffffff';
+
+const DEFAULT_SETTINGS = {
+  name: 'YOU',
+  bodyColor: '#ff5252',
+  stripeColor: '#ffffff',
+  difficulty: 'medium'
+};
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('headon_settings');
+    if (!raw) return { ...DEFAULT_SETTINGS };
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+  } catch (e) {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+function saveSettings(s) {
+  try { localStorage.setItem('headon_settings', JSON.stringify(s)); } catch (e) { /* ignore */ }
+}
+
+let settings = loadSettings();
+
+/* ============================== CAR CLASS ============================== */
+
+class Car {
+  constructor(stats, colors) {
+    this.stats = stats;
+    this.colors = colors;
+    this.x = 0; this.y = 0;
+    this.heading = 0;
+    this.speed = 0;
+    this.radius = CAR_RADIUS;
+    this.crashed = false;
+  }
+
+  reset(x, y, heading) {
+    this.x = x; this.y = y; this.heading = heading;
+    this.speed = 0;
+    this.crashed = false;
+  }
+
+  headingVector() { return { x: Math.cos(this.heading), y: Math.sin(this.heading) }; }
+
+  update(dt, throttle, steer) {
+    if (this.crashed) return;
+    const s = this.stats;
+
+    if (throttle > 0) this.speed += s.accel * throttle * dt;
+    else if (throttle < 0) this.speed += s.brake * throttle * dt;
+    else {
+      if (this.speed > 0) this.speed = Math.max(0, this.speed - s.decel * dt);
+      else if (this.speed < 0) this.speed = Math.min(0, this.speed + s.decel * dt);
+    }
+    this.speed = clamp(this.speed, -s.reverseMaxSpeed, s.maxSpeed);
+
+    if (Math.abs(this.speed) > 4) {
+      const speedFactor = clamp(Math.abs(this.speed) / s.maxSpeed, 0.28, 1);
+      const dir = this.speed >= 0 ? 1 : -1;
+      this.heading += steer * s.turnRate * speedFactor * dir * dt;
+    }
+
+    this.x += Math.cos(this.heading) * this.speed * dt;
+    this.y += Math.sin(this.heading) * this.speed * dt;
+  }
+}
+
+/* ============================== AI CONTROLLER ============================== */
+
+function computeAIInput(ai, player, dt) {
+  const cfg = ai.diffConfig;
+  const toPlayerX = player.x - ai.x, toPlayerY = player.y - ai.y;
+  const distToPlayer = Math.hypot(toPlayerX, toPlayerY);
+
+  let targetX = player.x + Math.cos(player.heading) * player.speed * cfg.predictionTime;
+  let targetY = player.y + Math.sin(player.heading) * player.speed * cfg.predictionTime;
+
+  // Ramming the player's body with our own front gets US wrecked under these rules, so
+  // instead of aiming the nose straight at them, actively cut across their predicted
+  // path and pull in close broadside-on. That drives our body directly into their
+  // way — if they keep coming, THEIR front hits OUR side and they wreck, not us.
+  if (cfg.flank && distToPlayer < cfg.flankRange) {
+    const predX = player.x + Math.cos(player.heading) * player.speed * cfg.predictionTime;
+    const predY = player.y + Math.sin(player.heading) * player.speed * cfg.predictionTime;
+
+    // Pick a side using the AI's position relative to the player's own heading — a
+    // slowly-changing reference, unlike the AI's own heading, which would flip-flop
+    // as it turns and create an unstable feedback loop.
+    const angleAiFromPlayer = Math.atan2(-toPlayerY, -toPlayerX);
+    const side = Math.sign(Math.sin(normalizeAngle(angleAiFromPlayer - player.heading))) || 1;
+    const perpAngle = player.heading + (Math.PI / 2) * side;
+    const orbitDist = clamp(distToPlayer * 0.3, 18, 46);
+    targetX = predX + Math.cos(perpAngle) * orbitDist;
+    targetY = predY + Math.sin(perpAngle) * orbitDist;
+  }
+
+  // Never chase a target that's off the playfield — a fast, far-predicted player can
+  // otherwise pull the AI's aim point past a wall and straight into a front-first crash.
+  targetX = clamp(targetX, ARENA.x + 12, ARENA.x + ARENA.w - 12);
+  targetY = clamp(targetY, ARENA.y + 12, ARENA.y + ARENA.h - 12);
+
+  // Wall avoidance: steer target back toward the center when close to a boundary.
+  const margin = cfg.wallMargin;
+  if (ai.x < ARENA.x + margin) targetX += (ARENA.x + margin - ai.x) * 3;
+  if (ai.x > ARENA.x + ARENA.w - margin) targetX -= (ai.x - (ARENA.x + ARENA.w - margin)) * 3;
+  if (ai.y < ARENA.y + margin) targetY += (ARENA.y + margin - ai.y) * 3;
+  if (ai.y > ARENA.y + ARENA.h - margin) targetY -= (ai.y - (ARENA.y + ARENA.h - margin)) * 3;
+
+  const desiredHeading = Math.atan2(targetY - ai.y, targetX - ai.x);
+  let angleDiff = normalizeAngle(desiredHeading - ai.heading);
+  angleDiff += (Math.random() - 0.5) * cfg.jitter;
+
+  const steer = clamp(angleDiff / (Math.PI / 3), -1, 1);
+  let throttle = Math.abs(angleDiff) < 2.2 ? 1 : cfg.throttleFloor;
+
+  // Hard safety brake: at higher top speeds the AI needs real stopping distance, not a
+  // fixed margin — a fast car heading straight at a nearby wall gets a full brake so
+  // aggressive pursuit never turns into a front-first self-crash.
+  const stoppingDist = (Math.max(ai.speed, 0) ** 2) / (2 * cfg.brake) + 22;
+  const hx = Math.cos(ai.heading), hy = Math.sin(ai.heading);
+  const wallDanger =
+    (ai.x - ARENA.x < stoppingDist && hx < -0.4) ||
+    (ARENA.x + ARENA.w - ai.x < stoppingDist && hx > 0.4) ||
+    (ai.y - ARENA.y < stoppingDist && hy < -0.4) ||
+    (ARENA.y + ARENA.h - ai.y < stoppingDist && hy > 0.4);
+  if (wallDanger) throttle = -1;
+
+  return { throttle, steer };
+}
+
+/* ============================== PARTICLES / SHAKE ============================== */
+
+let particles = [];
+let shake = { time: 0, mag: 0 };
+
+function spawnCrashParticles(x, y, color) {
+  for (let i = 0; i < 26; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const spd = randRange(50, 240);
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd,
+      life: randRange(0.4, 0.85),
+      maxLife: 0.85,
+      color,
+      size: randRange(2, 5)
+    });
+  }
+}
+
+function triggerShake(mag, duration) {
+  shake.time = duration;
+  shake.mag = mag;
+}
+
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.vx *= 0.94; p.vy *= 0.94;
+    p.life -= dt;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+  if (shake.time > 0) shake.time = Math.max(0, shake.time - dt);
+}
+
+function drawParticles(ctx) {
+  for (const p of particles) {
+    const alpha = clamp(p.life / p.maxLife, 0, 1);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ============================== DRAWING ============================== */
+
+function shadeColor(hex, percent) {
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map((ch) => ch + ch).join('');
+  const num = parseInt(hex, 16);
+  const amt = Math.round(255 * (percent / 100));
+  const r = clamp((num >> 16) + amt, 0, 255);
+  const g = clamp(((num >> 8) & 0xff) + amt, 0, 255);
+  const b = clamp((num & 0xff) + amt, 0, 255);
+  return `rgb(${r},${g},${b})`;
+}
+
+function drawLight(ctx, x, y, color) {
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, 3.4);
+  glow.addColorStop(0, color);
+  glow.addColorStop(1, 'rgba(255,246,200,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, 3.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fffef2';
+  ctx.beginPath();
+  ctx.arc(x, y, 1.3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawBodyShape(ctx, L, W) {
+  ctx.beginPath();
+  if (typeof ctx.roundRect === 'function') {
+    // [topLeft(rear), topRight(nose), bottomRight(nose), bottomLeft(rear)]
+    ctx.roundRect(-L / 2, -W / 2, L, W, [2.5, 8, 8, 2.5]);
+  } else {
+    ctx.moveTo(-L / 2 + 2.5, -W / 2);
+    ctx.lineTo(L / 2 - 8, -W / 2);
+    ctx.quadraticCurveTo(L / 2, -W / 2, L / 2, -W / 2 + 8);
+    ctx.lineTo(L / 2, W / 2 - 8);
+    ctx.quadraticCurveTo(L / 2, W / 2, L / 2 - 8, W / 2);
+    ctx.lineTo(-L / 2 + 2.5, W / 2);
+    ctx.quadraticCurveTo(-L / 2, W / 2, -L / 2, W / 2 - 2.5);
+    ctx.lineTo(-L / 2, -W / 2 + 2.5);
+    ctx.quadraticCurveTo(-L / 2, -W / 2, -L / 2 + 2.5, -W / 2);
+  }
+  ctx.closePath();
+}
+
+function drawCar(ctx, car, ghost) {
+  ctx.save();
+  ctx.translate(car.x, car.y);
+  ctx.rotate(car.heading);
+  if (ghost) ctx.globalAlpha = 0.35;
+
+  const L = CAR_LENGTH, W = CAR_WIDTH;
+  const colors = car.colors;
+
+  // soft contact shadow grounds the sprite against the arena floor
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(0.8, 1.6, L / 2 - 1, W / 2 - 1, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // body: tapered nose, rounded tail, subtle top-lit gradient for a glossy look
+  const bodyGrad = ctx.createLinearGradient(0, -W / 2, 0, W / 2);
+  bodyGrad.addColorStop(0, shadeColor(colors.bodyColor, 24));
+  bodyGrad.addColorStop(0.55, colors.bodyColor);
+  bodyGrad.addColorStop(1, shadeColor(colors.bodyColor, -20));
+  drawBodyShape(ctx, L, W);
+  ctx.fillStyle = bodyGrad;
+  ctx.fill();
+  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.stroke();
+
+  // cabin roof panel
+  ctx.fillStyle = shadeColor(colors.bodyColor, -32);
+  roundRect(ctx, -L * 0.24, -W / 2 + 3.5, L * 0.34, W - 7, 2.2);
+  ctx.fill();
+
+  // windshield glass with a light reflection streak
+  const glassGrad = ctx.createLinearGradient(0, -W / 2, 0, W / 2);
+  glassGrad.addColorStop(0, 'rgba(150,195,235,0.95)');
+  glassGrad.addColorStop(0.5, 'rgba(30,38,50,0.92)');
+  glassGrad.addColorStop(1, 'rgba(18,22,30,0.92)');
+  roundRect(ctx, -L * 0.07, -W / 2 + 4, L * 0.17, W - 8, 1.6);
+  ctx.fillStyle = glassGrad;
+  ctx.fill();
+
+  // head cap: the white nose covers only the front of the car, marking
+  // the exact zone that has to land the hit / must not get hit
+  const headGrad = ctx.createLinearGradient(0, -W / 2, 0, W / 2);
+  headGrad.addColorStop(0, shadeColor(HEAD_CAP_COLOR, 6));
+  headGrad.addColorStop(1, shadeColor(HEAD_CAP_COLOR, -14));
+  roundRect(ctx, L * 0.12, -W / 2 + 0.6, L / 2 - L * 0.12, W - 1.2, 4);
+  ctx.fillStyle = headGrad;
+  ctx.fill();
+
+  // racing stripes: two lines running the full length of the car, clipped to
+  // the body silhouette so they never spill past the tapered nose/tail
+  ctx.save();
+  drawBodyShape(ctx, L, W);
+  ctx.clip();
+  ctx.fillStyle = colors.stripeColor;
+  const stripeW = W * 0.13, stripeOffset = W * 0.24;
+  ctx.fillRect(-L / 2, -stripeOffset - stripeW / 2, L, stripeW);
+  ctx.fillRect(-L / 2, stripeOffset - stripeW / 2, L, stripeW);
+  ctx.restore();
+
+  // headlights = "the head"
+  drawLight(ctx, L / 2 - 2.4, -W / 2 + 3, '#fff9d6');
+  drawLight(ctx, L / 2 - 2.4, W / 2 - 3, '#fff9d6');
+
+  // tail lights
+  ctx.fillStyle = '#e53935';
+  ctx.fillRect(-L / 2 + 0.6, -W / 2 + 2, 1.6, 2.6);
+  ctx.fillRect(-L / 2 + 0.6, W / 2 - 4.6, 1.6, 2.6);
+
+  // side mirrors
+  ctx.fillStyle = shadeColor(colors.bodyColor, -22);
+  ctx.fillRect(-L * 0.03, -W / 2 - 1.8, 2.2, 1.8);
+  ctx.fillRect(-L * 0.03, W / 2, 2.2, 1.8);
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawArena(ctx) {
+  ctx.fillStyle = '#0d1015';
+  ctx.fillRect(0, 0, 960, 600);
+
+  // floor
+  ctx.fillStyle = '#181c24';
+  ctx.fillRect(ARENA.x, ARENA.y, ARENA.w, ARENA.h);
+
+  // grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+  ctx.lineWidth = 1;
+  for (let gx = ARENA.x; gx <= ARENA.x + ARENA.w; gx += 45) {
+    ctx.beginPath(); ctx.moveTo(gx, ARENA.y); ctx.lineTo(gx, ARENA.y + ARENA.h); ctx.stroke();
+  }
+  for (let gy = ARENA.y; gy <= ARENA.y + ARENA.h; gy += 45) {
+    ctx.beginPath(); ctx.moveTo(ARENA.x, gy); ctx.lineTo(ARENA.x + ARENA.w, gy); ctx.stroke();
+  }
+
+  // hazard border
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = '#ff5252';
+  ctx.strokeRect(ARENA.x, ARENA.y, ARENA.w, ARENA.h);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#111';
+  ctx.strokeRect(ARENA.x, ARENA.y, ARENA.w, ARENA.h);
+}
+
+/* ============================== DOM REFS ============================== */
+
+const menuScreen = document.getElementById('menu-screen');
+const customizeScreen = document.getElementById('customize-screen');
+const gameScreen = document.getElementById('game-screen');
+
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const previewCanvas = document.getElementById('preview-canvas');
+const previewCtx = previewCanvas.getContext('2d');
+
+const hudPlayerName = document.getElementById('hud-player-name');
+const hudAiName = document.getElementById('hud-ai-name');
+const hudPlayerScore = document.getElementById('hud-player-score');
+const hudAiScore = document.getElementById('hud-ai-score');
+const hudRound = document.getElementById('hud-round');
+const hudTimer = document.getElementById('hud-timer');
+
+const overlayMessage = document.getElementById('overlay-message');
+const overlayTitle = document.getElementById('overlay-title');
+const overlaySubtitle = document.getElementById('overlay-subtitle');
+
+const pauseMenu = document.getElementById('pause-menu');
+const matchendMenu = document.getElementById('matchend-menu');
+const matchendTitle = document.getElementById('matchend-title');
+const matchendSubtitle = document.getElementById('matchend-subtitle');
+
+/* ============================== INPUT ============================== */
+
+const keys = {};
+window.addEventListener('keydown', (e) => {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
+  keys[e.key.toLowerCase()] = true;
+  if (e.key === 'Escape') togglePause();
+});
+window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+
+function getPlayerInput() {
+  let throttle = 0, steer = 0;
+  if (keys['w'] || keys['arrowup']) throttle += 1;
+  if (keys['s'] || keys['arrowdown']) throttle -= 1;
+  if (keys['a'] || keys['arrowleft']) steer -= 1;
+  if (keys['d'] || keys['arrowright']) steer += 1;
+  return { throttle, steer };
+}
+
+/* ============================== GAME STATE ============================== */
+
+const app = { state: 'menu' }; // menu | customize | countdown | playing | roundend | paused | matchend
+
+const match = {
+  round: 1,
+  overtime: false,
+  playerScore: 0,
+  aiScore: 0,
+  roundTimer: ROUND_TIME,
+  countdownTimer: 0
+};
+
+let player, ai, prevAppStateBeforePause = 'playing';
+
+function buildCars() {
+  player = new Car({ ...PLAYER_STATS }, { bodyColor: settings.bodyColor, stripeColor: settings.stripeColor });
+  const diffCfg = AI_DIFFICULTY[settings.difficulty] || AI_DIFFICULTY.medium;
+  ai = new Car({ ...diffCfg }, { bodyColor: '#4fc3f7', stripeColor: '#ffffff' });
+  ai.diffConfig = diffCfg;
+}
+
+function setupRound() {
+  const points = [...SPAWN_POINTS];
+  // shuffle
+  for (let i = points.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [points[i], points[j]] = [points[j], points[i]];
+  }
+  const [pSpawn, aSpawn] = points;
+  const pHeading = Math.atan2(ARENA_CENTER.y - pSpawn.y, ARENA_CENTER.x - pSpawn.x);
+  const aHeading = Math.atan2(ARENA_CENTER.y - aSpawn.y, ARENA_CENTER.x - aSpawn.x);
+  player.reset(pSpawn.x, pSpawn.y, pHeading);
+  ai.reset(aSpawn.x, aSpawn.y, aHeading);
+
+  match.roundTimer = ROUND_TIME;
+  match.countdownTimer = 3.0;
+  app.state = 'countdown';
+  particles = [];
+
+  hudRound.textContent = match.overtime ? 'OVERTIME' : `ROUND ${match.round} / ${MAX_ROUNDS}`;
+  updateHud();
+  showOverlay(Math.ceil(match.countdownTimer).toString(), '');
+}
+
+function startMatch() {
+  buildCars();
+  match.round = 1;
+  match.overtime = false;
+  match.playerScore = 0;
+  match.aiScore = 0;
+  hudPlayerName.textContent = (settings.name || 'YOU').toUpperCase().slice(0, 14);
+  hudAiName.textContent = 'RIVAL (' + (ai.diffConfig.label || 'AI').toUpperCase() + ')';
+  setupRound();
+}
+
+function updateHud() {
+  hudPlayerScore.textContent = match.playerScore;
+  hudAiScore.textContent = match.aiScore;
+  hudTimer.textContent = Math.ceil(match.roundTimer);
+}
+
+function showOverlay(title, subtitle) {
+  overlayTitle.textContent = title;
+  overlaySubtitle.textContent = subtitle;
+  overlayMessage.classList.remove('hidden');
+}
+function hideOverlay() { overlayMessage.classList.add('hidden'); }
+
+/* ---- collisions ---- */
+
+function resolveWalls(car) {
+  const left = ARENA.x + car.radius, right = ARENA.x + ARENA.w - car.radius;
+  const top = ARENA.y + car.radius, bottom = ARENA.y + ARENA.h - car.radius;
+  let crashed = false;
+
+  // Only forward motion drives the car nose-first into a wall (this model has no lateral
+  // drift, so the car always travels along its heading). Reversing into a wall means the
+  // rear takes the hit, not the front/head, so it never counts as a crash.
+  const frontHit = car.speed > CRASH_SPEED_THRESHOLD;
+
+  if (car.x < left) { car.x = left; if (frontHit) crashed = true; else car.speed *= -0.35; }
+  if (car.x > right) { car.x = right; if (frontHit) crashed = true; else car.speed *= -0.35; }
+  if (car.y < top) { car.y = top; if (frontHit) crashed = true; else car.speed *= -0.35; }
+  if (car.y > bottom) { car.y = bottom; if (frontHit) crashed = true; else car.speed *= -0.35; }
+
+  return crashed;
+}
+
+function resolveCarCollision(a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const d = Math.hypot(dx, dy);
+  const minDist = a.radius + b.radius;
+  if (d >= minDist || d === 0) return null;
+
+  const nx = dx / d, ny = dy / d;
+  const overlap = minDist - d;
+  a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
+  b.x += nx * overlap / 2; b.y += ny * overlap / 2;
+
+  const aHead = a.headingVector();
+  const bHead = b.headingVector();
+  const aFront = (aHead.x * nx + aHead.y * ny) > FRONT_ANGLE_COS;
+  const bFront = (bHead.x * -nx + bHead.y * -ny) > FRONT_ANGLE_COS;
+
+  const combinedSpeed = Math.abs(a.speed) + Math.abs(b.speed);
+  if (combinedSpeed < MIN_COLLISION_SPEED) {
+    a.speed *= 0.4; b.speed *= 0.4;
+    return null;
+  }
+
+  if (aFront && bFront) return 'both';
+  // Ramming someone's side/back with your own front is like hitting a wall: the
+  // front-user is the one who wrecks, not the car they hit.
+  if (aFront) return 'b';
+  if (bFront) return 'a';
+
+  a.speed *= 0.35; b.speed *= 0.35;
+  return null;
+}
+
+/* ---- round / match flow ---- */
+
+function endRound(winner) {
+  app.state = 'roundend';
+  let title, subtitle;
+
+  if (winner === 'player') {
+    match.playerScore++;
+    title = 'POINT — YOU';
+    subtitle = 'The Rival hit its head and wrecked!';
+  } else if (winner === 'ai') {
+    match.aiScore++;
+    title = 'POINT — RIVAL';
+    subtitle = 'You hit your head and wrecked!';
+  } else if (winner === 'draw-crash') {
+    title = 'DOUBLE KO';
+    subtitle = 'Both hit their heads — no point awarded.';
+  } else {
+    title = 'TIME UP';
+    subtitle = 'No one scored this round.';
+  }
+
+  updateHud();
+  showOverlay(title, subtitle);
+
+  setTimeout(() => {
+    if (app.state !== 'roundend') return; // paused/quit meanwhile
+    hideOverlay();
+    const tied = match.playerScore === match.aiScore;
+    if (match.round >= MAX_ROUNDS) {
+      if (tied) {
+        match.overtime = true;
+        match.round++;
+        setupRound();
+      } else {
+        endMatch();
+      }
+    } else {
+      match.round++;
+      setupRound();
+    }
+  }, 2200);
+}
+
+function endMatch() {
+  app.state = 'matchend';
+  const playerWon = match.playerScore > match.aiScore;
+  matchendTitle.textContent = playerWon ? 'YOU WIN' : 'RIVAL WINS';
+  matchendTitle.style.color = playerWon ? '#4fc3f7' : '#ff5252';
+  matchendSubtitle.textContent = `${match.playerScore} — ${match.aiScore}`;
+  matchendMenu.classList.remove('hidden');
+}
+
+function togglePause() {
+  if (app.state === 'playing' || app.state === 'countdown' || app.state === 'roundend') {
+    prevAppStateBeforePause = app.state;
+    app.state = 'paused';
+    pauseMenu.classList.remove('hidden');
+  } else if (app.state === 'paused') {
+    app.state = prevAppStateBeforePause;
+    pauseMenu.classList.add('hidden');
+  }
+}
+
+/* ============================== UPDATE / RENDER LOOP ============================== */
+
+let lastTime = performance.now();
+
+function frame(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+
+  if (app.state === 'countdown') {
+    match.countdownTimer -= dt;
+    if (match.countdownTimer > 0) {
+      showOverlay(Math.ceil(match.countdownTimer).toString(), '');
+    } else {
+      hideOverlay();
+      app.state = 'playing';
+    }
+    render();
+  } else if (app.state === 'playing') {
+    stepPlaying(dt);
+    render();
+  } else if (app.state === 'roundend' || app.state === 'paused' || app.state === 'matchend') {
+    updateParticles(dt);
+    render();
+  }
+
+}
+
+// setInterval (not requestAnimationFrame) so the match keeps advancing even if the
+// tab loses foreground/visibility focus, e.g. a second monitor or an inactive window.
+setInterval(() => frame(performance.now()), 1000 / 60);
+
+function stepPlaying(dt) {
+  match.roundTimer -= dt;
+  updateHud();
+
+  const pIn = getPlayerInput();
+  const aIn = computeAIInput(ai, player, dt);
+
+  player.update(dt, pIn.throttle, pIn.steer);
+  ai.update(dt, aIn.throttle, aIn.steer);
+
+  const pWallCrash = resolveWalls(player);
+  const aWallCrash = resolveWalls(ai);
+
+  let outcome = null;
+  if (pWallCrash && aWallCrash) outcome = 'draw-crash';
+  else if (pWallCrash) outcome = 'ai';
+  else if (aWallCrash) outcome = 'player';
+
+  if (!outcome) {
+    const carResult = resolveCarCollision(player, ai);
+    if (carResult === 'both') outcome = 'draw-crash';
+    else if (carResult === 'a') outcome = 'player';
+    else if (carResult === 'b') outcome = 'ai';
+  }
+
+  updateParticles(dt);
+
+  if (outcome) {
+    player.crashed = true;
+    ai.crashed = true;
+    const mx = (player.x + ai.x) / 2, my = (player.y + ai.y) / 2;
+    spawnCrashParticles(player.x, player.y, player.colors.bodyColor);
+    spawnCrashParticles(ai.x, ai.y, ai.colors.bodyColor);
+    triggerShake(6, 0.35);
+    endRound(outcome);
+    return;
+  }
+
+  if (match.roundTimer <= 0) {
+    endRound('timeout');
+  }
+}
+
+function render() {
+  ctx.save();
+  if (shake.time > 0) {
+    ctx.translate((Math.random() - 0.5) * shake.mag, (Math.random() - 0.5) * shake.mag);
+  }
+  drawArena(ctx);
+  if (!player.crashed) drawCar(ctx, player); else drawCar(ctx, player, true);
+  if (!ai.crashed) drawCar(ctx, ai); else drawCar(ctx, ai, true);
+  drawParticles(ctx);
+  ctx.restore();
+}
+
+/* ============================== MENU WIRING ============================== */
+
+function showScreen(name) {
+  menuScreen.classList.toggle('hidden', name !== 'menu');
+  customizeScreen.classList.toggle('hidden', name !== 'customize');
+  gameScreen.classList.toggle('hidden', name !== 'game');
+}
+
+document.getElementById('btn-play').addEventListener('click', () => {
+  showScreen('game');
+  matchendMenu.classList.add('hidden');
+  pauseMenu.classList.add('hidden');
+  startMatch();
+  canvas.focus();
+});
+
+// If the page is embedded in a preview/iframe, keydown only reaches this
+// window once the canvas itself holds focus — clicking it recovers control.
+canvas.addEventListener('click', () => canvas.focus());
+
+document.getElementById('btn-customize').addEventListener('click', () => {
+  showScreen('customize');
+  initCustomizeScreen();
+});
+
+document.getElementById('btn-back-from-customize').addEventListener('click', () => {
+  saveSettings(settings);
+  showScreen('menu');
+});
+
+document.getElementById('btn-resume').addEventListener('click', () => {
+  togglePause();
+  canvas.focus();
+});
+document.getElementById('btn-quit').addEventListener('click', () => {
+  pauseMenu.classList.add('hidden');
+  app.state = 'menu';
+  showScreen('menu');
+});
+
+document.getElementById('btn-rematch').addEventListener('click', () => {
+  matchendMenu.classList.add('hidden');
+  startMatch();
+  canvas.focus();
+});
+document.getElementById('btn-mainmenu-end').addEventListener('click', () => {
+  matchendMenu.classList.add('hidden');
+  app.state = 'menu';
+  showScreen('menu');
+});
+
+/* difficulty buttons */
+const diffButtons = document.querySelectorAll('.diff-btn');
+function refreshDifficultyButtons() {
+  diffButtons.forEach((b) => b.classList.toggle('active', b.dataset.diff === settings.difficulty));
+}
+diffButtons.forEach((b) => {
+  b.addEventListener('click', () => {
+    settings.difficulty = b.dataset.diff;
+    saveSettings(settings);
+    refreshDifficultyButtons();
+  });
+});
+refreshDifficultyButtons();
+
+/* ============================== CUSTOMIZATION ============================== */
+
+const inputName = document.getElementById('input-name');
+const inputBodyColor = document.getElementById('input-body-color');
+const inputStripeColor = document.getElementById('input-stripe-color');
+const swatchesEl = document.getElementById('swatches');
+
+const SWATCHES = ['#ff5252', '#4fc3f7', '#ffca28', '#66bb6a', '#ab47bc', '#ff7043', '#26c6da', '#ffffff'];
+SWATCHES.forEach((c) => {
+  const el = document.createElement('div');
+  el.className = 'swatch';
+  el.style.background = c;
+  el.addEventListener('click', () => {
+    inputBodyColor.value = c;
+    settings.bodyColor = c;
+    drawPreview();
+  });
+  swatchesEl.appendChild(el);
+});
+
+function initCustomizeScreen() {
+  inputName.value = settings.name;
+  inputBodyColor.value = settings.bodyColor;
+  inputStripeColor.value = settings.stripeColor;
+  drawPreview();
+}
+
+[inputName, inputBodyColor, inputStripeColor].forEach((el) => {
+  el.addEventListener('input', () => {
+    settings.name = inputName.value.trim() || 'YOU';
+    settings.bodyColor = inputBodyColor.value;
+    settings.stripeColor = inputStripeColor.value;
+    drawPreview();
+  });
+});
+
+function drawPreview() {
+  previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+  const fakeCar = {
+    x: previewCanvas.width / 2,
+    y: previewCanvas.height / 2,
+    heading: -Math.PI / 2,
+    colors: { bodyColor: settings.bodyColor, stripeColor: settings.stripeColor }
+  };
+  previewCtx.save();
+  previewCtx.translate(0, 0);
+  previewCtx.scale(2.4, 2.4);
+  const scaledCar = { ...fakeCar, x: fakeCar.x / 2.4, y: fakeCar.y / 2.4 };
+  drawCar(previewCtx, scaledCar);
+  previewCtx.restore();
+}
+
+})();
+
+</script>
+</body>
+</html>

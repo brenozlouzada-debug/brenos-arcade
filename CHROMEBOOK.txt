@@ -1,0 +1,63 @@
+BRENO'S ARCADE — ON A CHROMEBOOK
+================================
+
+SETUP (once)
+
+  1. Copy this whole folder onto the Chromebook (USB stick, or Google Drive ->
+     download it).
+  2. If it arrived as a .zip, open the Files app, double-click the .zip to open
+     it, then DRAG the "Breno's Arcade" folder out into My Files. Don't play
+     straight from inside the zip -- ChromeOS mounts it read-only and saves
+     won't stick.
+  3. Open the folder and double-click index.html.
+
+That's it. No internet, no server, no install. All 41 games play instantly.
+
+  Tip: once index.html is open in Chrome, press Ctrl+D to bookmark it so you
+  don't have to dig through Files every time.
+
+
+IF A GAME NEEDS THE KEYBOARD OR MOUSE LOCK
+
+  Most 3D games capture the mouse when you click. Press Esc to release it.
+  Fullscreen is F4 on a Chromebook (the [] key), not F11.
+
+
+WHAT WORKS OFFLINE
+
+  All 41 games, fully. Every library is built into the files themselves.
+
+  Golazo 26 pulls club crests and national flags from the internet. Offline it
+  shows plain shield badges instead; the game itself plays the same.
+
+  Four games (Blocky CAD, Find the Balls, Mechazilla, Rival Fighters) use a
+  Google webfont for their headings. Offline they fall back to a
+  normal system font -- slightly different look, everything still works.
+
+
+UNIVERSE ENGINE -- THE BIG ONE
+
+  This one is a real astronomical simulator: actual NASA orbit data, real star
+  catalogs. It works with a plain double-click like everything else, but it's
+  a folder (games/universe-engine, about 107 MB), not one file. Keep that
+  whole folder, including its "assets" folder, or it won't load. It takes a
+  few seconds to start the first time.
+
+
+SAVES AND HIGH SCORES
+
+  Games save into the browser, not into these files, so saves live on whichever
+  device you played on. They survive closing the tab and rebooting.
+
+  One quirk of opening files directly: all the games share one storage area, so
+  a game that saves under a common name could in theory collide with another.
+  Nothing has done that so far. If you ever want them fully separated, you need
+  to serve the folder over http instead of opening it directly.
+
+  Clearing "Cookies and other site data" in Chrome settings erases game saves.
+
+
+UPDATING LATER
+
+  Replace the folder with a newer copy. Saves are stored in the browser, not in
+  the folder, so they survive the swap.
