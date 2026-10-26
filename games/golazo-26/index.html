@@ -706,6 +706,34 @@ kbd { display: inline-block; min-width: 20px; padding: 0 5px; border-radius: 4px
   .studio-tile { flex-wrap: wrap; }
 }
 
+/* ---------- VS Attack ---------- */
+.art-vsattack { background: radial-gradient(circle at 80% 30%, rgba(255,210,63,0.55) 0 10%, transparent 30%), repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 40px), linear-gradient(120deg, #3a0d1a, #c8102e 55%, #ff7a00); }
+.scoreboard.vsattack .sb-logo { background: linear-gradient(120deg, #c8102e, #ff7a00); color: #fff; }
+.scoreboard.vsattack .sb-logo b { color: #ffd23f; }
+.hud-vs { position: absolute; top: 18px; right: 18px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; pointer-events: none; }
+.hud-vs .vs-coins { display: flex; align-items: center; gap: 8px; background: rgba(8,12,20,0.85); border: 1px solid rgba(241,207,107,0.6); border-radius: 10px; padding: 5px 12px 5px 8px; font-family: var(--head); font-weight: 800; font-size: 24px; color: var(--gold); box-shadow: 0 4px 18px rgba(0,0,0,0.4); }
+.hud-vs .ico, .hud-coinpop .ico { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff3b0, #f1cf6b 45%, #b8892b); box-shadow: inset 0 0 0 2px rgba(120,80,10,0.5); display: inline-block; }
+.hud-vs .vs-info { background: rgba(8,12,20,0.75); border-radius: 6px; padding: 3px 9px; font-family: var(--head); font-weight: 700; font-size: 14px; letter-spacing: 1.5px; color: #fff; }
+.hud-vs.bump .vs-coins { animation: vsBump 0.6s ease; }
+@keyframes vsBump { 30% { transform: scale(1.18); box-shadow: 0 0 30px rgba(241,207,107,0.8); } }
+.hud-coinpop { position: absolute; left: 50%; top: 38%; transform: translate(-50%, 0); display: flex; align-items: center; gap: 10px; font-family: var(--head); font-weight: 900; font-style: italic; color: var(--gold); text-shadow: 0 4px 18px rgba(0,0,0,0.6); opacity: 0; pointer-events: none; }
+.hud-coinpop b { font-size: 64px; line-height: 1; }
+.hud-coinpop .ico { width: 44px; height: 44px; }
+.hud-coinpop small { font-size: 20px; color: #fff; font-style: normal; letter-spacing: 1px; text-transform: uppercase; }
+.hud-coinpop.on { animation: coinPop 2.6s ease forwards; }
+@keyframes coinPop { 0% { opacity: 0; transform: translate(-50%, 30px) scale(0.6); } 12% { opacity: 1; transform: translate(-50%, 0) scale(1.08); } 20% { transform: translate(-50%, 0) scale(1); } 75% { opacity: 1; transform: translate(-50%, -20px); } 100% { opacity: 0; transform: translate(-50%, -60px); } }
+.hud.replaying .hud-coinpop { display: none; }
+.vs-rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 14px 0; }
+.vs-rules .panel { padding: 12px 14px; }
+.vs-rules b { display: block; font-family: var(--head); font-size: 20px; text-transform: uppercase; color: var(--gold); }
+.vs-rules span { font-size: 13px; color: var(--muted); }
+.vs-result { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; border: 1px solid rgba(241,207,107,0.5); background: linear-gradient(110deg, rgba(241,207,107,0.14), rgba(200,16,46,0.12)); border-radius: var(--radius); padding: 14px 18px; margin: 12px 0; }
+.vs-result .big { font-family: var(--head); font-weight: 900; font-style: italic; font-size: 40px; color: var(--gold); line-height: 1; }
+.vs-ft { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin: 8px 0 14px; }
+.vs-ft div { text-align: center; }
+.vs-ft b { display: block; font-family: var(--head); font-size: 34px; font-weight: 900; color: var(--gold); line-height: 1.1; }
+.vs-ft span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
 </style>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23d7ff3a'/%3E%3Ctext x='32' y='44' font-family='Arial Black,Arial' font-weight='900' font-size='30' text-anchor='middle' fill='%230b1020'%3EG26%3C/text%3E%3C/svg%3E">
   </head>
@@ -55502,6 +55530,388 @@ const HAIR = ['#1b130d', '#2b1d12', '#3d2817', '#5a3a1e', '#8b5a2b', '#c49a5a', 
 __M["src/data/names.js"] = { NAME_POOLS, SKIN, POOL_SKIN, HAIR };
 })();
 
+/* ---- src/data/looks.js ---- */
+;(function(){
+// How real players look: skin tone, hair colour and cut, facial hair, eye colour, face shape and
+// height, for the best-known players (others get a look rolled from their background).
+// Keys: s skin tone 0 (very fair) .. 6 (deep), h hair colour, c haircut (src/match/render/hair.js),
+// b facial hair (src/match/render/beard.js), e eyes, f face type (src/match/render/face.js),
+// m face-shape tweaks on top of the type, ht height in cm, d dyed colour (tips and highlights),
+// bc beard colour when it differs from the hair, t tattooed arms (L, R or LR).
+// These are this project's own descriptions of public appearance, not scanned or traced likenesses.
+
+const HAIR_COLORS = {
+  black: '#141010', jet: '#0c0a09', dkbrown: '#26180f', brown: '#3a2416', mdbrown: '#553621', ltbrown: '#76502f',
+  auburn: '#6e3518', ginger: '#9c4f26', strawberry: '#b97a45', dkblond: '#8c6a3e', blond: '#c09a5c', ltblond: '#d8bc84',
+  platinum: '#e6d9b8', grey: '#8b8680', salt: '#5d5853', white: '#d8d4cc', bleach: '#dcc690',
+};
+const EYE_COLORS = {
+  dkbrown: '#24160d', brown: '#3b2414', hazel: '#6b5a3a', green: '#5a6b3a', blue: '#4a6a8a', ltblue: '#6d8fb0', grey: '#6f7a80',
+};
+
+const LOOKS = {
+  // ---------- Premier League ----------
+  'Erling Haaland': { s: 0, h: 'blond', c: 'bun', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.7, jaw: 0.35, chinLen: 0.5, noseLen: 0.3, lips: -0.2, lids: 0.45 }, ht: 195 },
+  'Mohamed Salah': { s: 3, h: 'black', c: 'afro', b: 'full', e: 'dkbrown', f: 'arab', m: { noseW: 0.2, lips: 0.15, cheek: 0.2 }, ht: 175 },
+  'Rodri': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'stubble', e: 'brown', f: 'sEur', m: { long: 0.45, noseLen: 0.35, faceW: -0.1 }, ht: 191 },
+  'Alisson': { s: 1, h: 'dkbrown', c: 'slick', b: 'full', e: 'ltblue', f: 'sEur', m: { long: 0.35, jaw: 0.3 }, ht: 193 },
+  'Virgil van Dijk': { s: 3, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'mixed', m: { jaw: 0.45, long: 0.35, chinLen: 0.25, neck: 0.5 }, ht: 195 },
+  'Florian Wirtz': { s: 0, h: 'ltbrown', c: 'textured', b: 'none', e: 'blue', f: 'nEur', m: { faceW: 0.15, cheek: 0.2 }, ht: 177 },
+  'Gianluigi Donnarumma': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: { long: 0.35, jaw: 0.35, faceW: 0.15 }, ht: 196 },
+  'William Saliba': { s: 5, h: 'black', c: 'fade', b: 'stubble', e: 'dkbrown', f: 'wAfr', m: { long: 0.35, jaw: 0.2 }, ht: 192 },
+  'Bukayo Saka': { s: 5, h: 'black', c: 'curlytop', b: 'light', e: 'dkbrown', f: 'wAfr', m: { faceW: 0.15, cheek: 0.25 }, ht: 178 },
+  'Cole Palmer': { s: 1, h: 'ltbrown', c: 'curlytop', b: 'light', e: 'hazel', f: 'mixed', m: { long: 0.45, faceW: -0.2, lips: 0.15 }, ht: 189 },
+  'Alexander Isak': { s: 4, h: 'black', c: 'fade', b: 'goatee', e: 'dkbrown', f: 'eAfr', m: { long: 0.6, faceW: -0.15 }, ht: 192 },
+  'Declan Rice': { s: 0, h: 'ltbrown', c: 'crop', b: 'none', e: 'hazel', f: 'nEur', m: { long: 0.35, chinLen: 0.3 }, ht: 188 },
+  'Martin Ødegaard': { s: 0, h: 'dkblond', c: 'sidepart', b: 'light', e: 'blue', f: 'nEur', m: { faceW: -0.1, noseLen: 0.2 }, ht: 178 },
+  'Moisés Caicedo': { s: 4, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'latin', m: { jaw: 0.2, lips: 0.2 }, ht: 178 },
+  'Alexis Mac Allister': { s: 1, h: 'auburn', c: 'textured', b: 'short', e: 'brown', f: 'sEur', m: { long: 0.2 }, ht: 176 },
+  'Rúben Dias': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: { jaw: 0.4, long: 0.2 }, ht: 187 },
+  'Bruno Fernandes': { s: 1, h: 'dkbrown', c: 'slick', b: 'short', e: 'brown', f: 'sEur', m: { long: 0.35, noseLen: 0.45, ears: 0.45 }, ht: 179 },
+  'Viktor Gyökeres': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'stubble', e: 'hazel', f: 'nEur', m: { jaw: 0.5, long: 0.3, neck: 0.4 }, ht: 187 },
+  'Emiliano Martínez': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'latin', m: { long: 0.45, jaw: 0.3, noseLen: 0.5 }, ht: 195 },
+  'Enzo Fernández': { t: 'LR', s: 1, h: 'dkbrown', c: 'textured', b: 'stubble', e: 'brown', f: 'latin', m: { long: 0.4, noseLen: 0.45 }, ht: 178 },
+  'Joško Gvardiol': { s: 0, h: 'dkbrown', c: 'fade', b: 'light', e: 'hazel', f: 'nEur', m: { long: 0.45, jaw: 0.25 }, ht: 185 },
+  'Bernardo Silva': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: { faceW: -0.35, noseLen: 0.45, long: 0.35 }, ht: 173 },
+  'Phil Foden': { s: 0, h: 'ltbrown', c: 'crop', b: 'light', e: 'blue', f: 'nEur', m: { faceW: -0.1, ears: 0.7 }, ht: 171 },
+  'Bruno Guimarães': { s: 2, h: 'black', c: 'fade', b: 'short', e: 'brown', f: 'latin', m: { faceW: 0.1 }, ht: 182 },
+  'Scott McTominay': { s: 0, h: 'dkbrown', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: { long: 0.45, jaw: 0.3 }, ht: 191 },
+  'Ibrahima Konaté': { s: 6, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: { long: 0.45, jaw: 0.4, neck: 0.5 }, ht: 194 },
+  'Ryan Gravenberch': { s: 5, h: 'black', c: 'twists', b: 'light', e: 'dkbrown', f: 'wAfr', m: { long: 0.4 }, ht: 190 },
+  'Dominik Szoboszlai': { s: 0, h: 'dkbrown', c: 'slick', b: 'light', e: 'blue', f: 'nEur', m: { long: 0.45, noseLen: 0.45, faceW: -0.25 }, ht: 186 },
+  'Tijjani Reijnders': { s: 3, h: 'black', c: 'textured', b: 'light', e: 'brown', f: 'mixed', m: { faceW: -0.1 }, ht: 185 },
+  'Sandro Tonali': { s: 1, h: 'dkbrown', c: 'mid', b: 'short', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 181 },
+  'Cristian Romero': { s: 1, h: 'dkbrown', c: 'fade', b: 'short', e: 'brown', f: 'latin', m: { jaw: 0.4 }, ht: 185 },
+  'Eberechi Eze': { s: 5, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'wAfr', m: {}, ht: 173 },
+  'Ollie Watkins': { s: 4, h: 'black', c: 'curlytop', b: 'short', e: 'dkbrown', f: 'mixed', m: { long: 0.2 }, ht: 180 },
+  'Marc Guéhi': { s: 5, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 182 },
+  'Jordan Pickford': { s: 0, h: 'dkblond', c: 'fade', b: 'short', bc: 'strawberry', e: 'blue', f: 'nEur', m: { faceW: 0.2 }, ht: 185 },
+  'Cody Gakpo': { s: 4, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'mixed', m: { long: 0.4 }, ht: 193 },
+  'Hugo Ekitiké': { s: 5, h: 'black', c: 'twists', b: 'none', e: 'dkbrown', f: 'wAfr', m: { long: 0.4, faceW: -0.1 }, ht: 190 },
+  'Omar Marmoush': { s: 3, h: 'black', c: 'curlytop', b: 'short', e: 'dkbrown', f: 'arab', m: {}, ht: 183 },
+  'Lisandro Martínez': { t: 'LR', s: 1, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'latin', m: { jaw: 0.3, neck: 0.4 }, ht: 175 },
+  'Bryan Mbeumo': { s: 5, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'wAfr', m: {}, ht: 171 },
+  'Anthony Gordon': { s: 0, h: 'dkblond', c: 'quiff', b: 'none', e: 'blue', f: 'nEur', m: { faceW: -0.1 }, ht: 183 },
+  'Micky van de Ven': { s: 0, h: 'ltbrown', c: 'fade', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.4 }, ht: 193 },
+  'Jurriën Timber': { s: 5, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 179 },
+  'Mikel Merino': { s: 0, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: { long: 0.4 }, ht: 189 },
+  'Kai Havertz': { s: 0, h: 'ltbrown', c: 'quiff', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.55, faceW: -0.2 }, ht: 193 },
+  'Gabriel Magalhães': { s: 3, h: 'black', c: 'fade', b: 'full', e: 'brown', f: 'latin', m: { jaw: 0.45, faceW: 0.2 }, ht: 190 },
+  'David Raya': { s: 1, h: 'black', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 183 },
+  'Gabriel Martinelli': { s: 2, h: 'dkbrown', c: 'textured', b: 'light', e: 'brown', f: 'latin', m: { long: 0.2 }, ht: 178 },
+  'Ben White': { s: 0, h: 'ltbrown', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 186 },
+  'Leandro Trossard': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 172 },
+  'Riccardo Calafiori': { s: 1, h: 'dkbrown', c: 'mid', b: 'short', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 188 },
+  'Reece James': { s: 5, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'wAfr', m: { jaw: 0.3 }, ht: 179 },
+  'Marc Cucurella': { s: 0, h: 'mdbrown', c: 'long', b: 'light', e: 'brown', f: 'sEur', m: { noseLen: 0.4 }, ht: 172 },
+  'João Pedro': { s: 4, h: 'black', c: 'curlytop', b: 'light', e: 'dkbrown', f: 'latin', m: {}, ht: 182 },
+  'Jeremie Frimpong': { s: 5, h: 'black', c: 'twists', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 171 },
+  'Andrew Robertson': { s: 0, h: 'ltbrown', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 178 },
+  'Rayan Cherki': { s: 3, h: 'black', c: 'curly', b: 'light', e: 'dkbrown', f: 'arab', m: {}, ht: 177 },
+  'Jérémy Doku': { s: 6, h: 'black', c: 'twists', b: 'none', e: 'dkbrown', f: 'wAfr', m: {}, ht: 171 },
+  'Matthijs de Ligt': { s: 0, h: 'blond', c: 'sidepart', b: 'light', e: 'blue', f: 'nEur', m: { faceW: 0.25, jaw: 0.3 }, ht: 189 },
+  'Matheus Cunha': { s: 3, h: 'black', c: 'fade', b: 'light', e: 'brown', f: 'latin', m: {}, ht: 184 },
+  'Morgan Gibbs-White': { s: 0, h: 'brown', c: 'fade', b: 'light', e: 'brown', f: 'mixed', m: {}, ht: 171 },
+  'Granit Xhaka': { s: 1, h: 'black', c: 'fade', b: 'full', e: 'brown', f: 'sEur', m: { jaw: 0.35 }, ht: 186 },
+  'Guglielmo Vicario': { s: 0, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: { long: 0.35 }, ht: 194 },
+  'Pedro Porro': { s: 1, h: 'dkbrown', c: 'fade', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 173 },
+  'Xavi Simons': { s: 3, h: 'black', c: 'locs', b: 'none', e: 'dkbrown', f: 'mixed', m: { faceW: -0.1 }, ht: 179 },
+  'Jarrod Bowen': { s: 0, h: 'ltbrown', c: 'fade', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 175 },
+  'Ezri Konsa': { s: 5, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: {}, ht: 183 },
+  'Pau Torres': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'stubble', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 191 },
+  'Morgan Rogers': { s: 4, h: 'black', c: 'twists', b: 'light', e: 'dkbrown', f: 'mixed', m: {}, ht: 187 },
+  'Antoine Semenyo': { s: 6, h: 'black', c: 'buzz', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 185 },
+  'Levi Colwill': { s: 0, h: 'ltbrown', c: 'fade', b: 'none', e: 'hazel', f: 'nEur', m: {}, ht: 187 },
+  'Pedro Neto': { s: 2, h: 'black', c: 'fade', b: 'light', e: 'brown', f: 'latin', m: {}, ht: 172 },
+  'John Stones': { s: 0, h: 'ltbrown', c: 'sidepart', b: 'light', e: 'blue', f: 'nEur', m: { long: 0.3 }, ht: 188 },
+  'Rayan Aït-Nouri': { s: 4, h: 'black', c: 'curlytop', b: 'light', e: 'dkbrown', f: 'arab', m: {}, ht: 179 },
+  'Mateo Kovačić': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'nEur', m: {}, ht: 177 },
+  'Savinho': { s: 4, h: 'black', c: 'curlytop', b: 'none', e: 'dkbrown', f: 'latin', m: { faceW: -0.1 }, ht: 176 },
+  'Benjamin Šeško': { s: 0, h: 'dkbrown', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.45 }, ht: 195 },
+  'Elliot Anderson': { s: 0, h: 'ltbrown', c: 'textured', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 179 },
+  'João Palhinha': { s: 1, h: 'black', c: 'fade', b: 'short', e: 'brown', f: 'sEur', m: { jaw: 0.3 }, ht: 190 },
+  'James Maddison': { s: 0, h: 'dkbrown', c: 'quiff', b: 'stubble', e: 'brown', f: 'nEur', m: {}, ht: 175 },
+  'Dejan Kulusevski': { s: 0, h: 'dkbrown', c: 'fade', b: 'light', e: 'brown', f: 'sEur', m: { faceW: 0.15 }, ht: 186 },
+  'Mohammed Kudus': { s: 6, h: 'black', c: 'twists', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 177 },
+  'Lucas Paquetá': { s: 3, h: 'black', c: 'fade', b: 'short', e: 'brown', f: 'latin', m: {}, ht: 180 },
+  'Bernd Leno': { s: 0, h: 'ltbrown', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 190 },
+  'Giorgi Mamardashvili': { s: 0, h: 'dkbrown', c: 'crop', b: 'stubble', e: 'brown', f: 'sEur', m: { long: 0.4 }, ht: 197 },
+  'Nick Pope': { s: 0, h: 'ltbrown', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 191 },
+  'Nikola Milenković': { s: 0, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: { jaw: 0.4 }, ht: 195 },
+  'Amadou Onana': { s: 6, h: 'black', c: 'buzz', b: 'light', e: 'dkbrown', f: 'wAfr', m: { long: 0.35 }, ht: 195 },
+  'John McGinn': { s: 0, h: 'ltbrown', c: 'crop', b: 'full', bc: 'ginger', e: 'blue', f: 'nEur', m: { faceW: 0.2 }, ht: 178 },
+  'Youri Tielemans': { s: 1, h: 'dkbrown', c: 'fade', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 176 },
+  'Boubacar Kamara': { s: 5, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: {}, ht: 184 },
+  'Kaoru Mitoma': { s: 1, h: 'black', c: 'textured', b: 'none', e: 'dkbrown', f: 'asia', m: {}, ht: 178 },
+  'Dean Henderson': { s: 0, h: 'ltbrown', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 188 },
+  'Daniel Muñoz': { s: 3, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'latin', m: {}, ht: 182 },
+  'Adam Wharton': { s: 0, h: 'ltbrown', c: 'textured', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 182 },
+  'Jean-Philippe Mateta': { s: 6, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: { neck: 0.4 }, ht: 192 },
+  'Milos Kerkez': { s: 0, h: 'dkbrown', c: 'fade', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 180 },
+  'Amad Diallo': { s: 6, h: 'black', c: 'twists', b: 'none', e: 'dkbrown', f: 'wAfr', m: { faceW: 0.1 }, ht: 173 },
+  'Joelinton': { s: 4, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'latin', m: { jaw: 0.4, neck: 0.5 }, ht: 186 },
+  'Nick Woltemade': { s: 0, h: 'ltbrown', c: 'sidepart', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.5, faceW: -0.2 }, ht: 198 },
+  'Yoane Wissa': { s: 6, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: {}, ht: 176 },
+  'Chris Wood': { s: 0, h: 'blond', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: { long: 0.3 }, ht: 191 },
+  'Matz Sels': { s: 0, h: 'ltbrown', c: 'crop', b: 'short', e: 'blue', f: 'nEur', m: {}, ht: 188 },
+  'Ivan Toney': { s: 5, h: 'black', c: 'twists', b: 'short', e: 'dkbrown', f: 'wAfr', m: {}, ht: 179 },
+  'Marcus Rashford': { s: 5, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'wAfr', m: { long: 0.2 }, ht: 185 },
+  'Trent Alexander-Arnold': { s: 1, h: 'dkbrown', c: 'curlytop', b: 'light', e: 'brown', f: 'mixed', m: { long: 0.2 }, ht: 180 },
+
+  // ---------- LaLiga ----------
+  'Kylian Mbappé': { s: 4, h: 'black', c: 'shaved', b: 'light', e: 'dkbrown', f: 'mixed', m: { ears: 0.7, long: 0.25, lips: 0.2, chinFwd: 0.2 }, ht: 178 },
+  'Vinícius Jr.': { s: 5, h: 'black', c: 'twists', b: 'light', e: 'dkbrown', f: 'wAfr', m: { lips: 0.25, ears: 0.35, faceW: -0.1 }, ht: 176 },
+  'Thibaut Courtois': { s: 0, h: 'dkbrown', c: 'slick', b: 'light', e: 'hazel', f: 'nEur', m: { long: 0.65, noseLen: 0.45, faceW: -0.1 }, ht: 200 },
+  'Jude Bellingham': { s: 4, h: 'black', c: 'curlytop', b: 'light', e: 'dkbrown', f: 'mixed', m: { jaw: 0.25, long: 0.25, lips: 0.15 }, ht: 186 },
+  'Pedri': { s: 1, h: 'black', c: 'textured', b: 'light', e: 'dkbrown', f: 'sEur', m: { noseLen: 0.35, faceW: -0.25, cheek: 0.15 }, ht: 174 },
+  'Lamine Yamal': { s: 3, h: 'black', c: 'curlytop', b: 'none', e: 'dkbrown', f: 'mixed', m: { lips: 0.2, faceW: -0.15, long: 0.15 }, ht: 180 },
+  'Federico Valverde': { s: 1, h: 'black', c: 'fade', b: 'stubble', e: 'brown', f: 'latin', m: { long: 0.35, jaw: 0.3 }, ht: 182 },
+  'Raphinha': { t: 'LR', s: 3, h: 'black', c: 'textured', b: 'stubble', e: 'brown', f: 'latin', m: { long: 0.2 }, ht: 176 },
+  'Robert Lewandowski': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'light', e: 'hazel', f: 'nEur', m: { long: 0.45, jaw: 0.35, chinFwd: 0.35 }, ht: 185 },
+  'Marc-André ter Stegen': { s: 0, h: 'dkblond', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 187 },
+  'Frenkie de Jong': { s: 0, h: 'dkbrown', c: 'slick', b: 'light', e: 'hazel', f: 'nEur', m: { long: 0.35 }, ht: 181 },
+  'Jan Oblak': { s: 0, h: 'ltbrown', c: 'sidepart', b: 'short', e: 'green', f: 'nEur', m: { long: 0.35 }, ht: 188 },
+  'Julián Álvarez': { s: 1, h: 'dkbrown', c: 'crop', b: 'light', e: 'brown', f: 'latin', m: { faceW: 0.1 }, ht: 170 },
+  'Antonio Rüdiger': { s: 5, h: 'black', c: 'shaved', b: 'short', e: 'dkbrown', f: 'wAfr', m: { jaw: 0.45, long: 0.25, neck: 0.6 }, ht: 190 },
+  'Jules Koundé': { t: 'R', s: 5, h: 'black', c: 'locs', b: 'moustache', e: 'dkbrown', f: 'wAfr', m: {}, ht: 178 },
+  'Martín Zubimendi': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'stubble', e: 'hazel', f: 'sEur', m: {}, ht: 181 },
+  'Aurélien Tchouaméni': { s: 5, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: { long: 0.3 }, ht: 188 },
+  'Rodrygo': { t: 'R', s: 4, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'latin', m: { faceW: -0.1 }, ht: 174 },
+  'Antoine Griezmann': { s: 0, h: 'dkbrown', c: 'bun', b: 'short', e: 'hazel', f: 'sEur', m: { faceW: -0.1 }, ht: 176 },
+  'Unai Simón': { s: 0, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 190 },
+  'Nico Williams': { s: 6, h: 'black', c: 'twists', b: 'none', e: 'dkbrown', f: 'wAfr', m: { faceW: -0.1 }, ht: 181 },
+  'Dani Carvajal': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'full', e: 'brown', f: 'sEur', m: {}, ht: 173 },
+  'Éder Militão': { s: 3, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'latin', m: { jaw: 0.3 }, ht: 186 },
+  'Eduardo Camavinga': { s: 6, h: 'black', c: 'twists', b: 'none', e: 'dkbrown', f: 'wAfr', m: {}, ht: 182 },
+  'Joan García': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'light', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 194 },
+  'Ronald Araújo': { s: 4, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'latin', m: { jaw: 0.35 }, ht: 188 },
+  'Pau Cubarsí': { s: 0, h: 'dkbrown', c: 'textured', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 184 },
+  'Dani Olmo': { s: 0, h: 'mdbrown', c: 'sidepart', b: 'stubble', e: 'hazel', f: 'sEur', m: {}, ht: 179 },
+  'Mikel Oyarzabal': { s: 0, h: 'mdbrown', c: 'crop', b: 'stubble', e: 'hazel', f: 'sEur', m: {}, ht: 181 },
+  'Arda Güler': { s: 1, h: 'dkbrown', c: 'curly', b: 'none', e: 'brown', f: 'sEur', m: { faceW: 0.1 }, ht: 176 },
+  'Alejandro Balde': { s: 5, h: 'black', c: 'twists', b: 'none', e: 'dkbrown', f: 'wAfr', m: {}, ht: 175 },
+  'Gavi': { s: 1, h: 'dkbrown', c: 'textured', b: 'none', e: 'brown', f: 'sEur', m: { faceW: -0.15 }, ht: 173 },
+  'Álex Baena': { s: 1, h: 'dkbrown', c: 'fade', b: 'light', e: 'brown', f: 'sEur', m: {}, ht: 174 },
+  'Takefusa Kubo': { s: 1, h: 'black', c: 'textured', b: 'none', e: 'dkbrown', f: 'asia', m: {}, ht: 173 },
+  'Dean Huijsen': { s: 0, h: 'dkbrown', c: 'textured', b: 'none', e: 'brown', f: 'sEur', m: { long: 0.4 }, ht: 197 },
+  'José María Giménez': { s: 1, h: 'black', c: 'sidepart', b: 'short', e: 'brown', f: 'latin', m: { jaw: 0.3 }, ht: 185 },
+  'Pablo Barrios': { s: 1, h: 'dkbrown', c: 'textured', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 181 },
+  'Conor Gallagher': { s: 0, h: 'ltbrown', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 182 },
+  'Marcos Llorente': { s: 0, h: 'mdbrown', c: 'quiff', b: 'stubble', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 184 },
+  'Alexander Sørloth': { s: 0, h: 'dkblond', c: 'sidepart', b: 'stubble', e: 'blue', f: 'nEur', m: { long: 0.5 }, ht: 195 },
+  'Isco': { s: 1, h: 'black', c: 'sidepart', b: 'full', e: 'brown', f: 'sEur', m: { faceW: 0.2 }, ht: 176 },
+  'Alejandro Grimaldo': { s: 1, h: 'dkbrown', c: 'fade', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 171 },
+  'Fabián Ruiz': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'full', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 189 },
+  'David Alaba': { s: 4, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'mixed', m: {}, ht: 180 },
+  'Ferland Mendy': { s: 6, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: {}, ht: 180 },
+  'Álvaro Carreras': { s: 0, h: 'mdbrown', c: 'fade', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 186 },
+  'Fermín López': { s: 1, h: 'dkbrown', c: 'textured', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 174 },
+  'Koke': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 176 },
+  'Aymeric Laporte': { s: 0, h: 'dkbrown', c: 'fade', b: 'short', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 189 },
+  'Oihan Sancet': { s: 0, h: 'mdbrown', c: 'textured', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 188 },
+  'Dani Parejo': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 182 },
+  'Gerard Moreno': { s: 1, h: 'dkbrown', c: 'crop', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 180 },
+  'Brais Méndez': { s: 0, h: 'mdbrown', c: 'sidepart', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 187 },
+  'Robin Le Normand': { s: 0, h: 'ltbrown', c: 'crop', b: 'short', e: 'blue', f: 'nEur', m: {}, ht: 187 },
+  'David Hancko': { s: 0, h: 'dkbrown', c: 'fade', b: 'light', e: 'brown', f: 'nEur', m: {}, ht: 186 },
+  'Álex Remiro': { s: 0, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 191 },
+
+  // ---------- Serie A ----------
+  'Lautaro Martínez': { s: 2, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'latin', m: { jaw: 0.4, faceW: 0.2, noseW: 0.1 }, ht: 174 },
+  'Nicolò Barella': { s: 1, h: 'dkbrown', c: 'fade', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 172 },
+  'Mike Maignan': { s: 5, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: { jaw: 0.3 }, ht: 191 },
+  'Kevin De Bruyne': { s: 0, h: 'ginger', c: 'crop', b: 'light', e: 'blue', f: 'nEur', m: { faceW: 0.15, noseLen: 0.2, brow: -0.2, lids: 0.75 }, ht: 181 },
+  'Yann Sommer': { s: 0, h: 'mdbrown', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 183 },
+  'Alessandro Bastoni': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: { long: 0.35 }, ht: 190 },
+  'Hakan Çalhanoğlu': { s: 1, h: 'black', c: 'sidepart', b: 'short', e: 'brown', f: 'arab', m: { noseLen: 0.5, bridge: 0.3 }, ht: 178 },
+  'Marcus Thuram': { s: 5, h: 'black', c: 'twists', b: 'light', e: 'dkbrown', f: 'wAfr', m: { long: 0.3 }, ht: 192 },
+  'Gleison Bremer': { s: 4, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'latin', m: { jaw: 0.3 }, ht: 188 },
+  'Rafael Leão': { t: 'L', s: 5, h: 'black', c: 'twists', b: 'moustache', e: 'dkbrown', f: 'wAfr', m: { long: 0.3 }, ht: 188 },
+  'Federico Dimarco': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 175 },
+  'Kenan Yıldız': { s: 1, h: 'dkbrown', c: 'textured', b: 'none', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 186 },
+  'Luka Modrić': { s: 0, h: 'dkblond', c: 'mid', b: 'light', e: 'hazel', f: 'nEur', m: { faceW: -0.35, long: 0.35, cheek: 0.35, noseLen: 0.3 }, ht: 172 },
+  'Christian Pulisic': { s: 0, h: 'mdbrown', c: 'sidepart', b: 'stubble', e: 'hazel', f: 'nEur', m: {}, ht: 177 },
+  'Giovanni Di Lorenzo': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 183 },
+  'Stanislav Lobotka': { s: 0, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'nEur', m: { faceW: 0.2 }, ht: 170 },
+  'Ademola Lookman': { s: 6, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 174 },
+  'Mile Svilar': { s: 0, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 189 },
+  'Paulo Dybala': { t: 'R', s: 1, h: 'dkbrown', c: 'fade', b: 'stubble', e: 'green', f: 'latin', m: { faceW: -0.1 }, ht: 177 },
+  'David de Gea': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'full', e: 'brown', f: 'sEur', m: { long: 0.35 }, ht: 192 },
+  'Michele Di Gregorio': { s: 0, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 187 },
+  'Andrea Cambiaso': { s: 0, h: 'dkbrown', c: 'textured', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 183 },
+  'Manuel Locatelli': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 185 },
+  'Dušan Vlahović': { s: 0, h: 'dkbrown', c: 'slick', b: 'stubble', e: 'brown', f: 'sEur', m: { long: 0.4, jaw: 0.3 }, ht: 190 },
+  'Adrien Rabiot': { s: 0, h: 'dkbrown', c: 'mid', b: 'short', e: 'blue', f: 'sEur', m: { long: 0.4 }, ht: 188 },
+  'Alex Meret': { s: 0, h: 'dkbrown', c: 'crop', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 190 },
+  'Amir Rrahmani': { s: 0, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 192 },
+  'Romelu Lukaku': { s: 6, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: { jaw: 0.4, faceW: 0.25, neck: 0.6 }, ht: 191 },
+  'Marco Carnesecchi': { s: 0, h: 'dkbrown', c: 'crop', b: 'light', e: 'brown', f: 'sEur', m: {}, ht: 191 },
+  'Charles De Ketelaere': { s: 0, h: 'dkblond', c: 'sidepart', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.4, faceW: -0.2 }, ht: 192 },
+  'Moise Kean': { s: 6, h: 'black', c: 'twists', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 183 },
+  'Alessandro Buongiorno': { s: 0, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 194 },
+  'André-Frank Zambo Anguissa': { s: 6, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: {}, ht: 184 },
+  'Francesco Acerbi': { s: 0, h: 'grey', c: 'buzz', b: 'stubble', e: 'brown', f: 'sEur', m: { jaw: 0.3 }, ht: 192 },
+  'Henrikh Mkhitaryan': { s: 1, h: 'black', c: 'sidepart', b: 'short', e: 'brown', f: 'arab', m: { noseLen: 0.45 }, ht: 177 },
+  'Khéphren Thuram': { s: 5, h: 'black', c: 'twists', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 192 },
+  'Teun Koopmeiners': { s: 0, h: 'ltbrown', c: 'sidepart', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 184 },
+  'Francisco Conceição': { s: 1, h: 'dkbrown', c: 'fade', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 170 },
+  'Éderson': { s: 4, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'latin', m: {}, ht: 183 },
+
+  // ---------- Bundesliga ----------
+  'Harry Kane': { s: 0, h: 'ltbrown', c: 'sidepart', b: 'light', e: 'blue', f: 'nEur', m: { long: 0.35, chinLen: 0.3, noseLen: 0.35, browUp: -0.2, lids: 0.8 }, ht: 188 },
+  'Jamal Musiala': { s: 3, h: 'black', c: 'curlytop', b: 'none', e: 'brown', f: 'mixed', m: { long: 0.35, faceW: -0.15, ears: 0.25 }, ht: 184 },
+  'Joshua Kimmich': { s: 0, h: 'dkblond', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: { faceW: -0.1 }, ht: 177 },
+  'Michael Olise': { s: 4, h: 'black', c: 'twists', b: 'light', e: 'dkbrown', f: 'mixed', m: { long: 0.3 }, ht: 184 },
+  'Manuel Neuer': { s: 0, h: 'dkblond', c: 'crop', b: 'light', e: 'blue', f: 'nEur', m: { long: 0.4, jaw: 0.4 }, ht: 193 },
+  'Luis Díaz': { s: 3, h: 'black', c: 'curly', b: 'light', e: 'dkbrown', f: 'latin', m: { faceW: 0.1, noseW: 0.15 }, ht: 180 },
+  'Gregor Kobel': { s: 0, h: 'ltbrown', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 194 },
+  'Serhou Guirassy': { s: 6, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: {}, ht: 187 },
+  'Dayot Upamecano': { s: 6, h: 'black', c: 'buzz', b: 'light', e: 'dkbrown', f: 'wAfr', m: { neck: 0.5 }, ht: 186 },
+  'Jonathan Tah': { s: 4, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'mixed', m: { jaw: 0.3, neck: 0.5 }, ht: 195 },
+  'Nico Schlotterbeck': { s: 0, h: 'mdbrown', c: 'crop', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 191 },
+  'Kim Min-jae': { s: 1, h: 'black', c: 'crop', b: 'none', e: 'dkbrown', f: 'asia', m: { jaw: 0.2 }, ht: 190 },
+  'Alphonso Davies': { s: 6, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 183 },
+  'Aleksandar Pavlović': { s: 0, h: 'dkbrown', c: 'textured', b: 'none', e: 'brown', f: 'nEur', m: {}, ht: 188 },
+  'Julian Brandt': { s: 0, h: 'ltbrown', c: 'sidepart', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 185 },
+  'Angelo Stiller': { s: 0, h: 'mdbrown', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 183 },
+  'Leroy Sané': { s: 5, h: 'black', c: 'fade', b: 'short', e: 'dkbrown', f: 'mixed', m: {}, ht: 183 },
+  'İlkay Gündoğan': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'arab', m: { faceW: -0.1 }, ht: 180 },
+
+  // ---------- Ligue 1 ----------
+  'Ousmane Dembélé': { s: 5, h: 'black', c: 'twists', b: 'short', e: 'dkbrown', f: 'wAfr', m: { lips: 0.25, faceW: 0.1 }, ht: 178 },
+  'Vitinha': { s: 1, h: 'dkbrown', c: 'fade', b: 'stubble', e: 'brown', f: 'sEur', m: { faceW: -0.1, long: 0.2 }, ht: 172 },
+  'Achraf Hakimi': { t: 'LR', s: 3, h: 'black', c: 'curlytop', b: 'light', e: 'dkbrown', f: 'arab', m: { long: 0.4, noseLen: 0.4 }, ht: 181 },
+  'Khvicha Kvaratskhelia': { s: 0, h: 'dkbrown', c: 'mid', b: 'light', e: 'brown', f: 'sEur', m: { long: 0.5, noseLen: 0.6, bridge: 0.5 }, ht: 183 },
+  'Nuno Mendes': { s: 5, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 180 },
+  'Marquinhos': { t: 'LR', s: 2, h: 'black', c: 'fade', b: 'short', e: 'brown', f: 'latin', m: {}, ht: 183 },
+  'João Neves': { s: 1, h: 'dkbrown', c: 'textured', b: 'none', e: 'brown', f: 'sEur', m: { faceW: -0.15 }, ht: 174 },
+  'Désiré Doué': { s: 5, h: 'black', c: 'twists', b: 'none', e: 'dkbrown', f: 'wAfr', m: {}, ht: 181 },
+  'Willian Pacho': { s: 6, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 187 },
+  'Bradley Barcola': { s: 5, h: 'black', c: 'curlytop', b: 'none', e: 'dkbrown', f: 'wAfr', m: {}, ht: 182 },
+  'Lucas Chevalier': { s: 0, h: 'mdbrown', c: 'crop', b: 'light', e: 'brown', f: 'nEur', m: {}, ht: 189 },
+  'Mason Greenwood': { s: 4, h: 'black', c: 'curlytop', b: 'light', e: 'dkbrown', f: 'mixed', m: {}, ht: 181 },
+  'Gerónimo Rulli': { s: 1, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'latin', m: {}, ht: 189 },
+  'Jonathan David': { s: 6, h: 'black', c: 'fade', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 175 },
+
+  // ---------- Rest of the world ----------
+  'Lionel Messi': { t: 'L', s: 1, h: 'mdbrown', c: 'sidepart', b: 'full', e: 'brown', f: 'latin', m: { noseW: -0.2, noseLen: 0.35, faceW: 0.1, cheek: 0.25 }, ht: 170 },
+  'Cristiano Ronaldo': { s: 2, h: 'dkbrown', c: 'quiff', b: 'none', e: 'brown', f: 'sEur', m: { long: 0.45, jaw: 0.5, chinFwd: 0.45, noseLen: 0.2, browUp: 0.2 }, ht: 187 },
+  'Victor Osimhen': { s: 6, h: 'black', c: 'twists', d: 'bleach', b: 'light', e: 'dkbrown', f: 'wAfr', m: { long: 0.3 }, ht: 186 },
+  'Karim Benzema': { s: 3, h: 'black', c: 'buzz', b: 'full', e: 'brown', f: 'arab', m: { noseLen: 0.45, jaw: 0.3, long: 0.25 }, ht: 185 },
+  'Son Heung-min': { s: 1, h: 'black', c: 'textured', b: 'none', e: 'dkbrown', f: 'asia', m: { faceW: 0.1 }, ht: 183 },
+  'Diogo Costa': { s: 1, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 186 },
+  'Ederson': { t: 'LR', s: 3, h: 'dkbrown', c: 'buzz', b: 'short', e: 'brown', f: 'latin', m: {}, ht: 188 },
+  'Yassine Bounou': { s: 2, h: 'black', c: 'crop', b: 'short', e: 'brown', f: 'arab', m: { long: 0.4 }, ht: 195 },
+  'Theo Hernández': { t: 'LR', s: 0, h: 'black', c: 'fade', b: 'short', e: 'brown', f: 'sEur', m: { jaw: 0.3 }, ht: 184 },
+  'Rúben Neves': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 180 },
+  'Sergej Milinković-Savić': { s: 0, h: 'dkbrown', c: 'mid', b: 'short', e: 'brown', f: 'sEur', m: { long: 0.45, jaw: 0.3 }, ht: 191 },
+  "N'Golo Kanté": { s: 6, h: 'black', c: 'buzz', b: 'light', e: 'dkbrown', f: 'wAfr', m: { faceW: 0.15, ears: 0.4 }, ht: 168 },
+  'Gonçalo Inácio': { s: 1, h: 'dkbrown', c: 'fade', b: 'light', e: 'brown', f: 'sEur', m: {}, ht: 185 },
+  'Giorgian de Arrascaeta': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'short', e: 'brown', f: 'latin', m: {}, ht: 172 },
+  'Neymar Jr.': { t: 'LR', s: 3, h: 'dkbrown', c: 'fade', d: 'dkblond', b: 'goatee', e: 'brown', f: 'latin', m: { faceW: -0.15, long: 0.2 }, ht: 175 },
+  'Sadio Mané': { s: 6, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: {}, ht: 174 },
+  'João Cancelo': { s: 1, h: 'dkbrown', c: 'fade', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 182 },
+  'Édouard Mendy': { s: 6, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: { faceW: 0.2 }, ht: 194 },
+  'Riyad Mahrez': { s: 3, h: 'black', c: 'sidepart', b: 'short', e: 'brown', f: 'arab', m: { faceW: -0.2, long: 0.3 }, ht: 179 },
+  'Anatoliy Trubin': { s: 0, h: 'ltbrown', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.4 }, ht: 199 },
+  'Morten Hjulmand': { s: 0, h: 'dkblond', c: 'crop', b: 'short', e: 'blue', f: 'nEur', m: {}, ht: 185 },
+  'Pedro Gonçalves': { s: 1, h: 'dkbrown', c: 'fade', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 173 },
+  'Francisco Trincão': { s: 1, h: 'dkbrown', c: 'quiff', b: 'light', e: 'brown', f: 'sEur', m: {}, ht: 184 },
+  'Uğurcan Çakır': { s: 1, h: 'dkbrown', c: 'crop', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 191 },
+};
+
+// Icons and Heroes: the looks they're remembered for.
+const LEGEND_LOOKS = {
+  'Pelé': { s: 6, h: 'black', c: 'buzz', b: 'none', e: 'dkbrown', f: 'wAfr', m: { faceW: 0.15 }, ht: 173 },
+  'Diego Maradona': { s: 2, h: 'black', c: 'curly', b: 'light', e: 'dkbrown', f: 'latin', m: { faceW: 0.25 }, ht: 165 },
+  'Zinedine Zidane': { s: 2, h: 'dkbrown', c: 'bald', b: 'light', e: 'brown', f: 'arab', m: { long: 0.4, noseLen: 0.6, bridge: 0.5 }, ht: 185 },
+  'Ronaldinho': { s: 4, h: 'black', c: 'long', b: 'light', e: 'dkbrown', f: 'latin', m: { lips: 0.4, mouthW: 0.4 }, ht: 181 },
+  'Ronaldo Nazário': { s: 4, h: 'black', c: 'buzz', b: 'none', e: 'dkbrown', f: 'latin', m: { mouthW: 0.3 }, ht: 183 },
+  'Thierry Henry': { s: 6, h: 'black', c: 'bald', b: 'light', e: 'dkbrown', f: 'wAfr', m: { long: 0.35 }, ht: 188 },
+  'David Beckham': { s: 0, h: 'dkblond', c: 'quiff', b: 'stubble', e: 'blue', f: 'nEur', m: {}, ht: 183 },
+  'Johan Cruyff': { s: 0, h: 'mdbrown', c: 'mid', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.4 }, ht: 178 },
+  'Paolo Maldini': { s: 1, h: 'dkbrown', c: 'mid', b: 'none', e: 'blue', f: 'sEur', m: { long: 0.35 }, ht: 186 },
+  'Andrea Pirlo': { s: 1, h: 'dkbrown', c: 'mid', b: 'full', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 177 },
+  'Zlatan Ibrahimović': { t: 'R', s: 1, h: 'dkbrown', c: 'bun', b: 'short', e: 'brown', f: 'sEur', m: { noseLen: 0.7, bridge: 0.6, long: 0.4 }, ht: 195 },
+  'Ruud Gullit': { s: 4, h: 'black', c: 'locs', b: 'moustache', e: 'dkbrown', f: 'mixed', m: {}, ht: 191 },
+  'Carlos Valderrama': { s: 3, h: 'blond', c: 'afro', b: 'moustache', e: 'dkbrown', f: 'latin', m: {}, ht: 176 },
+  'Roberto Baggio': { s: 1, h: 'dkbrown', c: 'ponytail', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 174 },
+  'Wayne Rooney': { s: 0, h: 'ltbrown', c: 'buzz', b: 'none', e: 'blue', f: 'nEur', m: { faceW: 0.3 }, ht: 176 },
+  'Steven Gerrard': { s: 0, h: 'ltbrown', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 183 },
+  'Frank Lampard': { s: 0, h: 'ltbrown', c: 'sidepart', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 184 },
+  'Kaká': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'none', e: 'brown', f: 'latin', m: {}, ht: 186 },
+  'Xavi': { s: 1, h: 'dkbrown', c: 'crop', b: 'light', e: 'brown', f: 'sEur', m: {}, ht: 170 },
+  'Andrés Iniesta': { s: 0, h: 'ltbrown', c: 'shaved', b: 'light', e: 'brown', f: 'sEur', m: { faceW: -0.2 }, ht: 171 },
+  'Carles Puyol': { s: 1, h: 'mdbrown', c: 'long', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 178 },
+  'Sergio Ramos': { s: 1, h: 'dkbrown', c: 'slick', b: 'full', e: 'brown', f: 'sEur', m: { jaw: 0.3 }, ht: 184 },
+  'Iker Casillas': { s: 1, h: 'dkbrown', c: 'crop', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 185 },
+  'Gianluigi Buffon': { s: 0, h: 'dkbrown', c: 'sidepart', b: 'stubble', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 192 },
+  'Didier Drogba': { s: 6, h: 'black', c: 'buzz', b: 'light', e: 'dkbrown', f: 'wAfr', m: { jaw: 0.3 }, ht: 189 },
+  'Samuel Eto\'o': { s: 6, h: 'black', c: 'buzz', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 180 },
+  'Eric Cantona': { s: 0, h: 'dkbrown', c: 'crop', b: 'none', e: 'brown', f: 'sEur', m: { jaw: 0.4 }, ht: 187 },
+  'Peter Schmeichel': { s: 0, h: 'blond', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: { faceW: 0.3 }, ht: 191 },
+  'Franz Beckenbauer': { s: 0, h: 'mdbrown', c: 'sidepart', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 181 },
+  'Lothar Matthäus': { s: 0, h: 'mdbrown', c: 'mid', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 174 },
+  'Marco van Basten': { s: 0, h: 'dkblond', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 188 },
+  'Ronald Koeman': { s: 0, h: 'blond', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 181 },
+  'Patrick Vieira': { s: 6, h: 'black', c: 'buzz', b: 'none', e: 'dkbrown', f: 'wAfr', m: { long: 0.3 }, ht: 192 },
+  'Claude Makélélé': { s: 6, h: 'black', c: 'bald', b: 'none', e: 'dkbrown', f: 'wAfr', m: {}, ht: 174 },
+  'Rio Ferdinand': { s: 5, h: 'black', c: 'buzz', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 189 },
+  'George Weah': { s: 6, h: 'black', c: 'buzz', b: 'none', e: 'dkbrown', f: 'wAfr', m: {}, ht: 184 },
+  'Roberto Carlos': { s: 4, h: 'black', c: 'bald', b: 'none', e: 'dkbrown', f: 'latin', m: { neck: 0.5 }, ht: 168 },
+  'Cafu': { s: 4, h: 'black', c: 'bald', b: 'none', e: 'dkbrown', f: 'latin', m: {}, ht: 176 },
+  'Rivaldo': { s: 3, h: 'black', c: 'crop', b: 'none', e: 'dkbrown', f: 'latin', m: { long: 0.4 }, ht: 186 },
+  'Romário': { s: 4, h: 'black', c: 'buzz', b: 'none', e: 'dkbrown', f: 'latin', m: {}, ht: 167 },
+  'Luís Figo': { s: 1, h: 'dkbrown', c: 'slick', b: 'none', e: 'brown', f: 'sEur', m: { long: 0.4 }, ht: 180 },
+  'Eusébio': { s: 6, h: 'black', c: 'buzz', b: 'none', e: 'dkbrown', f: 'wAfr', m: {}, ht: 175 },
+  'Alfredo Di Stéfano': { s: 0, h: 'mdbrown', c: 'slick', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 178 },
+  'Ferenc Puskás': { s: 0, h: 'dkbrown', c: 'slick', b: 'none', e: 'brown', f: 'sEur', m: { faceW: 0.3 }, ht: 172 },
+  'Lev Yashin': { s: 0, h: 'mdbrown', c: 'slick', b: 'none', e: 'brown', f: 'nEur', m: {}, ht: 185 },
+  'Bobby Charlton': { s: 0, h: 'ltbrown', c: 'shaved', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 173 },
+  'Gerd Müller': { s: 0, h: 'dkbrown', c: 'mid', b: 'none', e: 'brown', f: 'nEur', m: { faceW: 0.3 }, ht: 176 },
+  'Michel Platini': { s: 0, h: 'mdbrown', c: 'curly', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 179 },
+  'Raúl': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 180 },
+  'Fernando Torres': { s: 0, h: 'blond', c: 'sidepart', b: 'none', e: 'blue', f: 'sEur', m: {}, ht: 186 },
+  'David Villa': { s: 1, h: 'dkbrown', c: 'crop', b: 'goatee', e: 'brown', f: 'sEur', m: {}, ht: 175 },
+  'Hristo Stoichkov': { s: 0, h: 'dkbrown', c: 'crop', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 178 },
+  'Gheorghe Hagi': { s: 0, h: 'dkbrown', c: 'mid', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 174 },
+  'Davor Šuker': { s: 0, h: 'dkbrown', c: 'crop', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 183 },
+  'Pavel Nedvěd': { s: 0, h: 'blond', c: 'long', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 177 },
+  'Andriy Shevchenko': { s: 0, h: 'ltbrown', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 183 },
+  'Dennis Bergkamp': { s: 0, h: 'blond', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 188 },
+  'Clarence Seedorf': { s: 5, h: 'black', c: 'shaved', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 176 },
+  'Frank Rijkaard': { s: 4, h: 'black', c: 'locs', b: 'none', e: 'dkbrown', f: 'mixed', m: {}, ht: 190 },
+  'Yaya Touré': { s: 6, h: 'black', c: 'buzz', b: 'short', e: 'dkbrown', f: 'wAfr', m: { faceW: 0.2 }, ht: 189 },
+  'Abedi Pelé': { s: 6, h: 'black', c: 'buzz', b: 'none', e: 'dkbrown', f: 'wAfr', m: {}, ht: 173 },
+  'Jay-Jay Okocha': { s: 6, h: 'black', c: 'buzz', b: 'light', e: 'dkbrown', f: 'wAfr', m: {}, ht: 172 },
+  'Hidetoshi Nakata': { s: 1, h: 'black', c: 'textured', b: 'none', e: 'dkbrown', f: 'asia', m: {}, ht: 175 },
+  'Park Ji-sung': { s: 1, h: 'black', c: 'crop', b: 'none', e: 'dkbrown', f: 'asia', m: {}, ht: 175 },
+  'Alessandro Del Piero': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 174 },
+  'Alessandro Nesta': { s: 1, h: 'dkbrown', c: 'mid', b: 'none', e: 'brown', f: 'sEur', m: { long: 0.3 }, ht: 187 },
+  'Francesco Totti': { s: 1, h: 'ltbrown', c: 'sidepart', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 180 },
+  'Fabio Cannavaro': { s: 1, h: 'dkbrown', c: 'crop', b: 'none', e: 'brown', f: 'sEur', m: {}, ht: 176 },
+  'Bobby Moore': { s: 0, h: 'blond', c: 'sidepart', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 182 },
+  'Toni Kroos': { s: 0, h: 'ltbrown', c: 'sidepart', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.3 }, ht: 183 },
+  'Mia Hamm': { s: 0, h: 'ltbrown', c: 'ponytail', b: 'none', e: 'brown', f: 'nEur', m: { faceW: -0.25, jaw: -0.4, brow: -0.5 }, ht: 165 },
+  'Alex Morgan': { s: 0, h: 'mdbrown', c: 'ponytail', b: 'none', e: 'blue', f: 'nEur', m: { faceW: -0.25, jaw: -0.4, brow: -0.5 }, ht: 170 },
+  'Juan Román Riquelme': { s: 1, h: 'black', c: 'sidepart', b: 'light', e: 'brown', f: 'latin', m: { long: 0.4 }, ht: 182 },
+  'Diego Forlán': { s: 0, h: 'blond', c: 'long', b: 'none', e: 'blue', f: 'sEur', m: {}, ht: 172 },
+  'Antonio Di Natale': { s: 1, h: 'dkbrown', c: 'shaved', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 170 },
+  'Rafael Márquez': { s: 2, h: 'dkbrown', c: 'slick', b: 'short', e: 'brown', f: 'latin', m: {}, ht: 182 },
+  'Tim Cahill': { s: 2, h: 'black', c: 'shaved', b: 'light', e: 'brown', f: 'mixed', m: {}, ht: 178 },
+  'Joaquín': { s: 1, h: 'dkbrown', c: 'sidepart', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 179 },
+  'Hatem Ben Arfa': { s: 3, h: 'black', c: 'shaved', b: 'short', e: 'brown', f: 'arab', m: {}, ht: 178 },
+  'Ricardo Quaresma': { s: 2, h: 'black', c: 'fade', b: 'short', e: 'brown', f: 'sEur', m: {}, ht: 175 },
+  'Mario Gómez': { s: 1, h: 'black', c: 'slick', b: 'stubble', e: 'brown', f: 'sEur', m: { jaw: 0.3 }, ht: 189 },
+  'Lúcio': { s: 3, h: 'black', c: 'buzz', b: 'none', e: 'dkbrown', f: 'latin', m: {}, ht: 188 },
+  'Landon Donovan': { s: 0, h: 'ltbrown', c: 'shaved', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 173 },
+  'Dirk Kuyt': { s: 0, h: 'ginger', c: 'crop', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.3 }, ht: 184 },
+  'Jamie Carragher': { s: 0, h: 'ltbrown', c: 'buzz', b: 'none', e: 'blue', f: 'nEur', m: {}, ht: 185 },
+};
+
+__M["src/data/looks.js"] = { HAIR_COLORS, EYE_COLORS, LOOKS, LEGEND_LOOKS };
+})();
+
 /* ---- src/data/nations.js ---- */
 ;(function(){
 // National teams. `str` is the squad strength used for generated national squads and sims.
@@ -58783,11 +59193,13 @@ __M["src/data/meta.js"] = { POSITIONS, ALT_POS, FORMATIONS, RUSH_FORMATIONS, PLA
 const { RNG } = __M["src/core/rng.js"];
 const { clamp } = __M["src/core/util.js"];
 const { NAME_POOLS, SKIN, POOL_SKIN, HAIR } = __M["src/data/names.js"];
+const { LOOKS, LEGEND_LOOKS, HAIR_COLORS: HC, EYE_COLORS: EC } = __M["src/data/looks.js"];
 const { NATIONS, NATION_BY_ID, EXPORT_NATIONS } = __M["src/data/nations.js"];
 const { LEAGUES, ALL_CLUBS, CLUB_BY_ID } = __M["src/data/leagues.js"];
 const { ICONS_RAW, HEROES_RAW } = __M["src/data/real/world.js"];
 const { ALT_POS, POS_PLAYSTYLES } = __M["src/data/meta.js"];
 // Deterministic player database: every club, nation squad, Icon and Hero is generated from seeds.
+
 
 
 
@@ -58854,6 +59266,46 @@ function pickLook(rng, poolId, pos) {
   return { skin: SKIN[skinIdx], hair, hairStyle, height, beard: rng.chance(0.25) };
 }
 
+// The rest of a look (haircut, facial hair, eyes, face type, natural hair colour), from its own
+// random stream so the original rolls, and so every player's stats, stay as they were.
+const FAIR_POOLS = ['nordic', 'de', 'nl', 'en', 'ie', 'sc', 'sl', 'oce', 'us'];
+const FACE_BY_POOL = { en: 'nEur', ie: 'nEur', sc: 'nEur', de: 'nEur', nl: 'nEur', nordic: 'nEur', sl: 'nEur', oce: 'nEur', us: 'nEur', es: 'sEur', it: 'sEur', pt: 'sEur', fr: 'sEur', tr: 'sEur', ar: 'arab', fa: 'arab', latam: 'latin', cam: 'latin', waf: 'wAfr', saf: 'wAfr', car: 'wAfr', jp: 'asia', kr: 'asia' };
+function extendLook(look, r, pool, age) {
+  const skin = Math.max(0, SKIN.indexOf(look.skin));
+  const dark = skin >= 4, mid = skin === 3;
+  const pickW = (pairs) => r.weighted(pairs, (p) => p[1])[0];
+  if (dark) look.hair = pickW([[HC.black, 5], [HC.jet, 3], [HC.dkbrown, 1]]);
+  else if (FAIR_POOLS.includes(pool) && skin <= 1) look.hair = pickW([[HC.dkbrown, 2], [HC.brown, 3], [HC.mdbrown, 3], [HC.ltbrown, 3], [HC.dkblond, 2], [HC.blond, pool === 'nordic' ? 3 : 1], [HC.ginger, pool === 'ie' || pool === 'sc' ? 1.2 : 0.3], [HC.black, 1]]);
+  else look.hair = pickW([[HC.black, 3], [HC.dkbrown, 4], [HC.brown, 2], [HC.mdbrown, 1]]);
+  if (age >= 34 && r.chance(0.3)) look.hair = HC.salt;
+  look.cut = dark ? pickW([['buzz', 22], ['fade', 22], ['curlytop', 18], ['twists', 12], ['shaved', 8], ['locs', 6], ['braids', 3], ['crop', 9]])
+    : mid ? pickW([['fade', 25], ['curlytop', 18], ['buzz', 12], ['crop', 15], ['curly', 10], ['textured', 12], ['twists', 8]])
+      : pickW([['crop', 22], ['fade', 20], ['sidepart', 18], ['textured', 15], ['quiff', 7], ['slick', 6], ['buzz', 5], ['curly', 4], ['bun', 2], ['mid', 1]]);
+  look.beardStyle = age < 21 ? pickW([['none', 6], ['light', 3], ['stubble', 1]])
+    : age < 28 ? pickW([['none', 25], ['light', 25], ['stubble', 25], ['short', 15], ['goatee', 5], ['full', 5]])
+      : pickW([['none', 15], ['light', 15], ['stubble', 25], ['short', 25], ['full', 15], ['goatee', 5]]);
+  look.eyes = dark || mid ? EC.dkbrown : FAIR_POOLS.includes(pool) ? pickW([[EC.blue, 3], [EC.ltblue, 1.5], [EC.grey, 1], [EC.green, 1], [EC.hazel, 1.5], [EC.brown, 2]]) : pickW([[EC.brown, 5], [EC.dkbrown, 3], [EC.hazel, 2], [EC.green, 0.7], [EC.blue, 0.6]]);
+  const byPool = FACE_BY_POOL[pool] || 'sEur';
+  look.faceType = dark ? (pool === 'latam' || pool === 'pt' ? 'mixed' : 'wAfr') : mid ? (['arab', 'latin', 'asia'].includes(byPool) ? byPool : 'mixed') : byPool === 'wAfr' ? 'mixed' : byPool;
+}
+
+// A real player's look from src/data/looks.js.
+function applyLook(look, e) {
+  if (!e) return;
+  if (e.s !== undefined) look.skin = SKIN[e.s];
+  if (e.h) look.hair = HC[e.h] || e.h;
+  if (e.c) look.cut = e.c;
+  if (e.b) look.beardStyle = e.b;
+  if (e.bc) look.beardCol = HC[e.bc] || e.bc;
+  if (e.e) look.eyes = EC[e.e] || e.e;
+  if (e.f) look.faceType = e.f;
+  if (e.m) look.face = { ...e.m };
+  if (e.ht) look.height = e.ht;
+  if (e.d) look.dye = HC[e.d] || e.d;
+  if (e.t) look.ink = e.t;
+  look.beard = !['none', 'light'].includes(look.beardStyle);
+}
+
 function makeStats(rng, pos, ovr, flavour) {
   const t = TEMPLATE[pos];
   const stats = {};
@@ -58917,6 +59369,7 @@ function makePlayer({ id, nation, pos, ovr, age, club, league, rng, type = 'base
     look.skin = SKIN[skin];
     if (skin >= 4 && ![0, 1, 8].includes(HAIR.indexOf(look.hair))) look.hair = HAIR[rng.pick([0, 1, 8])];
   }
+  extendLook(look, new RNG('look:' + id + ':' + (name ? name.display : '')), pool, age);
   const stats = statsOverride ? { ...statsOverride } : makeStats(rng, pos, ovr, pos === 'GK' ? {} : flavourFor(rng));
   const { styles, plus } = assignPlaystyles(rng, pos, ovr);
   const dri = stats.dri || 40;
@@ -59018,15 +59471,6 @@ const SHIRT = {
 };
 
 // Hand-tuned face stats for superstars (PAC SHO PAS DRI DEF PHY or GK DIV HAN KIC REF SPD POS).
-// Fixed looks for a few famous faces (otherwise looks are rolled from the player's background).
-// hairStyle: 0 short, 1 buzz, 2 long, 3 afro, 4 shaved, 5 curly; hairMesh picks the short cut.
-const REAL_LOOKS = {
-  'Cristiano Ronaldo': { hair: '#1b130d', hairStyle: 0, hairMesh: 'short', beard: false, height: 187 },
-  'Lionel Messi': { hair: '#3d2817', hairStyle: 0, hairMesh: 'short', beard: true, height: 170 },
-  'Erling Haaland': { hair: '#e5c97a', hairStyle: 2, beard: false, height: 195 },
-  'Mohamed Salah': { hair: '#1b130d', hairStyle: 3, beard: true, height: 175 },
-};
-
 const STAR_STATS = {
   'Kylian Mbappé': [97, 91, 81, 92, 36, 78], 'Erling Haaland': [89, 93, 66, 80, 45, 88], 'Mohamed Salah': [88, 87, 84, 88, 45, 76],
   'Vinícius Jr.': [95, 84, 81, 91, 29, 69], 'Lamine Yamal': [88, 79, 85, 91, 35, 61], 'Harry Kane': [68, 93, 84, 82, 49, 82],
@@ -59076,7 +59520,7 @@ function genClubSquad(club, league) {
       name: realName(r.name, r.nation), foot: r.foot, skin: r.skin, statsOverride: statsFromArray(r.pos, STAR_STATS[r.name]),
     });
     p.real = true;
-    if (REAL_LOOKS[r.name]) Object.assign(p.look, REAL_LOOKS[r.name]);
+    applyLook(p.look, LOOKS[r.name]);
     assignNum(p, SHIRT[r.name]);
     made[i] = p;
   }
@@ -59125,12 +59569,14 @@ function db() {
     const rng = new RNG('icon:' + r.name);
     const p = makePlayer({ id: `ICON-${i}`, nation: r.nation, pos: r.pos, ovr: r.ovr, age: r.age, club: 'ICON', league: 'ICON', rng, type: 'icon', name: realName(r.name, r.nation), foot: r.foot, skin: r.skin });
     p.num = 10; p.rare = true;
+    applyLook(p.look, LEGEND_LOOKS[r.name]);
     return p;
   });
   const heroes = parseBlock(HEROES_RAW).map((r, i) => {
     const rng = new RNG('hero:' + r.name);
     const p = makePlayer({ id: `HERO-${i}`, nation: r.nation, pos: r.pos, ovr: r.ovr, age: r.age, club: 'HERO', league: r.extra || 'EPL', rng, type: 'hero', name: realName(r.name, r.nation), foot: r.foot, skin: r.skin });
     p.num = 7; p.rare = true;
+    applyLook(p.look, LEGEND_LOOKS[r.name]);
     return p;
   });
   const byId = {};
@@ -59547,12 +59993,667 @@ function kitMaker(club) {
 __M["src/data/sponsors.js"] = { BOARD_BRANDS, shirtSponsor, kitMaker };
 })();
 
+/* ---- src/match/render/face.js ---- */
+;(function(){
+const THREE = window.THREE;
+// Face rig for the player model, built once when the model loads: head landmarks (eyes, nose tip,
+// mouth, chin, ears, cranium centre) and extra face-shape morph targets made the same way as the
+// Blender ones (smooth displacement fields around landmarks), so faces can be shaped per player.
+// Coordinates: model space, metres, y up, +z forward, +x the player's left.
+
+
+
+const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+// 1 inside an ellipsoid around c with radii r, fading to 0 at its edge.
+const ell = (x, y, z, c, r) => 1 - ss(0.6, 1, Math.hypot((x - c[0]) / r[0], (y - c[1]) / r[1], (z - c[2]) / r[2]));
+
+// Morph targets added here, in order. Positive values:
+//   noseW wider nostrils · bridge higher nose bridge · noseLen longer, lower nose tip
+//   mouthW wider mouth · chinLen longer chin · chinFwd chin further forward
+//   lids relaxed eyelids (less white showing) · browUp raised brows · ears ears further out
+//   neck thicker neck · faceW wider cheeks and face
+const FACE_MORPHS = ['noseW', 'bridge', 'noseLen', 'mouthW', 'chinLen', 'chinFwd', 'lids', 'browUp', 'ears', 'neck', 'faceW'];
+
+function buildFaceRig(M) {
+  const g = M.geometry;
+  const pos = g.attributes.position.array, n = g.attributes.position.count;
+  const si = g.attributes.skinIndex.array, sw = g.attributes.skinWeight.array;
+  const names = M.meta.bones.map((b) => b.name);
+  const hi = names.indexOf('head'), ni = names.indexOf('neck');
+  const headW = new Float32Array(n), neckW = new Float32Array(n);
+  for (let v = 0; v < n; v++) for (let k = 0; k < 4; k++) {
+    if (si[v * 4 + k] === hi) headW[v] += sw[v * 4 + k];
+    if (si[v * 4 + k] === ni) neckW[v] += sw[v * 4 + k];
+  }
+  const eyeV = new Uint8Array(n), skinV = new Uint8Array(n);
+  for (const gr of g.groups) {
+    const idx = g.index.array;
+    if (gr.materialIndex === M.groups.eyes) for (let i = gr.start; i < gr.start + gr.count; i++) eyeV[idx[i]] = 1;
+    if (gr.materialIndex === M.groups.skin) for (let i = gr.start; i < gr.start + gr.count; i++) skinV[idx[i]] = 1;
+  }
+  // ---- Landmarks ----
+  const eye = [[0, 0, 0, 0], [0, 0, 0, 0]];
+  for (let v = 0; v < n; v++) if (eyeV[v]) { const e = eye[pos[v * 3] > 0 ? 0 : 1]; e[0] += pos[v * 3]; e[1] += pos[v * 3 + 1]; e[2] += pos[v * 3 + 2]; e[3]++; }
+  const eyeL = eye[0].slice(0, 3).map((x) => x / eye[0][3]), eyeR = eye[1].slice(0, 3).map((x) => x / eye[1][3]);
+  let eyeRad = 0;
+  for (let v = 0; v < n; v++) if (eyeV[v] && pos[v * 3] > 0) eyeRad = Math.max(eyeRad, Math.hypot(pos[v * 3] - eyeL[0], pos[v * 3 + 1] - eyeL[1], pos[v * 3 + 2] - eyeL[2]));
+  const eyeY = eyeL[1], eyeZ = eyeL[2];
+  const isFace = (v) => skinV[v] && headW[v] > 0.5;
+  let nose = null, chin = null, headTop = -1;
+  for (let v = 0; v < n; v++) {
+    if (!isFace(v)) continue;
+    const x = pos[v * 3], y = pos[v * 3 + 1], z = pos[v * 3 + 2];
+    headTop = Math.max(headTop, y);
+    if (Math.abs(x) < 0.008 && y < eyeY - 0.01 && y > eyeY - 0.07 && (!nose || z > nose[2])) nose = [x, y, z];
+  }
+  for (let v = 0; v < n; v++) {
+    if (!isFace(v)) continue;
+    const x = pos[v * 3], y = pos[v * 3 + 1], z = pos[v * 3 + 2];
+    if (Math.abs(x) < 0.01 && z > nose[2] - 0.05 && y < nose[1] - 0.03 && (!chin || y < chin[1])) chin = [x, y, z];
+  }
+  const mouthY = nose[1] - 0.38 * (nose[1] - chin[1]);
+  let mouthZ = -1;
+  for (let v = 0; v < n; v++) if (isFace(v) && Math.abs(pos[v * 3]) < 0.008 && Math.abs(pos[v * 3 + 1] - mouthY) < 0.006) mouthZ = Math.max(mouthZ, pos[v * 3 + 2]);
+  const mouth = [0, mouthY, mouthZ];
+  let earX = 0;
+  for (let v = 0; v < n; v++) if (isFace(v) && pos[v * 3 + 1] < eyeY + 0.01 && pos[v * 3 + 1] > eyeY - 0.05 && pos[v * 3 + 2] < eyeZ - 0.06) earX = Math.max(earX, Math.abs(pos[v * 3]));
+  const hc = [0, eyeY + 0.01, eyeZ - 0.085];
+  const L = { eyeL, eyeR, eyeY, eyeZ, eyeRad, nose, chin, mouth, earX, hc, headTop };
+
+  // ---- Morph fields ----
+  const fields = Object.fromEntries(FACE_MORPHS.map((k) => [k, new Float32Array(n * 3)]));
+  const lidRot = (x, y, z, c, w, a, out, v) => {
+    // Rotate about the eye's horizontal axis so the lid slides over the eyeball.
+    const ry = y - c[1], rz = z - c[2];
+    const ca = Math.cos(a * w), sa = Math.sin(a * w);
+    out[v * 3 + 1] += ry * ca - rz * sa - ry;
+    out[v * 3 + 2] += ry * sa + rz * ca - rz;
+  };
+  for (let v = 0; v < n; v++) {
+    if (eyeV[v]) continue;
+    const x = pos[v * 3], y = pos[v * 3 + 1], z = pos[v * 3 + 2];
+    const hw = headW[v];
+    if (hw > 0.3 && skinV[v]) {
+      const head = ss(0.3, 0.6, hw) * ss(chin[1] - 0.05, chin[1] - 0.02, y);
+      const front = ss(eyeZ - 0.04, eyeZ - 0.005, z);
+      // Nostrils and the sides of the nose.
+      let w = ell(x, y, z, [0, nose[1] - 0.008, nose[2] - 0.014], [0.024, 0.02, 0.026]) * head * front;
+      fields.noseW[v * 3] = x * 0.5 * w;
+      // Bridge: forward from between the eyes down to the tip.
+      w = ell(x, y, z, [0, eyeY - 0.016, nose[2] - 0.026], [0.012, 0.038, 0.036]) * head * front;
+      fields.bridge[v * 3 + 2] = 0.0075 * w;
+      // Tip down and out.
+      w = ell(x, y, z, [0, nose[1] - 0.004, nose[2] - 0.004], [0.016, 0.016, 0.02]) * head * front;
+      fields.noseLen[v * 3 + 1] = -0.0035 * w; fields.noseLen[v * 3 + 2] = 0.0022 * w;
+      // Mouth corners out.
+      w = ell(x, y, z, [0, mouthY, mouthZ - 0.012], [0.036, 0.016, 0.03]) * head * front;
+      fields.mouthW[v * 3] = x * 0.16 * w;
+      // Chin longer (down) and further forward.
+      w = ss(mouthY - 0.012, chin[1] + 0.004, y) * ell(x, y, z, [0, chin[1], chin[2] - 0.02], [0.04, 0.045, 0.05]) * head;
+      fields.chinLen[v * 3 + 1] = -0.006 * w;
+      fields.chinFwd[v * 3 + 2] = 0.0055 * w;
+      // Brows up.
+      w = (ell(x, y, z, [0.034, eyeY + 0.016, eyeZ + 0.004], [0.026, 0.014, 0.03]) + ell(x, y, z, [-0.034, eyeY + 0.016, eyeZ + 0.004], [0.026, 0.014, 0.03])) * head;
+      fields.browUp[v * 3 + 1] = 0.0028 * w;
+      // Eyelids: upper lid rolls down over the eye, the lower one up a touch.
+      for (const c of [eyeL, eyeR]) {
+        const dx = x - c[0], dy = y - c[1], dz = z - c[2];
+        const r = Math.hypot(dx, dy, dz);
+        if (r > eyeRad * 2.2 || dz < -0.004 || Math.abs(dx) > eyeRad * 1.6) continue;
+        const near = 1 - ss(eyeRad * 1.05, eyeRad * 2.1, r);
+        const across = 1 - ss(eyeRad * 0.9, eyeRad * 1.5, Math.abs(dx));
+        if (dy > -0.001) lidRot(x, y, z, c, near * across * ss(-0.001, 0.004, dy), 0.27, fields.lids, v);
+        else lidRot(x, y, z, c, near * across * ss(-0.001, -0.005, dy), -0.17, fields.lids, v);
+      }
+      // Ears out: rotate the ear about a vertical line at its root.
+      if (Math.abs(x) > earX - 0.022 && z < eyeZ - 0.055 && y > eyeY - 0.06 && y < eyeY + 0.03) {
+        const root = earX - 0.02;
+        const t = ss(0, 0.02, Math.abs(x) - root);
+        fields.ears[v * 3] = Math.sign(x) * 0.002 * t; fields.ears[v * 3 + 2] = -0.0045 * t * ss(eyeZ - 0.06, eyeZ - 0.11, z) + 0.004 * t;
+      }
+      // Fuller, wider face: cheeks and jaw out, below the eyes.
+      w = ss(eyeY + 0.005, eyeY - 0.02, y) * ss(chin[1] - 0.01, mouthY, y) * ss(eyeZ - 0.075, eyeZ - 0.03, z);
+      fields.faceW[v * 3] = x * 0.07 * w * head;
+    }
+    // Neck: out from its centre line, between the jaw and the collar.
+    const nw = neckW[v] + hw * 0.4;
+    if (nw > 0.2 && y < chin[1] + 0.005 && y > 1.43 && skinV[v]) {
+      const t = ss(0.2, 0.7, nw) * ss(1.43, 1.48, y) * ss(chin[1] + 0.005, chin[1] - 0.025, y);
+      fields.neck[v * 3] = x * 0.12 * t; fields.neck[v * 3 + 2] = (z - 0.005) * 0.12 * t;
+    }
+  }
+  const start = g.morphAttributes.position.length;
+  for (const k of FACE_MORPHS) g.morphAttributes.position.push(new THREE.BufferAttribute(fields[k], 3));
+  FACE_MORPHS.forEach((k, i) => { M.morphIndex[k] = start + i; });
+  M.landmarks = L;
+  return L;
+}
+
+// Typical face shapes as morph settings, mixed per player from their background and then
+// adjusted for the real players in src/data/looks.js. The base head is broad-nosed and full-lipped.
+const FACE_PRESETS = {
+  nEur: { noseW: -1.0, bridge: 1.05, noseLen: 0.45, nose: -0.45, lips: -0.9, mouthW: -0.2, cheek: -0.25, jaw: 0.15, chinFwd: 0.35, brow: 0.35, lids: 0.65 },
+  sEur: { noseW: -0.75, bridge: 0.9, noseLen: 0.55, nose: -0.15, lips: -0.6, mouthW: -0.12, cheek: -0.05, chinFwd: 0.2, brow: 0.25 },
+  arab: { noseW: -0.5, bridge: 1.0, noseLen: 0.85, nose: 0.1, lips: -0.35, cheek: 0.1, brow: 0.3 },
+  latin: { noseW: -0.45, bridge: 0.5, noseLen: 0.25, nose: 0, lips: -0.35, cheek: 0.3, jaw: 0.15 },
+  wAfr: { noseW: 0.1, bridge: -0.05, noseLen: -0.1, nose: 0.1, lips: 0.2, cheek: 0.15, jaw: 0.15 },
+  eAfr: { noseW: -0.3, bridge: 0.45, noseLen: 0.2, lips: 0, long: 0.35, cheek: 0.2 },
+  asia: { noseW: -0.2, bridge: -0.45, noseLen: -0.2, nose: -0.25, lips: -0.35, cheek: 0.55, faceW: 0.35, lids: 0.85, browUp: -0.2 },
+  mixed: { noseW: -0.35, bridge: 0.45, noseLen: 0.15, lips: -0.15, cheek: 0.1 },
+};
+
+__M["src/match/render/face.js"] = { FACE_MORPHS, buildFaceRig, FACE_PRESETS };
+})();
+
+/* ---- src/match/render/hair.js ---- */
+;(function(){
+const THREE = window.THREE;
+// Haircuts for the player model, generated in the browser from the head's shape: a fine shell
+// over the scalp shaped per cut (fades, quiffs, side parts, curly tops, afros, long hair falling
+// behind the shoulders), plus buns, ponytails, locs and twists, and a coverage map for each cut
+// that the skin shader paints on the scalp (stubble, skin fades, hairlines, cornrows).
+// Model space: metres, y up, +z forward; hc is the centre of the cranium.
+
+
+
+const TAU = Math.PI * 2;
+const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+
+// ---------- Head shape ----------
+// Distance from hc to the skin in every direction, sampled on a (theta, phi) grid: theta is the
+// angle round the head (0 = the face, +PI/2 = the player's left), phi the angle down from the top.
+const TN = 192, PN = 100, PHI_MAX = 2.55;
+const SCALP_PHI_MAX = PHI_MAX;
+
+function headMaps(M) {
+  if (M._headMaps) return M._headMaps;
+  const g = M.geometry, L = M.landmarks;
+  const pos = g.attributes.position.array, mask = g.attributes.aMask.array, idx = g.index.array;
+  const hc = L.hc;
+  const R = new Float32Array(TN * PN).fill(-1);
+  const S = new Float32Array(TN * PN).fill(-1);
+  const bin = (x, y, z) => {
+    const dx = x - hc[0], dy = y - hc[1], dz = z - hc[2];
+    const r = Math.hypot(dx, dy, dz);
+    const th = Math.atan2(dx, dz), ph = Math.acos(Math.max(-1, Math.min(1, dy / r)));
+    if (ph >= PHI_MAX) return null;
+    const ti = Math.min(TN - 1, Math.floor(((th + Math.PI) / TAU) * TN)), pi = Math.min(PN - 1, Math.floor((ph / PHI_MAX) * PN));
+    return [ti * PN + pi, r];
+  };
+  const skin = M.groups.skin;
+  const N = 5;
+  for (const gr of g.groups) {
+    if (gr.materialIndex !== skin) continue;
+    for (let i = gr.start; i < gr.start + gr.count; i += 3) {
+      const a = idx[i], b = idx[i + 1], c = idx[i + 2];
+      if (pos[a * 3 + 1] < 1.45 && pos[b * 3 + 1] < 1.45 && pos[c * 3 + 1] < 1.45) continue;
+      for (let u = 0; u <= N; u++) for (let v = 0; v <= N - u; v++) {
+        const w0 = u / N, w1 = v / N, w2 = 1 - w0 - w1;
+        const x = pos[a * 3] * w0 + pos[b * 3] * w1 + pos[c * 3] * w2;
+        const y = pos[a * 3 + 1] * w0 + pos[b * 3 + 1] * w1 + pos[c * 3 + 1] * w2;
+        const z = pos[a * 3 + 2] * w0 + pos[b * 3 + 2] * w1 + pos[c * 3 + 2] * w2;
+        const hb = bin(x, y, z);
+        if (!hb) continue;
+        if (hb[1] > R[hb[0]]) R[hb[0]] = hb[1];
+        const m = mask[a * 4 + 3] * w0 + mask[b * 4 + 3] * w1 + mask[c * 4 + 3] * w2;
+        if (m / 255 > S[hb[0]]) S[hb[0]] = m / 255;
+      }
+    }
+  }
+  // Fill gaps from neighbours, then soften.
+  for (const A of [R, S]) {
+    for (let it = 0; it < 40; it++) {
+      let missing = 0;
+      const B = A.slice();
+      for (let t = 0; t < TN; t++) for (let p = 0; p < PN; p++) {
+        if (A[t * PN + p] >= 0) continue;
+        let s = 0, n = 0;
+        for (const [dt, dp] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const tt = (t + dt + TN) % TN, pp = p + dp;
+          if (pp < 0 || pp >= PN) continue;
+          const val = A[tt * PN + pp];
+          if (val >= 0) { s += val; n++; }
+        }
+        if (n) B[t * PN + p] = s / n; else missing++;
+      }
+      A.set(B);
+      if (!missing) break;
+    }
+  }
+  const blur = (A, passes) => {
+    for (let k = 0; k < passes; k++) {
+      const B = A.slice();
+      for (let t = 0; t < TN; t++) for (let p = 1; p < PN - 1; p++) {
+        let s = 0;
+        for (let dt = -1; dt <= 1; dt++) for (let dp = -1; dp <= 1; dp++) s += A[((t + dt + TN) % TN) * PN + p + dp];
+        B[t * PN + p] = s / 9;
+      }
+      A.set(B);
+    }
+  };
+  blur(R, 2); blur(S, 1);
+  // The natural hairline: how far down the scalp the Blender mask reaches, per theta.
+  const line = new Float32Array(TN);
+  for (let t = 0; t < TN; t++) {
+    let p = 0;
+    while (p < PN - 1 && S[t * PN + p] > 0.45) p++;
+    line[t] = (p / PN) * PHI_MAX;
+  }
+  for (let k = 0; k < 6; k++) { const B = line.slice(); for (let t = 0; t < TN; t++) B[t] = (line[(t + TN - 1) % TN] + line[t] * 2 + line[(t + 1) % TN]) / 4; line.set(B); }
+  const radius = (th, ph) => {
+    const ft = (((th + Math.PI) / TAU) * TN - 0.5 + TN) % TN, fp = Math.max(0, Math.min(PN - 1.001, (ph / PHI_MAX) * PN - 0.5));
+    const t0 = Math.floor(ft), p0 = Math.floor(fp), at = ft - t0, ap = fp - p0, t1 = (t0 + 1) % TN;
+    const r00 = R[t0 * PN + p0], r01 = R[t0 * PN + p0 + 1], r10 = R[t1 * PN + p0], r11 = R[t1 * PN + p0 + 1];
+    return lerp(lerp(r00, r01, ap), lerp(r10, r11, ap), at);
+  };
+  const hairline = (th) => {
+    const ft = (((th + Math.PI) / TAU) * TN - 0.5 + TN) % TN, t0 = Math.floor(ft), at = ft - t0;
+    return lerp(line[t0], line[(t0 + 1) % TN], at);
+  };
+  // Height of a point on the skin at (theta, phi).
+  const yAt = (th, ph) => hc[1] + Math.cos(ph) * radius(th, ph);
+  // The phi at which the skin drops below height y, searching down from the crown.
+  const phiAtY = (th, y) => {
+    let lo = 0.05, hi = PHI_MAX - 0.02;
+    if (yAt(th, hi) > y) return hi;
+    for (let k = 0; k < 24; k++) { const mid = (lo + hi) / 2; if (yAt(th, mid) > y) lo = mid; else hi = mid; }
+    return (lo + hi) / 2;
+  };
+  M._headMaps = { radius, hairline, hc, yAt, phiAtY, L };
+  return M._headMaps;
+}
+
+const dirOf = (th, ph) => [Math.sin(ph) * Math.sin(th), Math.cos(ph), Math.sin(ph) * Math.cos(th)];
+
+// Smooth value noise for curls and texture variation.
+function hash3(x, y, z) { let h = (x * 374761393 + y * 668265263 + z * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function noise3(x, y, z) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf);
+  let s = 0;
+  for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) for (let c = 0; c < 2; c++) s += hash3(xi + a, yi + b, zi + c) * (a ? u : 1 - u) * (b ? v : 1 - v) * (c ? w : 1 - w);
+  return s;
+}
+
+// ---------- Cuts ----------
+// Each cut: shell thickness (m) by region; its hairline (front fringe, receding temples, side and
+// nape heights); hair falling below the scalp for long styles; curl bumps; extras; and how the
+// scalp is painted. Regions: f front, s sides, b back, top (crown), low (lower sides and nape).
+const R = (th, ph) => {
+  const c = Math.cos(th);
+  const f = ss(0.25, 0.95, c), b = ss(0.15, 0.85, -c);
+  return { f, b, s: Math.max(0, 1 - f - b), top: 1 - ss(0.25, 0.95, ph), low: ss(1.15, 1.6, ph), side: Math.sin(th) };
+};
+const CUTS = {
+  // Painted on the scalp only.
+  bald: { mesh: false, scalp: 0 },
+  shaved: { mesh: false, scalp: 0.35 },
+  buzz: { mesh: false, scalp: 1 },
+  // Short cuts.
+  crop: { thick: (r) => 0.004 + 0.005 * r.top + 0.002 * r.f, scalp: 1 },
+  fade: { thick: (r) => (0.008 + 0.008 * r.top) * (1 - r.low * 0.92) * (1 - r.s * 0.3), scalp: 1, fade: true },
+  textured: { thick: (r) => (0.011 + 0.009 * r.top + 0.008 * r.f) * (1 - r.low * 0.75), scalp: 1, fade: true, line: { f: 0.02 }, curl: { amp: 0.0025, freq: 90 } },
+  sidepart: { thick: (r) => (0.008 + 0.012 * r.top + 0.008 * r.f * (r.side > 0 ? 1.3 : 0.8)) * (1 - r.low * 0.85), scalp: 1, fade: true, part: 0.55, line: { f: -0.008, temple: 0.012 } },
+  quiff: { thick: (r, th, ph) => (0.006 + 0.012 * r.top + 0.024 * ss(-0.1, 0.75, Math.cos(th)) * (1 - ss(0.25, 1.0, ph))) * (1 - r.low * 0.93), scalp: 1, fade: true, line: { f: -0.006, temple: 0.01 } },
+  slick: { thick: (r) => (0.009 + 0.008 * r.top + 0.007 * r.b) * (1 - r.low * 0.45), scalp: 1, line: { f: -0.004, temple: 0.006 }, gloss: true },
+  mohawk: { thick: (r, th, ph) => 0.003 + 0.028 * (1 - ss(0.14, 0.3, Math.abs(Math.sin(th) * Math.sin(ph)))) * (1 - r.low), scalp: 0.5, fade: true, strip: true },
+  // Curly and Afro-textured hair.
+  curlytop: { thick: (r) => (0.017 + 0.016 * r.top + 0.006 * r.f) * (1 - r.low * 0.95), scalp: 1, fade: true, line: { f: 0.006 }, curl: { amp: 0.0045, freq: 140 }, tex: 'coily' },
+  curly: { thick: (r) => (0.016 + 0.014 * r.top) * (1 - r.low * 0.4), scalp: 1, line: { f: 0.008 }, curl: { amp: 0.005, freq: 110 }, tex: 'coily' },
+  afro: { thick: (r) => (0.03 + 0.024 * r.top) * (1 - r.low * 0.35), scalp: 1, line: { f: 0.006 }, curl: { amp: 0.0055, freq: 80 }, round: 0.135, tex: 'coily' },
+  twists: { thick: (r) => (0.014 + 0.012 * r.top) * (1 - r.low * 0.9), scalp: 1, fade: true, curl: { amp: 0.0075, freq: 78 }, tex: 'coily' },
+  locs: { thick: (r) => 0.008 + 0.006 * r.top, scalp: 1, extra: 'locs', tex: 'coily' },
+  braids: { thick: () => 0.0025, scalp: 1, tex: 'braid', rows: true },
+  // Long hair: falls from the widest part of the head, over the ears.
+  long: { thick: (r) => 0.011 + 0.008 * r.top + 0.006 * r.b, scalp: 1, line: { f: 0.012 }, hang: 0.17 },
+  mid: { thick: (r) => 0.011 + 0.008 * r.top + 0.005 * r.b, scalp: 1, line: { f: 0.016 }, hang: 0.06 },
+  bun: { thick: (r) => 0.007 + 0.006 * r.top + 0.004 * r.b, scalp: 1, line: { f: -0.004 }, extra: 'bun', gloss: true },
+  ponytail: { thick: (r) => 0.007 + 0.006 * r.top + 0.004 * r.b, scalp: 1, line: { f: -0.004 }, extra: 'ponytail', gloss: true },
+};
+
+// The hairline as a height on the head for each theta: high at the forehead with slightly
+// receded temples, lower over the ears, lowest at the nape (after the Blender build's hairline).
+function edgePhi(H, cut, th) {
+  const L = H.L;
+  const c = Math.cos(th);
+  const f = Math.max(0, c) ** 1.3, b = Math.max(0, -c) ** 1.1;
+  const l = cut.line || {};
+  const temple = Math.exp(-(((Math.abs(th) - 0.62) / 0.22) ** 2));
+  let y = L.eyeY + 0.074 * f + 0.032 * (1 - f - b) - 0.066 * b;
+  y -= (l.f || 0) * ss(0.3, 0.9, c);
+  y += ((l.temple ?? 0.004) * temple);
+  return H.phiAtY(th, y);
+}
+
+// ---------- Geometry ----------
+const geoCache = new Map();
+
+// Builds the head map and the common cuts in the background after the model loads, one per
+// timer tick, so a match never stalls building hair.
+function warmHair(M, cuts = ['crop', 'fade', 'sidepart', 'textured', 'curlytop', 'twists', 'quiff', 'slick', 'curly', 'afro', 'bun', 'mid', 'locs']) {
+  const list = cuts.slice();
+  const step = () => {
+    if (!M._headMaps) headMaps(M);
+    else { const c = list.shift(); if (!c) return; hairGeometry(M, c); scalpTexture(M, c); }
+    setTimeout(step, 30);
+  };
+  setTimeout(step, 400);
+}
+
+function hairGeometry(M, cutKey) {
+  const cut = CUTS[cutKey];
+  if (!cut || cut.mesh === false) return null;
+  if (geoCache.has(cutKey)) return geoCache.get(cutKey);
+  const H = headMaps(M);
+  const hc = H.hc;
+  const CT = 168, RW = 46;
+  const HR = cut.hang ? 16 : 0;
+  const P = [], UV = [], EDGE = [];
+  const thickAt = (th, ph, edgeDist) => {
+    const r = R(th, ph);
+    let t = cut.thick(r, th, ph);
+    // Taper towards the skin at the hairline so the edge lies flat.
+    t = 0.001 + (t - 0.001) * ss(0, 0.03, edgeDist);
+    if (cut.curl) {
+      // Curl bumps from 3D noise on the direction (no seam where theta wraps round).
+      const d = dirOf(th, ph), k = cut.curl.freq * 0.16;
+      t += cut.curl.amp * (noise3(d[0] * k + 11.3, d[1] * k + 7.1, d[2] * k + 3.7) - 0.5) * 2 * ss(0, 0.02, edgeDist);
+    }
+    if (cut.part !== undefined) {
+      // A side part: a shallow groove where the hair divides.
+      t *= 1 - 0.32 * Math.exp(-(((th - cut.part) * 6) ** 2)) * (1 - ss(0.2, 1.0, ph)) * (1 - r.b);
+    }
+    return t;
+  };
+  for (let c = 0; c <= CT; c++) {
+    const th = -Math.PI + (c / CT) * TAU;
+    const r0 = R(th, 1.2);
+    // Long hair covers the sides and back: the scalp rows run to the nape there.
+    const hangW = cut.hang ? ss(0.85, 1.45, Math.abs(th)) : 0;
+    const edge = cut.hang ? lerp(edgePhi(H, cut, th), H.phiAtY(th, H.L.eyeY - 0.07), hangW) : edgePhi(H, cut, th);
+    let arc = 0, prev = null, horiz = 0;
+    for (let k = 0; k <= RW; k++) {
+      const s = k / RW;
+      const ph = 0.03 + s * (edge - 0.03);
+      const edgeDist = (edge - ph) * H.radius(th, ph) + hangW * 0.06;
+      let t = thickAt(th, ph, edgeDist);
+      if (cut.round) {
+        // Afro: out to a rounded silhouette rather than following the skull.
+        const rr = H.radius(th, ph);
+        const target = cut.round + 0.012 * Math.cos(ph) - 0.01 * r0.f;
+        t = Math.max(t, (target - rr) * (1 - ss(1.35, 1.8, ph)) * Math.sqrt(ss(0, 0.05, edgeDist)));
+      }
+      const d = dirOf(th, ph), rr = H.radius(th, ph) + t;
+      let p = [hc[0] + d[0] * rr, hc[1] + d[1] * rr, hc[2] + d[2] * rr];
+      if (cut.hang && hangW > 0) {
+        // Below the widest point hair falls straight rather than following the skull in.
+        const hx = p[0], hz = p[2] - hc[2], hd = Math.hypot(hx, hz);
+        if (hd < horiz * 0.86 && ph > 1.4) { const k2 = lerp(1, (horiz * 0.86) / Math.max(1e-4, hd), hangW); p = [hx * k2, p[1], hc[2] + hz * k2]; }
+        horiz = Math.max(horiz, Math.hypot(p[0], p[2] - hc[2]));
+      }
+      if (prev) arc += Math.hypot(p[0] - prev[0], p[1] - prev[1], p[2] - prev[2]);
+      prev = p;
+      P.push(p); UV.push([(c / CT) * 7, arc * 22]);
+      EDGE.push(Math.min(1, edgeDist / 0.009));
+    }
+    // Long hair carries on straight down, flaring a little, to its length.
+    for (let k = 1; k <= HR; k++) {
+      const s = k / HR;
+      const len = cut.hang * hangW;
+      const q = P[c * (RW + 1 + HR) + RW];
+      const hx = q[0], hz = q[2] - hc[2], hd = Math.max(1e-4, Math.hypot(hx, hz));
+      const flare = (0.002 + 0.012 * s * s) * hangW;
+      const p = [hx * (1 + flare / hd), q[1] - len * s, hc[2] + hz * (1 + flare / hd)];
+      arc += Math.hypot(p[0] - prev[0], p[1] - prev[1], p[2] - prev[2]);
+      prev = p;
+      P.push(p); UV.push([(c / CT) * 7, arc * 22]);
+      EDGE.push(hangW > 0.02 ? Math.min(1, ((1 - s) * len) / 0.012) : 0);
+    }
+  }
+  const cols = RW + 1 + HR;
+  const topIdx = P.length;
+  { const t = thickAt(0, 0.01, 1), d = dirOf(0, 0), rr = H.radius(0, 0.01) + t; P.push([hc[0] + d[0] * rr, hc[1] + d[1] * rr, hc[2] + d[2] * rr]); UV.push([3.5, 0]); EDGE.push(1); }
+  const index = [];
+  for (let c = 0; c < CT; c++) {
+    for (let k = 0; k < cols - 1; k++) {
+      const a = c * cols + k, b = (c + 1) * cols + k;
+      index.push(a, a + 1, b, b, a + 1, b + 1);
+    }
+    index.push(topIdx, c * cols, (c + 1) * cols);
+  }
+  const geo = new THREE.BufferGeometry();
+  const arr = new Float32Array(P.length * 3);
+  P.forEach((p, i) => { arr[i * 3] = p[0]; arr[i * 3 + 1] = p[1]; arr[i * 3 + 2] = p[2]; });
+  geo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(UV.flat(), 2));
+  geo.setAttribute('aEdge', new THREE.Float32BufferAttribute(EDGE, 1));
+  geo.setIndex(index);
+  geo.computeVertexNormals();
+  // The first and last columns are the same seam at the back: share their normals.
+  const nr = geo.attributes.normal.array;
+  for (let k = 0; k < cols; k++) {
+    const a = k, b = CT * cols + k;
+    for (let j = 0; j < 3; j++) { const m = (nr[a * 3 + j] + nr[b * 3 + j]) / 2; nr[a * 3 + j] = nr[b * 3 + j] = m; }
+  }
+  let out = geo;
+  if (cut.extra) { const ex = extraGeometry(M, cut, H); if (ex) out = mergeGeos([geo, ex]); }
+  // Head-rigid: positions relative to the head joint, like the Blender hair.
+  const hj = M.meta.bones.find((b) => b.name === 'head').head;
+  out.translate(-hj[0], -hj[1], -hj[2]);
+  out.computeBoundingSphere();
+  geoCache.set(cutKey, out);
+  return out;
+}
+
+function mergeGeos(list) {
+  const pos = [], nor = [], uv = [], edge = [], idx = [];
+  let base = 0;
+  for (const g of list) {
+    const n = g.attributes.position.count;
+    pos.push(...g.attributes.position.array); nor.push(...g.attributes.normal.array); uv.push(...g.attributes.uv.array); edge.push(...g.attributes.aEdge.array);
+    for (const i of g.index.array) idx.push(i + base);
+    base += n;
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  out.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  out.setAttribute('aEdge', new THREE.Float32BufferAttribute(edge, 1));
+  out.setIndex(idx);
+  return out;
+}
+
+// A tube along a path of points with radii (locs, twists, ponytails).
+function tube(path, radii, sides, uvScale = 20, edgeTaper = true) {
+  const pos = [], uv = [], edge = [], idx = [];
+  let arc = 0;
+  for (let i = 0; i < path.length; i++) {
+    const p = path[i];
+    const nx = path[Math.min(path.length - 1, i + 1)], pv = path[Math.max(0, i - 1)];
+    const t = new THREE.Vector3(nx[0] - pv[0], nx[1] - pv[1], nx[2] - pv[2]).normalize();
+    const a = Math.abs(t.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+    const u = new THREE.Vector3().crossVectors(t, a).normalize(), v = new THREE.Vector3().crossVectors(t, u);
+    if (i) arc += Math.hypot(p[0] - path[i - 1][0], p[1] - path[i - 1][1], p[2] - path[i - 1][2]);
+    for (let s = 0; s <= sides; s++) {
+      const an = (s / sides) * TAU;
+      const r = radii[i];
+      pos.push(p[0] + (u.x * Math.cos(an) + v.x * Math.sin(an)) * r, p[1] + (u.y * Math.cos(an) + v.y * Math.sin(an)) * r, p[2] + (u.z * Math.cos(an) + v.z * Math.sin(an)) * r);
+      uv.push(s / sides, arc * uvScale);
+      edge.push(edgeTaper ? Math.min(1, (1 - i / (path.length - 1)) * 3) : 1);
+    }
+  }
+  for (let i = 0; i < path.length - 1; i++) for (let s = 0; s < sides; s++) {
+    const a = i * (sides + 1) + s, b = a + sides + 1;
+    idx.push(a, a + 1, b, b, a + 1, b + 1);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setAttribute('aEdge', new THREE.Float32BufferAttribute(edge, 1));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+function ellipsoid(c, r, segs = 14) {
+  const g = new THREE.SphereGeometry(1, segs, Math.round(segs * 0.7));
+  g.scale(r[0], r[1], r[2]); g.translate(c[0], c[1], c[2]);
+  g.setAttribute('aEdge', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count).fill(1), 1));
+  const uv = g.attributes.uv.array; for (let i = 0; i < uv.length; i += 2) { uv[i] *= 5; uv[i + 1] *= 3; }
+  return g;
+}
+
+function extraGeometry(M, cut, H) {
+  const hc = H.hc;
+  const parts = [];
+  const at = (th, ph, out) => { const d = dirOf(th, ph), rr = H.radius(th, ph) + out; return [hc[0] + d[0] * rr, hc[1] + d[1] * rr, hc[2] + d[2] * rr]; };
+  if (cut.extra === 'bun') {
+    // A knot at the back of the head, just above the widest point, with a band round its base.
+    parts.push(ellipsoid(at(Math.PI, 1.02, 0.03), [0.034, 0.03, 0.028], 16));
+    parts.push(ellipsoid(at(Math.PI, 1.08, 0.011), [0.019, 0.016, 0.012], 10));
+  }
+  if (cut.extra === 'ponytail') {
+    const start = at(Math.PI, 1.3, 0.008);
+    const path = [], radii = [];
+    for (let i = 0; i <= 12; i++) {
+      const s = i / 12;
+      path.push([start[0] + Math.sin(s * 3) * 0.004, start[1] - s * 0.2, start[2] - 0.012 - s * 0.028 + s * s * 0.02]);
+      radii.push(0.018 * (1 - s * 0.55) + 0.002);
+    }
+    parts.push(tube(path, radii, 10, 14));
+  }
+  if (cut.extra === 'locs') {
+    // Locs: from points spread over the scalp, lying along the head and then hanging down.
+    const rnd = (() => { let s = 1234567; return () => { s = (s * 16807) % 2147483647; return s / 2147483647; }; })();
+    const golden = Math.PI * (3 - Math.sqrt(5));
+    const N = 420;
+    for (let i = 0; i < N; i++) {
+      const yv = 1 - (i / (N - 1)) * 2;
+      const th = ((i * golden) % TAU) - Math.PI;
+      const ph = Math.acos(yv);
+      if (ph > edgePhi(H, cut, th) - 0.08) continue;
+      // Pulled back off the face: no locs growing from the front of the scalp.
+      if (Math.cos(th) > 0.45 && ph > 0.45) continue;
+      const len = 0.09 + rnd() * 0.07 + ss(0.6, 1.5, ph) * 0.03;
+      const path = [], radii = [];
+      let cph = ph;
+      const n = 10;
+      let p = at(th, cph, 0.008);
+      for (let k = 0; k <= n; k++) {
+        path.push(p.slice());
+        radii.push(0.0042 * (1 - (k / n) * 0.2));
+        // Down the curve of the head while on it, then straight down.
+        const nextPh = Math.min(PHI_MAX - 0.05, cph + (len / n) / H.radius(th, cph));
+        const onHead = at(th, nextPh, 0.008);
+        if (onHead[1] < p[1] - 0.0005 && nextPh < 1.9) { p = onHead; cph = nextPh; }
+        else {
+          const rel = [p[0] - hc[0], p[2] - hc[2]];
+          const hd = Math.max(1e-4, Math.hypot(...rel));
+          p = [p[0] + (rel[0] / hd) * 0.0015, p[1] - len / n, p[2] + (rel[1] / hd) * 0.0015];
+        }
+      }
+      parts.push(tube(path, radii, 5, 30, true));
+    }
+  }
+  return parts.length ? mergeGeos(parts) : null;
+}
+
+// ---------- Scalp painting ----------
+// Coverage map over (theta, phi) for the skin shader: how much hair shows on the scalp skin, so
+// fades, buzz cuts and hairlines read correctly and nothing pale shows through under the shell.
+const scalpCache = new Map();
+function scalpTexture(M, cutKey) {
+  const key = cutKey;
+  if (scalpCache.has(key)) return scalpCache.get(key);
+  const cut = CUTS[cutKey] || CUTS.crop;
+  const H = headMaps(M);
+  const W = 256, Ht = 128;
+  const data = new Uint8Array(W * Ht * 4);
+  for (let x = 0; x < W; x++) {
+    const th = -Math.PI + ((x + 0.5) / W) * TAU;
+    const r = R(th, 1.2);
+    const edge = cut.hang ? lerp(edgePhi(H, cut, th), H.phiAtY(th, H.L.eyeY - 0.07), ss(0.85, 1.45, Math.abs(th))) : edgePhi(H, cut, th);
+    for (let y = 0; y < Ht; y++) {
+      const ph = ((y + 0.5) / Ht) * PHI_MAX;
+      // Distance below the hairline in metres (negative inside the hair).
+      const below = (ph - edge) * 0.1;
+      let c = (1 - ss(-0.002, 0.004, below)) * cut.scalp;
+      if (cut.fade) {
+        // Skin fade: the sides and back go from hair to skin towards the ears and nape.
+        const low = ss(1.05, 1.55, ph) * (1 - r.f);
+        c *= 1 - 0.85 * low;
+      }
+      if (cut.strip) c *= lerp(0.35, 1, 1 - ss(0.1, 0.35, Math.abs(Math.sin(th)) * Math.sin(ph)));
+      if (cut.rows) {
+        // Cornrows: lines running front to back with scalp showing between them.
+        const lane = Math.abs(Math.sin(th * 7.5));
+        c *= lerp(0.25, 1, 1 - ss(0.65, 0.95, lane));
+      }
+      const i = (y * W + x) * 4;
+      data[i] = data[i + 1] = data[i + 2] = Math.round(Math.min(1, Math.max(0, c)) * 255);
+      data[i + 3] = 255;
+    }
+  }
+  const t = new THREE.DataTexture(data, W, Ht, THREE.RGBAFormat);
+  t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.ClampToEdgeWrapping;
+  t.magFilter = t.minFilter = THREE.LinearFilter;
+  t.needsUpdate = true;
+  scalpCache.set(key, t);
+  return t;
+}
+
+// Strand textures: straight, coily and braided.
+const strandCache = new Map();
+function strandTexture(kind = 'straight') {
+  if (strandCache.has(kind)) return strandCache.get(kind);
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#cfcfcf'; g.fillRect(0, 0, 256, 256);
+  let s = 99;
+  const rnd = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+  if (kind === 'coily') {
+    for (let i = 0; i < 1500; i++) {
+      const x = rnd() * 256, y = rnd() * 256, r = 2 + rnd() * 4;
+      g.strokeStyle = rnd() < 0.55 ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.32)';
+      g.lineWidth = 1.2;
+      g.beginPath(); g.arc(x, y, r, rnd() * TAU, rnd() * TAU + 3.5); g.stroke();
+    }
+  } else if (kind === 'braid') {
+    for (let y = 0; y < 256; y += 16) for (let x = 0; x < 256; x += 32) {
+      g.fillStyle = 'rgba(0,0,0,0.35)';
+      g.beginPath(); g.ellipse(x + 8, y + 8, 10, 6, 0.6, 0, TAU); g.fill();
+      g.beginPath(); g.ellipse(x + 24, y + 16, 10, 6, -0.6, 0, TAU); g.fill();
+    }
+  } else {
+    for (let i = 0; i < 3200; i++) {
+      const x = rnd() * 256, y = rnd() * 256, l = 8 + rnd() * 22;
+      g.strokeStyle = rnd() < 0.6 ? 'rgba(0,0,0,0.32)' : 'rgba(255,255,255,0.34)';
+      g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + (rnd() - 0.5) * 2.5, y + l); g.stroke();
+    }
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  strandCache.set(kind, t);
+  return t;
+}
+
+__M["src/match/render/hair.js"] = { SCALP_PHI_MAX, CUTS, warmHair, hairGeometry, scalpTexture, strandTexture };
+})();
+
 /* ---- src/match/render/playerModel.js ---- */
 ;(function(){
 const THREE = window.THREE;
+const { buildFaceRig } = __M["src/match/render/face.js"];
+const { warmHair } = __M["src/match/render/hair.js"];
 // Loads the Blender-built footballer model (assets/models/player.json + player.bin, made by
 // tools/blender/build_player.py): one skinned body with kit, boots and eyes, face masks, face and
 // build morphs, and head-rigid hairstyles. Falls back to the procedural players if unavailable.
+
+
 
 
 
@@ -59971,6 +61072,9 @@ function loadPlayerModel() {
     const normalMap = await new THREE.TextureLoader().loadAsync('assets/models/player_normal.jpg').catch(() => null);
     if (normalMap) { normalMap.colorSpace = THREE.NoColorSpace; normalMap.anisotropy = 4; }
     MODEL = { meta, geometry: g, bones, hair, normalMap, fan, fans, morphIndex: Object.fromEntries(meta.morphs.map((k, i) => [k, i])), groups: Object.fromEntries(meta.groups.map((k, i) => [k, i])) };
+    // Landmarks and extra face-shape morphs for likenesses (face.js).
+    buildFaceRig(MODEL);
+    warmHair(MODEL);
     return MODEL;
   })().catch((e) => {
     console.warn('Player model unavailable, using procedural players:', e);
@@ -59982,6 +61086,102 @@ function loadPlayerModel() {
 __M["src/match/render/playerModel.js"] = { playerModel, SLEEVE_ROWS, shirtCoverage, loadPlayerModel };
 })();
 
+/* ---- src/match/render/beard.js ---- */
+;(function(){
+const THREE = window.THREE;
+// Facial hair styles, painted into a coverage texture wrapped round the lower face: theta is the
+// angle round a vertical axis through the head (0 = the chin, +PI/2 = the player's left), and the
+// texture runs from under the chin up to the eyes. The skin shader turns coverage into stubble or
+// beard in the player's beard colour. Shapes come from the face landmarks (see face.js).
+
+
+
+const BEARDS = ['none', 'light', 'stubble', 'short', 'full', 'goatee', 'chin', 'moustache', 'chinstrap', 'anchor'];
+
+// Coverage (0..1) per region for each style; density makes the hairs sparser (stubble).
+const STYLE = {
+  none: null,
+  light: { full: 1, density: 0.32 },
+  stubble: { full: 1, density: 0.58 },
+  short: { full: 1, density: 0.9, cheekHigh: 0.004 },
+  full: { full: 1, density: 1, cheekHigh: 0.009, neckLow: 0.012 },
+  goatee: { moustache: 1, chin: 1, sides: 1, density: 0.88 },
+  chin: { chin: 1, density: 0.82, chinOnly: true },
+  moustache: { moustache: 1, density: 0.9 },
+  chinstrap: { strap: 1, chin: 1, density: 0.85 },
+  anchor: { moustache: 1, chin: 1, density: 0.85, narrow: true },
+};
+
+function beardBox(L) {
+  return { y0: L.chin[1] - 0.075, y1: L.eyeY + 0.006, cz: L.hc[2] + 0.004 };
+}
+
+const cache = new Map();
+function beardTexture(L, style) {
+  const st = STYLE[style] || null;
+  const key = style;
+  if (cache.has(key)) return cache.get(key);
+  const W = 256, Ht = 256;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = Ht;
+  const g = c.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0, 0, W, Ht);
+  const box = beardBox(L);
+  // (theta, y) -> canvas pixels.
+  const X = (th) => ((th + Math.PI) / (Math.PI * 2)) * W;
+  const Y = (y) => (1 - (y - box.y0) / (box.y1 - box.y0)) * Ht;
+  const my = L.mouth[1], cy = L.chin[1], ny = L.nose[1], ey = L.eyeY;
+  const poly = (pts) => { g.beginPath(); pts.forEach(([t, y], i) => (i ? g.lineTo(X(t), Y(y)) : g.moveTo(X(t), Y(y)))); g.closePath(); g.fill(); };
+  const mirror = (pts) => pts.concat(pts.slice().reverse().map(([t, y]) => [-t, y]));
+  if (st) {
+    g.filter = 'blur(3.6px)';
+    g.fillStyle = '#fff';
+    const ch = st.cheekHigh || 0;
+    if (st.full) {
+      // One outline: sideburns, the cheek line, over the upper lip, and back under the jaw to the
+      // neckline.
+      const nl = st.neckLow || 0;
+      const upperL = [[-1.52, ey - 0.014], [-1.36, ey - 0.042 + ch], [-1.08, my + 0.02 + ch], [-0.64, my + 0.011 + ch * 0.6], [-0.3, my + 0.014], [0, my + 0.016]];
+      const upperR = upperL.slice(0, -1).reverse().map(([t, y]) => [-t, y]);
+      const lowerR = [[1.55, cy + 0.018], [1.2, cy - 0.01], [0.75, cy - 0.03 - nl], [0, cy - 0.04 - nl]];
+      const lowerL = lowerR.slice(0, -1).reverse().map(([t, y]) => [-t, y]);
+      poly([...upperL, ...upperR, ...lowerR, ...lowerL]);
+    }
+    if (st.moustache) poly(mirror([[-0.5, my + 0.002], [-0.42, my + 0.011], [-0.18, ny - 0.01], [0, ny - 0.009]]));
+    if (st.chin) {
+      const w = st.narrow ? 0.32 : st.chinOnly ? 0.28 : 0.45;
+      poly(mirror([[-w, my - 0.006], [-w * 0.95, cy + 0.006], [-w * 0.6, cy - 0.016], [0, cy - 0.022]]));
+    }
+    if (st.sides) {
+      // Moustache joined to the chin round the mouth.
+      for (const sgn of [-1, 1]) poly([[sgn * 0.42, my + 0.008], [sgn * 0.52, my + 0.004], [sgn * 0.5, my - 0.012], [sgn * 0.4, my - 0.01]]);
+    }
+    if (st.strap) {
+      g.lineWidth = 9; g.strokeStyle = '#fff'; g.lineJoin = 'round';
+      g.beginPath();
+      [[-1.5, ey - 0.015], [-1.42, my + 0.005], [-1.2, cy + 0.01], [-0.6, cy - 0.012], [0, cy - 0.018], [0.6, cy - 0.012], [1.2, cy + 0.01], [1.42, my + 0.005], [1.5, ey - 0.015]].forEach(([t, y], i) => (i ? g.lineTo(X(t), Y(y)) : g.moveTo(X(t), Y(y))));
+      g.stroke();
+    }
+    // Keep the lips clear.
+    g.filter = 'blur(1.5px)';
+    g.globalCompositeOperation = 'destination-out';
+    g.beginPath(); g.ellipse(X(0), Y(my - 0.001), X(0.4) - X(0), Y(my - 0.008) - Y(my), 0, 0, Math.PI * 2); g.fill();
+    g.globalCompositeOperation = 'source-over';
+    g.filter = 'none';
+    // Density: sparse stubble keeps only some hairs (the shader adds per-hair grain too).
+    const img = g.getImageData(0, 0, W, Ht);
+    for (let i = 0; i < img.data.length; i += 4) img.data[i] = img.data[i + 1] = img.data[i + 2] = Math.round(img.data[i] * st.density);
+    g.putImageData(img, 0, 0);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.ClampToEdgeWrapping;
+  cache.set(key, t);
+  return t;
+}
+
+__M["src/match/render/beard.js"] = { BEARDS, beardBox, beardTexture };
+})();
+
 /* ---- src/match/render/athlete.js ---- */
 ;(function(){
 const THREE = window.THREE;
@@ -59989,9 +61189,15 @@ const { textOn, shade, clamp } = __M["src/core/util.js"];
 const { badgeImage, drawBadge, loadImage } = __M["src/data/crests.js"];
 const { shirtSponsor, kitMaker } = __M["src/data/sponsors.js"];
 const { playerModel } = __M["src/match/render/playerModel.js"];
+const { hairGeometry, scalpTexture, strandTexture, CUTS, SCALP_PHI_MAX } = __M["src/match/render/hair.js"];
+const { beardTexture, beardBox } = __M["src/match/render/beard.js"];
+const { FACE_PRESETS } = __M["src/match/render/face.js"];
 const { SKIN } = __M["src/data/names.js"];
 // Realistic procedural footballer: a single skinned mesh with a skeleton, anatomical proportions,
 // smooth joint weighting, a detailed head and kit textures (crest, sponsor, name and number).
+
+
+
 
 
 
@@ -60740,7 +61946,7 @@ const hashStr = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i
 // The data stores each real player's skin tone as an index 0 (very fair) .. 6 (deep). These are
 // natural skin colours for those indices (the data swatches are emoji-like); everything that
 // shows skin (face, neck, arms, hands, legs) uses the same tone.
-const REAL_SKIN = ['#eccab4', '#ddb093', '#c99671', '#b07a52', '#8f5e3c', '#6c4329', '#4c2d1c'];
+const REAL_SKIN = ['#efc4ac', '#e0ac8e', '#c99778', '#a97858', '#8d5e41', '#714830', '#553423'];
 function modelTone(hex) {
   const idx = SKIN.indexOf(hex);
   if (idx >= 0) return new THREE.Color(REAL_SKIN[idx]);
@@ -60751,34 +61957,169 @@ function modelTone(hex) {
   return c;
 }
 
+// Tattoo sleeves: ink patterns unrolled round the arm (u round it, v from shoulder to wrist).
+let inkTex = null;
+function inkTexture() {
+  if (inkTex) return inkTex;
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 512;
+  const g = c.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0, 0, 256, 512);
+  let sd = 7;
+  const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+  g.strokeStyle = '#fff'; g.fillStyle = '#fff'; g.lineCap = 'round';
+  // Roses and rings, script, swirls and shading, denser down the outside of the arm.
+  for (let i = 0; i < 230; i++) {
+    const x = rnd() * 256, y = 30 + rnd() * 470, r = 6 + rnd() * 18;
+    const k = rnd();
+    g.globalAlpha = 0.55 + rnd() * 0.45;
+    g.lineWidth = 1.5 + rnd() * 2.5;
+    if (k < 0.35) { for (let j = 0; j < 4; j++) { g.beginPath(); g.arc(x, y, r * (1 - j * 0.22), rnd() * 6, rnd() * 6 + 4); g.stroke(); } }
+    else if (k < 0.55) { g.beginPath(); g.moveTo(x - r * 2, y); for (let j = 0; j < 8; j++) g.lineTo(x - r * 2 + j * r * 0.55, y + (j % 2 ? -4 : 3)); g.stroke(); }
+    else if (k < 0.8) { g.beginPath(); g.moveTo(x, y); g.bezierCurveTo(x + r * 2, y - r, x - r, y + r * 2, x + r * 1.5, y + r * 2.5); g.stroke(); }
+    else { g.globalAlpha = 0.3 + rnd() * 0.35; g.beginPath(); g.ellipse(x, y, r * 1.6, r * 1.1, rnd() * 3, 0, 7); g.fill(); }
+  }
+  g.globalAlpha = 1;
+  inkTex = new THREE.CanvasTexture(c);
+  inkTex.wrapS = THREE.RepeatWrapping;
+  return inkTex;
+}
+
 const modelSkinCache = new Map();
-function modelSkinMat(skin, hair, beard, scalp, normalMap = null) {
-  const k = `${skin}|${hair}|${beard.toFixed(2)}|${scalp.toFixed(2)}`;
+// Skin for the whole body. On the head: lips and brows from the Blender masks, and the haircut's
+// scalp coverage and the beard style from textures projected round the head (see hair.js and
+// beard.js), drawn as fine hairs in the hair and beard colours. Fair skin gets a little colour in
+// the cheeks, nose and ears, and all skin a touch of warmth so it doesn't go grey under the lights.
+function modelSkinMat(skin, hair, beardCol, cut, beard, M, ink = '') {
+  const k = `${skin}|${hair}|${beardCol}|${cut}|${beard}|${ink}`;
   if (modelSkinCache.has(k)) return modelSkinCache.get(k);
   const tone = modelTone(skin);
+  const L = M.landmarks;
+  const bb = beardBox(L);
+  const fair = ss(0.35, 0.75, tone.getHSL({}).l);
   const u = {
-    uSkin: { value: tone }, uHair: { value: new THREE.Color(hair) }, uBeard: { value: beard }, uScalp: { value: scalp },
+    uSkin: { value: tone }, uHair: { value: new THREE.Color(hair) }, uBeardCol: { value: new THREE.Color(beardCol) },
     uLip: { value: tone.clone().lerp(new THREE.Color('#a4504a'), 0.42).multiplyScalar(0.82) },
+    uScalpTex: { value: scalpTexture(M, cut) }, uBeardTex: { value: beardTexture(L, beard) },
+    uHC: { value: new THREE.Vector3(...L.hc) }, uBox: { value: new THREE.Vector4(bb.y0, bb.y1, bb.cz, SCALP_PHI_MAX) },
+    uNose: { value: new THREE.Vector3(...L.nose) }, uEyeY: { value: L.eyeY }, uEarX: { value: L.earX }, uFair: { value: Math.max(0, fair) },
+    // Arm joints (left side; the right is mirrored) and which arms are tattooed.
+    uInkTex: { value: inkTexture() }, uInk: { value: new THREE.Vector2(ink.includes('L') ? 1 : 0, ink.includes('R') ? 1 : 0) },
+    uSh: { value: new THREE.Vector3(...M.meta.bones.find((b) => b.name === 'shL').head) }, uEl: { value: new THREE.Vector3(...M.meta.bones.find((b) => b.name === 'elL').head) }, uWr: { value: new THREE.Vector3(...M.meta.bones.find((b) => b.name === 'handL').head) },
   };
-  const m = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.58, sheen: 0.1, sheenRoughness: 0.5, sheenColor: new THREE.Color(1, 0.7, 0.6), normalMap, normalScale: new THREE.Vector2(0.85, 0.85), envMapIntensity: 0.55 });
+  const m = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.56, sheen: 0.12, sheenRoughness: 0.5, sheenColor: new THREE.Color(1, 0.62, 0.5), normalMap: M.normalMap, normalScale: new THREE.Vector2(0.85, 0.85), envMapIntensity: 0.55 });
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, u);
     sh.vertexShader = 'attribute vec4 aMask; attribute vec4 aMask2; varying vec4 vMask; varying vec4 vMask2; varying vec3 vObj;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vMask = aMask; vMask2 = aMask2; vObj = position;');
-    sh.fragmentShader = `uniform vec3 uSkin; uniform vec3 uHair; uniform vec3 uLip; uniform float uBeard; uniform float uScalp; varying vec4 vMask; varying vec4 vMask2; varying vec3 vObj;
+    sh.fragmentShader = `uniform vec3 uSkin; uniform vec3 uHair; uniform vec3 uBeardCol; uniform vec3 uLip; uniform sampler2D uScalpTex; uniform sampler2D uBeardTex;
+      uniform vec3 uHC; uniform vec4 uBox; uniform vec3 uNose; uniform float uEyeY; uniform float uEarX; uniform float uFair;
+      uniform sampler2D uInkTex; uniform vec2 uInk; uniform vec3 uSh; uniform vec3 uEl; uniform vec3 uWr;
+      varying vec4 vMask; varying vec4 vMask2; varying vec3 vObj;
       float sHash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 ` + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
       float grain = sHash(floor(vObj * 900.0));
       vec3 c = uSkin * (0.97 + grain * 0.05);
+      // Natural colour: cheeks, nose tip and ears a little rosier on fair skin.
+      float rosy = (1.0 - smoothstep(0.012, 0.03, length((vObj - vec3(0.044 * sign(vObj.x), uEyeY - 0.032, uNose.z - 0.035)) * vec3(1.0, 1.3, 0.7))));
+      rosy = max(rosy, 1.0 - smoothstep(0.004, 0.016, length(vObj - uNose + vec3(0.0, 0.004, 0.004))));
+      rosy = max(rosy, smoothstep(uEarX - 0.025, uEarX - 0.008, abs(vObj.x)) * step(uEyeY - 0.07, vObj.y) * step(vObj.y, uEyeY + 0.03));
+      c = mix(c, c * vec3(1.06, 0.84, 0.82), rosy * uFair * 0.55);
       c = mix(c, uLip, vMask.r * 0.78);
-      float stub = clamp(vMask.b * uBeard * (0.75 + grain * 0.5), 0.0, 0.94);
-      c = mix(c, uHair * 0.9, stub);
-      c = mix(c, uHair * 0.8, vMask.g * 0.9);
-      c = mix(c, uHair, clamp(vMask.a * uScalp * (0.85 + grain * 0.3), 0.0, 1.0));
-      diffuseColor.rgb = c * mix(1.0, pow(vMask2.r, 0.7), 0.35);`);
+      // Brows: the denser middle of the mask only, broken up into hairs.
+      c = mix(c, uHair * 0.7, smoothstep(0.55, 0.96, vMask.g) * (0.55 + 0.45 * sHash(floor(vObj * 3600.0))));
+      // Scalp: coverage from the haircut, as fine stubble towards its edges.
+      vec3 rel = vObj - uHC;
+      float rl = max(length(rel), 1e-4);
+      float th = atan(rel.x, rel.z), ph = acos(clamp(rel.y / rl, -1.0, 1.0));
+      float hairGrain = sHash(floor(vObj * 2600.0));
+      float scalp = texture2D(uScalpTex, vec2((th + 3.14159265) / 6.2831853, ph / uBox.w)).r * step(1.45, vObj.y);
+      c = mix(c, uHair * 0.82, clamp(scalp * (0.55 + hairGrain * 0.6), 0.0, 1.0));
+      // Beard and stubble.
+      float bt = atan(vObj.x, vObj.z - uBox.z);
+      float bv = (vObj.y - uBox.x) / (uBox.y - uBox.x);
+      float beard = texture2D(uBeardTex, vec2((bt + 3.14159265) / 6.2831853, bv)).r * step(0.0, bv) * step(bv, 1.0) * step(0.0, rel.z + 0.06);
+      float fine = sHash(floor(vObj * 4200.0));
+      c = mix(c, c * 0.85, smoothstep(0.6, 1.0, beard) * 0.4);
+      c = mix(c, uBeardCol * (0.92 + fine * 0.22), clamp(beard * (0.66 + fine * 0.34), 0.0, 0.94));
+      // Tattoos: unroll the arm round its bones (upper arm then forearm) and ink the pattern.
+      float side = vObj.x > 0.0 ? uInk.x : uInk.y;
+      if (side > 0.0 && abs(vObj.x) > 0.16) {
+        vec3 p = vec3(abs(vObj.x), vObj.y, vObj.z);
+        vec3 a1 = uEl - uSh, a2 = uWr - uEl;
+        float t1 = clamp(dot(p - uSh, a1) / dot(a1, a1), 0.0, 1.0), t2 = clamp(dot(p - uEl, a2) / dot(a2, a2), 0.0, 1.0);
+        vec3 q1 = uSh + a1 * t1, q2 = uEl + a2 * t2;
+        bool upper = length(p - q1) < length(p - q2);
+        vec3 ax = normalize(upper ? a1 : a2), r = p - (upper ? q1 : q2);
+        vec3 ref = normalize(vec3(0.0, 0.0, 1.0) - ax * ax.z), sd = cross(ax, ref);
+        float ang = atan(dot(r, sd), dot(r, ref)) / 6.2831853;
+        float v = upper ? t1 * 0.5 : 0.5 + t2 * 0.5;
+        float ink = texture2D(uInkTex, vec2(ang, v)).r * smoothstep(0.08, 0.2, v) * (1.0 - smoothstep(0.96, 1.0, v));
+        c = mix(c, vec3(0.06, 0.07, 0.09) + c * 0.25, ink * 0.78 * side);
+      }
+      diffuseColor.rgb = c * mix(1.0, pow(vMask2.r, 0.7), 0.35);`)
+      .replace('#include <opaque_fragment>', `// Skin keeps its colour under bright floodlights (tone mapping greys it out otherwise).
+      float sl = dot(outgoingLight, vec3(0.299, 0.587, 0.114));
+      outgoingLight = mix(vec3(sl), outgoingLight, 1.0 + 0.22 * uFair);
+      // Light passing under fair skin warms its shadows.
+      outgoingLight += diffuseColor.rgb * vec3(0.11, 0.035, 0.02) * uFair * (1.0 - smoothstep(0.0, 0.45, sl));
+      #include <opaque_fragment>`);
   };
-  m.customProgramCacheKey = () => 'playerSkin';
+  m.customProgramCacheKey = () => 'playerSkin2';
   modelSkinCache.set(k, m);
   return m;
+}
+
+// Hair: strand texture to suit the cut, slicked styles glossier, optional dyed highlights.
+const hairMat2Cache = new Map();
+function hairMat2(color, cut, dye = null) {
+  const c = CUTS[cut] || {};
+  const tex = c.tex || 'straight';
+  const k = `${color}|${tex}|${!!c.gloss}|${dye}`;
+  if (hairMat2Cache.has(k)) return hairMat2Cache.get(k);
+  const base = new THREE.Color(color);
+  const t = strandTexture(tex);
+  const m = new THREE.MeshPhysicalMaterial({ color, map: t, bumpMap: t, bumpScale: tex === 'coily' ? 3.2 : 2.2, roughness: c.gloss ? 0.42 : 0.6, sheen: c.gloss ? 0.7 : 0.5, sheenRoughness: c.gloss ? 0.32 : 0.45, sheenColor: base.clone().lerp(new THREE.Color(1, 1, 1), 0.3) });
+  const u = { uDye: { value: new THREE.Color(dye || color) }, uDyeAmt: { value: dye ? 1 : 0 } };
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
+    sh.vertexShader = 'attribute float aEdge; varying float vEdge; varying vec3 vHP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vEdge = aEdge; vHP = position;');
+    sh.fragmentShader = 'uniform vec3 uDye; uniform float uDyeAmt; varying float vEdge; varying vec3 vHP;\nfloat hHash(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }\n' + sh.fragmentShader
+      .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
+      float fz = hHash(floor(vHP * 1400.0));
+      if (vEdge < 0.999 && fz > smoothstep(0.0, 0.85, vEdge) * 1.15) discard;`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+      float hv = hHash(floor(vHP * 900.0));
+      // Dyed: lighter on the top and the ends, darker roots.
+      diffuseColor.rgb = mix(diffuseColor.rgb, uDye * (0.85 + 0.3 * hv), uDyeAmt * smoothstep(0.35, 0.85, hHash(floor(vHP * 260.0)) * 0.5 + vEdge * 0.6));
+      diffuseColor.rgb *= mix(0.62, 1.0, smoothstep(0.0, 0.7, vEdge)) * (0.88 + 0.24 * hv);`);
+  };
+  m.customProgramCacheKey = () => 'playerHair2';
+  hairMat2Cache.set(k, m);
+  return m;
+}
+
+const ss = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+// Normalises a player's look: new fields (cut, beardStyle, eyes, faceType, face) or the older
+// ones (hairStyle, hairMesh, beard), with a little face variety for everyone.
+// How far each face morph can go before the mesh breaks up (nostrils, eyelids).
+const MORPH_RANGE = { noseW: [-1.1, 1.2], noseLen: [-0.6, 1.3], nose: [-0.8, 1.2], lids: [-0.3, 1.0], lips: [-1.2, 1.3], bridge: [-0.8, 1.4] };
+const LEGACY_CUT = { 0: 'crop', 1: 'buzz', 2: 'mid', 3: 'curly', 4: 'shaved', 5: 'curly' };
+function resolveLook(L, rnd) {
+  const lum = new THREE.Color(L.skin).getHSL({}).l;
+  const cut = CUTS[L.cut] ? L.cut : L.hairMesh === 'short' ? 'sidepart' : LEGACY_CUT[L.hairStyle ?? 0] || 'crop';
+  const beard = L.beardStyle || (L.beard ? 'short' : rnd() < 0.3 ? 'light' : 'none');
+  const hairCol = L.hair || '#2b1d12';
+  const beardCol = L.beardCol || (cut === 'bald' || cut === 'shaved' ? shade(hairCol, -0.05) : hairCol);
+  const eyes = L.eyes || (lum < 0.4 ? IRIS_DARK : IRIS_LIGHT)[Math.floor(rnd() * (lum < 0.4 ? IRIS_DARK.length : IRIS_LIGHT.length))];
+  const type = FACE_PRESETS[L.faceType] ? L.faceType : lum < 0.36 ? 'wAfr' : lum < 0.5 ? 'mixed' : lum < 0.62 ? 'latin' : 'sEur';
+  const face = { lids: 0.6, ...FACE_PRESETS[type] };
+  const own = L.face || {};
+  const jit = { jaw: 0.35, nose: 0.3, noseW: 0.25, bridge: 0.25, noseLen: 0.25, lips: 0.25, cheek: 0.3, long: 0.35, chinLen: 0.35, chinFwd: 0.3, brow: 0.35, browUp: 0.25, mouthW: 0.25, ears: 0.35, faceW: 0.2, lids: 0.15 };
+  const amp = L.face ? 0.35 : 1;
+  for (const [key, a] of Object.entries(jit)) if (own[key] === undefined) face[key] = (face[key] || 0) + (rnd() - 0.5) * 2 * a * amp;
+  Object.assign(face, own);
+  return { cut, beard, hairCol, beardCol, eyes, face, dye: L.dye || null };
 }
 
 // Goalkeeper gloves: latex palm, the keeper colour on the back with a darker wrist strap.
@@ -60801,20 +62142,25 @@ function gloveMat(color) {
 }
 
 const eyeCache = new Map();
-function eyeMat(iris) {
+function eyeMat(iris, L = null) {
   if (eyeCache.has(iris)) return eyeCache.get(iris);
-  const u = { uIris: { value: new THREE.Color(iris) } };
+  const u = { uIris: { value: new THREE.Color(iris) }, uEye: { value: new THREE.Vector4(L ? L.eyeL[0] : 0.0355, L ? L.eyeY : 1.7, L ? L.eyeZ : 0.095, L ? L.eyeRad : 0.012) } };
   // Wet look without mirror-sharp highlights (those overflow the half-float HDR buffer).
   const m = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.32, clearcoat: 0.8, clearcoatRoughness: 0.16 });
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, u);
-    sh.vertexShader = 'attribute vec4 aMask2; varying vec4 vMask2;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vMask2 = aMask2;');
-    sh.fragmentShader = 'uniform vec3 uIris; varying vec4 vMask2;\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
-      vec3 c = mix(vec3(0.58, 0.55, 0.51), uIris, vMask2.g);
+    sh.vertexShader = 'attribute vec4 aMask2; varying vec4 vMask2; varying vec3 vEP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vMask2 = aMask2; vEP = position;');
+    sh.fragmentShader = 'uniform vec3 uIris; uniform vec4 uEye; varying vec4 vMask2; varying vec3 vEP;\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+      // Off-white sclera, pinker towards the corners, shaded under the upper lid.
+      vec3 e = vEP - vec3(uEye.x * sign(vEP.x), uEye.y, uEye.z);
+      float corner = smoothstep(0.35, 0.85, abs(e.x) / uEye.w);
+      vec3 sclera = mix(vec3(0.37, 0.345, 0.32), vec3(0.42, 0.29, 0.27), corner * 0.6);
+      vec3 c = mix(sclera, uIris, vMask2.g);
       c *= 1.0 - vMask2.b * 0.93;
+      c *= mix(1.0, 0.45, smoothstep(0.05, 0.75, e.y / uEye.w));
       diffuseColor.rgb = c * mix(1.0, sqrt(vMask2.r), 0.7);`);
   };
-  m.customProgramCacheKey = () => 'playerEye';
+  m.customProgramCacheKey = () => 'playerEye2';
   eyeCache.set(iris, m);
   return m;
 }
@@ -61038,7 +62384,6 @@ function addFolds(mat, tex, amount) {
 
 const IRIS_DARK = ['#2a1a10', '#3b2414', '#24160d', '#40291a'];
 const IRIS_LIGHT = ['#3b2414', '#5a3a22', '#4a6a8a', '#3d5a78', '#5a6b3a', '#6b5a3a', '#2a1a10'];
-const HAIR_MODEL = { 0: 'short', 2: 'long', 3: 'afro', 5: 'curly' };
 
 function initModel(a, M, { kit, number, name, look, isGK, referee, club, height, captain }) {
   a.root = new THREE.Group();
@@ -61058,19 +62403,15 @@ function initModel(a, M, { kit, number, name, look, isGK, referee, club, height,
   const socks = new THREE.MeshStandardMaterial({ map: socksTex, roughness: 0.85 });
   const way = referee ? REF_BOOTS : BOOT_WAYS[hashStr(`${name}|${number}`) % BOOT_WAYS.length];
   const boots = bootMat(way);
-  const hairStyle = L.hairStyle ?? 0;
-  const meshStyle = L.hairMesh || (hairStyle === 0 ? (rnd() < 0.5 ? 'short' : 'crop') : HAIR_MODEL[hairStyle]);
-  const scalp = hairStyle === 4 ? 0 : hairStyle === 1 ? 0.9 : 0.85;
-  const beard = L.beard ? 0.88 : rnd() < 0.3 ? 0.22 : 0.06;
-  const skin = modelSkinMat(L.skin, L.hair, beard, scalp, M.normalMap);
-  const lum = new THREE.Color(L.skin).getHSL({}).l;
-  const iris = (lum < 0.4 ? IRIS_DARK : IRIS_LIGHT)[Math.floor(rnd() * (lum < 0.4 ? IRIS_DARK.length : IRIS_LIGHT.length))];
+  const lk = resolveLook(L, rnd);
+  const skin = modelSkinMat(L.skin, lk.hairCol, lk.beardCol, lk.cut, lk.beard, M, L.ink || '');
+  const iris = lk.eyes;
   const hands = isGK ? gloveMat(kit.gk) : skin;
   const forearm = isGK ? simple(kit.gk, 0.75) : skin;
   const G = M.groups;
   const mats = [];
   mats[G.skin] = skin; mats[G.shirt] = shirt; mats[G.shorts] = shorts; mats[G.socks] = socks;
-  mats[G.boots] = boots; mats[G.sole] = simple(way[2], 0.42, 0.05); mats[G.hands] = hands; mats[G.forearm] = forearm; mats[G.eyes] = eyeMat(iris);
+  mats[G.boots] = boots; mats[G.sole] = simple(way[2], 0.42, 0.05); mats[G.hands] = hands; mats[G.forearm] = forearm; mats[G.eyes] = eyeMat(iris, M.landmarks);
 
   const bones = {};
   const list = [];
@@ -61089,19 +62430,19 @@ function initModel(a, M, { kit, number, name, look, isGK, referee, club, height,
   a.mesh.castShadow = true;
   a.mesh.receiveShadow = false;
   a.mesh.frustumCulled = false;
-  // Face shape and build variation.
+  // Face shape (preset for the player's background, their own features, a little variety) and build.
   const inf = a.mesh.morphTargetInfluences;
   const mi = M.morphIndex;
-  const r = (lo, hi) => lo + rnd() * (hi - lo);
-  inf[mi.jaw] = r(-0.5, 1); inf[mi.nose] = r(-0.4, 1); inf[mi.brow] = r(0, 1); inf[mi.long] = r(-0.4, 0.8);
-  inf[mi.lips] = r(-0.3, 1) + (lum < 0.4 ? 0.3 : 0); inf[mi.cheek] = r(-0.4, 1);
+  for (const [key, v] of Object.entries(lk.face)) if (mi[key] !== undefined) inf[mi[key]] = clamp(v, ...(MORPH_RANGE[key] || [-1.5, 1.5]));
   inf[mi.bulk] = clamp(((L.build ?? 0.5) - 0.5) * 2.2, -0.8, 1);
+  if (mi.neck !== undefined) inf[mi.neck] = clamp((lk.face.neck ?? 0) + ((L.build ?? 0.5) - 0.5) * 0.8, -0.6, 1.2);
   // Hands: keepers wear padded gloves; fist / open-hand shapes are driven by the animation.
   if (mi.glove !== undefined && isGK) inf[mi.glove] = 1;
   a.mi = mi;
   a.root.add(a.mesh);
-  if (meshStyle && M.hair[meshStyle]) {
-    const hm = new THREE.Mesh(M.hair[meshStyle], hairMat(L.hair));
+  const hg = hairGeometry(M, lk.cut);
+  if (hg) {
+    const hm = new THREE.Mesh(hg, hairMat2(lk.hairCol, lk.cut, lk.dye));
     hm.castShadow = true;
     bones.head.add(hm);
     a.hair = hm;
@@ -62445,7 +63786,8 @@ const home = {
           tile('span-4 rows-1', 'art-rush', 'Rush', '5v5 · race to the ball · blue cards', () => app.go('rush'), null, '⚡'),
           tile('span-4 rows-1', 'art-practice', 'Practice Arena', 'You vs the keeper. Master finesse shots and chips.', () => app.go('practice'), null, '🎯'),
           tile('span-4 rows-1', 'art-ut', 'Cash Cups', 'Short knockout cups · win up to 335,000 coins', () => app.go('ut', { tab: 'play' }), 'New', '💰'),
-          tile('span-8 rows-1', 'art-copa', 'Copa do Brasil', copa ? `${copa.clubName} · ${copa.stageLabel}` : 'Flamengo, Palmeiras, Fluminense, Corinthians and 28 more · two-legged ties · prize money', () => app.go('copa'), 'New', '🇧🇷'),
+          tile('span-4 rows-1', 'art-vsattack', 'VS Attack', 'Your team against their defence only. Coins for every goal.', () => app.go('vsattack'), 'New', '⚔️'),
+          tile('span-4 rows-1', 'art-copa', 'Copa do Brasil', copa ? `${copa.clubName} · ${copa.stageLabel}` : 'Flamengo, Palmeiras, Fluminense, Corinthians and 28 more · two-legged ties · prize money', () => app.go('copa'), 'New', '🇧🇷'),
           tile('span-12 rows-1', 'art-settings', 'Settings & Controls', 'Difficulty, camera, accessibility (high contrast, pitch saturation), audio and the full controls list.', () => app.go('settings'), null, '⚙️'),
         ),
         el('div', { class: 'section-title' }, el('h2', {}, 'This Season')),
@@ -62457,6 +63799,7 @@ const home = {
           el('div', { class: 'item' }, el('b', {}, 'Chemistry 3/6/9'), el('span', {}, 'Team chemistry tops out at 33. Each player earns up to 3 points from club, league and nation links.')),
           el('div', { class: 'item' }, el('b', {}, 'International Cup'), el('span', {}, 'Lead any of 100 nations through 12 groups and a Round of 32 knockout bracket.')),
           el('div', { class: 'item' }, el('b', {}, 'Copa do Brasil'), el('span', {}, 'All 20 Brasileirão Série A clubs and 12 from Série B. Fresh draws every round, two-legged ties on aggregate and prize money for every round you win.')),
+          el('div', { class: 'item' }, el('b', {}, 'VS Attack'), el('span', {}, 'Take on a keeper and back line with your whole team, attack after attack against the clock. Every goal pays coins, with bonuses for goals in a row and long-range strikes.')),
           el('div', { class: 'item' }, el('b', {}, 'Cash Cups'), el('span', {}, 'Three-match knockout cups in Ultimate Team, from Bronze to Legends. Coins for every round, a jackpot for the trophy and a bonus per goal.')),
         ),
       ),
@@ -64372,8 +65715,11 @@ class TeamAI {
       const ranked = players.filter((p) => !p.isGK && p.human < 0).map((p) => ({ p, t: len2(p.pos.x - c.pos.x, p.pos.z - c.pos.z) / p.sprintSpeed })).sort((a, b2) => a.t - b2.t);
       const press = this.pressIntensity();
       const hp = players.find((p) => p.human >= 0);
+      // VS Attack: the defence holds its line until the carrier reaches a zone near goal that
+      // grows with difficulty (30 m on Beginner, close to halfway on Ultimate).
+      const zone = m.vsAttack && !this.s.human ? -m.pitch.L / 2 + (30 + 4 * m.difficulty) * m.scale : Infinity;
       if (!hp) {
-        if (ranked[0] && ranked[0].t < 6) this.presser = ranked[0].p;
+        if (ranked[0] && ranked[0].t < 6 && this.rel(c.pos.x, c.pos.z).x < zone) this.presser = ranked[0].p;
         if (ranked[1] && (press > 0.85 || this.s.quick.teamPress) && ranked[1].t < 2.6) this.presser2 = ranked[1].p;
       } else {
         // With a user on this side, AI teammates support the press rather than lead it.
@@ -65627,6 +66973,9 @@ const PRESETS = {
   authentic: { passSpeed: 0.94, passErr: 1.08, shotErr: 1.06, accel: 0.95, turn: 0.92, stamina: 1.3, press: 0.85, name: 'Authentic' },
 };
 
+// VS Attack: the CPU side keeps only its keeper and these defenders.
+const VS_DEFENDERS = new Set(['CB', 'LB', 'RB', 'LWB', 'RWB']);
+
 const emptyStats = () => ({ poss: 0, shots: 0, onTarget: 0, passes: 0, passAtt: 0, tackles: 0, tacklesWon: 0, fouls: 0, yellow: 0, red: 0, corners: 0, offsides: 0, saves: 0, xg: 0, crosses: 0, interceptions: 0, freeKicks: 0 });
 
 class Match {
@@ -65635,6 +66984,9 @@ class Match {
     this.settings = cfg.settings;
     this.rush = !!cfg.rush;
     this.practice = !!cfg.practice;
+    // VS Attack: { minutes, perGoal, streakBonus, longBonus }. One real-time period of attacks on
+    // a defence-only side; each attack ends with a goal or when the defence gets the ball.
+    this.vsAttack = cfg.vsAttack || null;
     this.pitch = makePitch(this.rush);
     this.scale = this.pitch.L / 105;
     this.preset = PRESETS[cfg.preset || 'competitive'];
@@ -65644,7 +66996,7 @@ class Match {
     this.clock = 0;
     this.half = 1;
     this.halfLength = cfg.halfLength || 4;
-    this.clockRate = this.rush ? 1 : 45 / this.halfLength;
+    this.clockRate = this.rush || this.vsAttack ? 1 : 45 / this.halfLength;
     this.state = 'intro';
     this.stateT = 0;
     this.listeners = [];
@@ -65687,9 +67039,12 @@ class Match {
     this.addedTime = 0;
     this.halfEnd = 45 * 60;
     if (this.rush) this.halfEnd = (cfg.rushLength || 5) * 60;
+    if (this.vsAttack) this.halfEnd = (this.vsAttack.minutes || 3) * 60;
     if (this.practice) this.setupPractice();
+    else if (this.vsAttack) this.setupVsAttack();
     else this.setupKickoff(this.kickoffSide, true);
-    this.state = cfg.skipIntro || this.practice ? (this.practice ? 'play' : 'kickoff') : 'intro';
+    if (this.vsAttack) this.state = cfg.skipIntro ? 'attackReady' : 'intro';
+    else this.state = cfg.skipIntro || this.practice ? (this.practice ? 'play' : 'kickoff') : 'intro';
   }
 
   // ---------- Setup ----------
@@ -65833,6 +67188,78 @@ class Match {
     this.state = 'play';
   }
 
+  // ---------- VS Attack ----------
+  setupVsAttack() {
+    const def = this.sides[1];
+    for (const p of def.players) if (!p.isGK && !VS_DEFENDERS.has(p.role)) { p.sentOff = true; p.vsOut = true; p.pos.x = 200; p.pos.z = 0; }
+    def.bench = []; def.subsLeft = 0;
+    // A set defence: a deeper line that steps up to press harder the higher the difficulty.
+    def.tactics = { ...def.tactics, depth: 0.3, press: 0.25 + 0.08 * this.difficulty };
+    this.attackN = 0;
+    this.attackStreak = 0;
+    this.bestStreak = 0;
+    this.vsEarned = 0;
+    this.setupAttack();
+  }
+
+  // A new attack: your side in shape just inside the opposition half, a midfielder on the ball, the
+  // defence in its line. Play starts after a short pause.
+  setupAttack() {
+    const b = this.ball, att = this.sides[0], def = this.sides[1], P = this.pitch;
+    this.attackN++;
+    const sx = att.dir * 2;
+    b.place(sx, 0);
+    b.owner = null; b.held = false; b.inNet = false; b.lastTouch = null; b.lastKick = null;
+    b.vel.x = b.vel.y = b.vel.z = 0; b.spin.y = b.spin.t = 0;
+    this.pass = null; this.offside = null; this.shotWatch = null; this.pendingSetPiece = null; this.setpiece = null; this.lastPasser = null;
+    this.ballPath = [];
+    for (const s of this.sides) {
+      for (const p of s.players) {
+        if (!this.active(p)) continue;
+        p.setState('run');
+        p.y = 0; p.vel.x = p.vel.z = 0; p.speed = 0; p.running = null; p.plan = null; p.fooled = 0; p.celeb = null;
+        const w = s.ai.formationTarget(p, s === att);
+        p.pos.x = w.x; p.pos.z = w.z;
+        p.facing = s.dir > 0 ? 0 : Math.PI;
+        p.target = { ...p.pos };
+      }
+    }
+    // The defence starts at least 10 m goal-side of the ball.
+    for (const p of def.players) {
+      if (!this.active(p) || p.isGK) continue;
+      if (p.pos.x * att.dir < 12) p.pos.x = (12 + Math.random() * 4) * att.dir;
+    }
+    const mids = att.players.filter((p) => this.active(p) && !p.isGK && !VS_DEFENDERS.has(p.role));
+    const carrier = mids.sort((a, c) => len2(a.pos.x - sx, a.pos.z) - len2(c.pos.x - sx, c.pos.z))[0] || att.players.find((p) => !p.isGK);
+    carrier.pos.x = sx - att.dir * 0.6; carrier.pos.z = 0;
+    carrier.facing = att.dir > 0 ? 0 : Math.PI;
+    b.owner = carrier;
+    b.lastTouch = carrier;
+    this.possSide = 0;
+    for (const h of this.humans) if (!h.lock && h.side === 0) h.setPlayer(carrier);
+    this.state = 'attackReady';
+    this.stateT = 0;
+    this.emit('attackStart', { n: this.attackN });
+  }
+
+  // The defence has the ball (or a set piece of theirs is due): the attack is over.
+  endAttack(reason) {
+    if (this.state !== 'play' && this.state !== 'stoppage') return;
+    this.attackStreak = 0;
+    if (this.state === 'play') this.whistle('attackOver');
+    this.pendingSetPiece = { type: 'newattack', side: 0 };
+    this.emit('attackOver', { reason, n: this.attackN });
+  }
+
+  // Coins for a goal: the base for the difficulty, more for goals in a row and long-range strikes.
+  vsGoalCoins(g) {
+    const v = this.vsAttack;
+    let c = v.perGoal || 200;
+    if (this.attackStreak > 1) c += (v.streakBonus || 50) * (this.attackStreak - 1);
+    if (g.longRange) c += v.longBonus || 100;
+    return c;
+  }
+
   // ---------- Queries used by AI/actions ----------
   nearestOpponentDist(p) {
     let best = 99;
@@ -65912,7 +67339,7 @@ class Match {
       this.offside = set.size ? { side: p.side, players: set, t: this.time } : null;
     } else this.offside = null;
     if (info.shot) {
-      this.shotWatch = { id: ++this.shotId, side: p.side, shooter: p, t: this.time, handled: false, xg: info.xg, assist: this.assisted(p) };
+      this.shotWatch = { id: ++this.shotId, side: p.side, shooter: p, t: this.time, handled: false, xg: info.xg, assist: this.assisted(p), from: { x: b.pos.x, z: b.pos.z } };
     } else if (this.shotWatch && kind !== 'header') this.shotWatch = null;
   }
 
@@ -66133,11 +67560,14 @@ class Match {
   }
 
   queueSetPiece(type, side, pos, extra = {}) {
+    // VS Attack: anything given to the defence ends the attack instead.
+    if (this.vsAttack && side === 1) { this.endAttack(type === 'freekick' && extra.indirect && !extra.kickin ? 'offside' : type); return; }
     this.pendingSetPiece = { type, side, pos, ...extra };
   }
 
   // ---------- Set pieces ----------
   setupSetPiece(sp) {
+    if (sp.type === 'newattack') { this.setupAttack(); return; }
     const { type, side } = sp;
     const P = this.pitch;
     const S = this.scale;
@@ -66571,7 +68001,16 @@ class Match {
     for (const r of this.refs) if (r.card > 0) r.card -= dt;
     switch (this.state) {
       case 'intro':
-        if (this.stateT > 7 || this.anyPressed()) { this.state = 'kickoff'; this.stateT = 0; this.emit('kickoffReady', {}); }
+        if (this.stateT > 7 || this.anyPressed()) {
+          this.state = this.vsAttack ? 'attackReady' : 'kickoff'; this.stateT = 0;
+          if (this.vsAttack) this.emit('attackStart', { n: this.attackN });
+          this.emit('kickoffReady', {});
+        }
+        break;
+      case 'attackReady':
+        // Everyone holds their spot for a moment, then the whistle goes.
+        this.stepPlay(dt, true);
+        if (this.stateT > 1.1) { this.state = 'play'; this.stateT = 0; this.emit('whistle', { kind: 'kickoff' }); }
         break;
       case 'kickoff':
         this.state = 'setpiece';
@@ -66584,6 +68023,7 @@ class Match {
         break;
       case 'play':
         this.stepPlay(dt);
+        if (this.vsAttack && this.state === 'play' && this.ball.owner && this.ball.owner.side === 1) this.endAttack(this.ball.held ? 'held' : 'won');
         this.tickClock(dt, true);
         this.subT = (this.subT || 0) + dt;
         if (this.subT > 1) { this.subT = 0; this.cpuSubs(); }
@@ -66630,15 +68070,16 @@ class Match {
     if (this.goldenGoal) { this.endMatch(); return; }
     const g = this.goals[this.goals.length - 1];
     if (this.endPending) { this.endPending = false; this.endPeriod(); return; }
+    if (this.vsAttack) { this.setupAttack(); return; }
     this.setupKickoff(1 - g.side);
   }
 
   tickClock(dt, live) {
     if (this.practice) return;
-    if (this.rush && !live) return;
+    if ((this.rush || this.vsAttack) && !live) return;
     this.clock += dt * this.clockRate;
     const end = this.periodEnd();
-    if (!this.addedShown && !this.rush && this.clock >= end - 60 && this.half <= 2) {
+    if (!this.addedShown && !this.rush && !this.vsAttack && this.clock >= end - 60 && this.half <= 2) {
       this.addedShown = true;
       this.addedTime = 1 + Math.floor(Math.random() * (this.half === 1 ? 3 : 5));
       this.emit('addedTime', { minutes: this.addedTime });
@@ -66660,12 +68101,13 @@ class Match {
   }
 
   periodEnd() {
+    if (this.vsAttack) return this.halfEnd;
     if (this.rush) return this.goldenGoal ? this.halfEnd + 140 : this.halfEnd;
     return [0, 45, 90, 105, 120][this.half] * 60;
   }
 
   periodStart() {
-    if (this.rush) return 0;
+    if (this.rush || this.vsAttack) return 0;
     return [0, 0, 45, 90, 105][this.half] * 60;
   }
 
@@ -66679,6 +68121,7 @@ class Match {
     const [h, a] = this.aggScore();
     this.addedShown = false;
     this.addedTime = 0;
+    if (this.vsAttack) return this.endMatch();
     if (this.rush) {
       if (h === a && this.knockout && !this.goldenGoal) {
         this.goldenGoal = true;
@@ -67242,6 +68685,16 @@ class Match {
     this.stat(si, 'onTarget');
     if (scorer && !own && this.shotWatch && this.shotWatch.shooter === scorer) scorer.st.onTarget++;
     const g = { side: si, scorer, assist, own, clock: this.clock, half: this.half, score: [this.sides[0].score, this.sides[1].score], xg: this.shotWatch ? this.shotWatch.xg : null };
+    if (this.vsAttack && si === 0) {
+      // Long range: struck from outside the box.
+      const from = this.shotWatch && this.shotWatch.shooter === scorer ? this.shotWatch.from : null;
+      g.longRange = !!from && !own && !this.inBoxPt(from, 1);
+      this.attackStreak++;
+      this.bestStreak = Math.max(this.bestStreak, this.attackStreak);
+      g.streak = this.attackStreak;
+      g.coins = this.vsGoalCoins(g);
+      this.vsEarned += g.coins;
+    }
     this.goals.push(g);
     this.shotWatch = null;
     this.pass = null;
@@ -71310,7 +72763,7 @@ const { crest } = __M["src/ui/components.js"];
 
 
 function fmtClock(m) {
-  if (m.rush) {
+  if (m.rush || m.vsAttack) {
     const left = Math.max(0, (m.goldenGoal ? m.halfEnd + 140 : m.halfEnd) - m.clock);
     const mm = Math.floor(left / 60), ss = Math.floor(left % 60);
     return `${mm}:${String(ss).padStart(2, '0')}`;
@@ -71351,9 +72804,15 @@ class HUD {
       this.replayTag = el('div', { class: 'hud-replay' }, el('span', { class: 'rp-dot' }), 'REPLAY', el('small', {}, 'Press any button to skip')),
       this.pens = el('div', { class: 'hud-pens' }),
       this.btnBar = el('div', { class: 'hud-btnbar' }),
+      // VS Attack: coins earned so far, the attack number and the run of goals.
+      this.vsEl = match.vsAttack ? el('div', { class: 'hud-vs' },
+        el('div', { class: 'vs-coins' }, el('span', { class: 'ico' }), this.vsCoins = el('b', {}, '0')),
+        this.vsInfo = el('div', { class: 'vs-info' }, 'ATTACK 1')) : null,
+      this.coinPop = el('div', { class: 'hud-coinpop' }),
     );
     this.btnKey = '';
     if (match.rush) this.score.classList.add('rush');
+    if (match.vsAttack) this.score.classList.add('vsattack');
     container.appendChild(this.root);
     this.labelEls = [];
     this.bannerT = 0;
@@ -71380,7 +72839,7 @@ class HUD {
     };
     const s = m.sides;
     return el('div', { class: 'hud-intro' },
-      el('div', { class: 'in-top' }, el('span', {}, m.rush ? 'RUSH' : (m.cfg.competition || (m.knockout ? 'KNOCKOUT' : 'MATCHDAY'))), el('b', {}, s[0].team.stadium || 'Golazo Arena')),
+      el('div', { class: 'in-top' }, el('span', {}, m.rush ? 'RUSH' : m.vsAttack ? 'VS ATTACK' : (m.cfg.competition || (m.knockout ? 'KNOCKOUT' : 'MATCHDAY'))), el('b', {}, s[0].team.stadium || 'Golazo Arena')),
       el('div', { class: 'in-card' },
         el('div', { class: 'in-team', style: { '--tc': s[0].kit.primary } }, crest(s[0].team, 'big'), el('div', { class: 'in-name' }, s[0].team.name)),
         el('div', { class: 'in-vs' }, 'VS'),
@@ -71452,6 +72911,7 @@ class HUD {
       case 'goal': {
         if (ev.shootout || ev.practice) { this.showBanner('<b>GOAL!</b>', 'goal small', 1.6); break; }
         this.showGoal(ev);
+        if (ev.coins) this.showCoins(ev);
         this.score.classList.add('flash');
         setTimeout(() => this.score.classList.remove('flash'), 2400);
         break;
@@ -71499,7 +72959,26 @@ class HUD {
       case 'run':
         this.showSmall('RUN TRIGGERED', 0.9);
         break;
+      case 'attackStart':
+        this.vsInfo.textContent = `ATTACK ${ev.n}${m.attackStreak > 1 ? ` · ${m.attackStreak} IN A ROW` : ''}`;
+        this.showSmall(`ATTACK ${ev.n}`, 1.3);
+        break;
+      case 'attackOver': {
+        const why = { won: 'DEFENCE WINS IT', held: 'KEEPER HOLDS IT', offside: 'OFFSIDE', freekick: 'FOUL · ATTACK OVER', goalkick: 'GOAL KICK · ATTACK OVER', throwin: 'OUT OF PLAY', corner: 'OUT OF PLAY' };
+        this.showSmall(why[ev.reason] || 'ATTACK OVER', 1.5);
+        break;
+      }
     }
+  }
+
+  // "+250" rising over the coin counter, with what it was for.
+  showCoins(ev) {
+    this.vsCoins.textContent = this.m.vsEarned.toLocaleString('en-GB');
+    this.vsEl.classList.remove('bump'); void this.vsEl.offsetWidth; this.vsEl.classList.add('bump');
+    const extra = [ev.streak > 1 ? `${ev.streak} in a row` : '', ev.longRange ? 'long range' : ''].filter(Boolean).join(' · ');
+    this.coinPop.innerHTML = '';
+    this.coinPop.append(el('span', { class: 'ico' }), el('b', {}, `+${ev.coins.toLocaleString('en-GB')}`), extra ? el('small', {}, extra) : null);
+    this.coinPop.classList.remove('on'); void this.coinPop.offsetWidth; this.coinPop.classList.add('on');
   }
 
   renderPens(ev) {
@@ -71757,6 +73236,9 @@ function goalCall(len, energy) {
 
 const LINES = {
   kickoff: ["And we're underway here at {stadium}!", '{team} get us started — here we go!', "The whistle goes, and we are off!", "Big atmosphere at {stadium}, and we're up and running!"],
+  attackGo: ['{team} come forward again.', 'Attack number {n} for {team}.', 'Here come {team} once more, the back line drops off.', 'Another go for {team}. Can they break them down?'],
+  attackWon: ['Won back by the defence. That attack is over.', 'Good defending, and {team} have to start again.', 'Snuffed out by the back line.', 'The defence wins that one.'],
+  attackHeld: ['Gathered by the keeper. Back to halfway.', 'Safe hands from the keeper, and that attack is done.'],
   restart: ["{team} get it going again. {sh}-{sa}.", "Back underway — {team} need a response.", "And we go again. {home} {sh}, {away} {sa}."],
   secondLeg: ["The second leg is underway at {stadium}! {home} {ah}, {away} {aa} from the first leg — everything to play for!", "Here we go — ninety minutes to settle this tie, and it's {ah}-{aa} on aggregate!", "And we're off in the second leg! No extra time in this one — level on aggregate means penalties!"],
   secondHalf: ["Here we go again — the second half is underway!", "Back out they come, and we're off for the second half!", 'Forty-five minutes to decide it. Second half, go!'],
@@ -71937,7 +73419,10 @@ class Commentary {
     const team = (side) => m.sides[side].team.name;
     switch (ev.type) {
       case 'whistle':
-        if (ev.kind === 'kickoff') {
+        if (ev.kind === 'kickoff' && m.vsAttack) {
+          if (m.attackN === 1 && m.clock < 3) this.say('kickoff', { team: team(0) }, 1, 0.55);
+          else if (Math.random() < 0.5) this.say('attackGo', { team: team(0), n: m.attackN }, 0, 0.3);
+        } else if (ev.kind === 'kickoff') {
           const start = Math.abs(m.clock - m.periodStart()) < 5;
           if (m.half === 1 && start && m.agg) this.say('secondLeg', { team: team(m.kickoffSide), ah: m.agg[0], aa: m.agg[1] }, 1, 0.6);
           else if (m.half === 1 && start) this.say('kickoff', { team: team(m.kickoffSide) }, 1, 0.55);
@@ -71946,6 +73431,10 @@ class Commentary {
         }
         if (ev.kind === 'offside') this.say('offside', { player: ev.player.name }, 1, 0.25);
         if (ev.kind === 'foul') this.say('foul', { player: ev.player.name, victim: ev.victim.name }, 1, 0.3);
+        break;
+      case 'attackOver':
+        if (Math.random() < 0.6 && ev.reason === 'won') this.say('attackWon', { team: team(0) }, 0, 0.45);
+        else if (Math.random() < 0.6 && ev.reason === 'held') this.say('attackHeld', { team: team(0) }, 0, 0.45);
         break;
       case 'goal':
         if (ev.shootout) { this.say('penScored', {}, 2, 0.9); break; }
@@ -72198,6 +73687,7 @@ function buildMatchConfig(o) {
     rush: !!o.rush,
     rushLength: o.rushLength,
     practice: !!o.practice,
+    vsAttack: o.vsAttack || null,
     boosts: o.boosts,
     kickoffSide: o.kickoffSide,
     skipIntro: o.skipIntro,
@@ -72281,6 +73771,8 @@ function playMatch(cfgOpts, onEnd) {
   });
 
   function onMatchEvent(ev) {
+    // Modes can watch the match (VS Attack pays coins for each goal).
+    if (cfgOpts.onEvent) cfgOpts.onEvent(ev, match);
     const cam = view ? view.camera.position : { x: 0, z: 0 };
     switch (ev.type) {
       case 'kick': {
@@ -72289,11 +73781,12 @@ function playMatch(cfgOpts, onEnd) {
         break;
       }
       case 'whistle':
-        audio.whistle(ev.kind === 'end' ? (match.half === 2 && !match.knockout ? 'end' : 'long') : ev.kind === 'kickoff' ? 'short' : ev.kind === 'foul' || ev.kind === 'offside' ? 'double' : 'short');
+        audio.whistle(ev.kind === 'end' ? (match.half === 2 && !match.knockout ? 'end' : 'long') : ev.kind === 'kickoff' ? 'short' : ev.kind === 'foul' || ev.kind === 'offside' || ev.kind === 'attackOver' ? 'double' : 'short');
         break;
       case 'goal':
         if (!ev.practice) { audio.roar(ev.shootout ? 0.7 : 1, ev.shootout ? 2.5 : 5.5); audio.net(); }
         else audio.net();
+        if (ev.coins) setTimeout(() => audio.ui('coin'), 350);
         break;
       case 'save': audio.ooh(); break;
       case 'miss': if (ev.close) audio.ooh(); break;
@@ -72385,6 +73878,7 @@ function playMatch(cfgOpts, onEnd) {
     const rl = (side) => el('div', { class: 'ratings-list' }, ...sum.players.filter((p) => p.side === side).sort((a, b) => b.rating - a.rating).map((p) => el('div', { class: 'rt' }, el('span', {}, p.name + (p.goals ? ' ⚽'.repeat(p.goals) : '') + (p.assists ? ' 🅰' : '')), el('b', { class: 'r', style: { background: ratingColor(p.rating) } }, p.rating.toFixed(1)))));
     showOverlay('fulltime', el('div', {},
       scoreHero('Full Time'),
+      cfgOpts.fullTimeExtra ? cfgOpts.fullTimeExtra(match) : null,
       potm ? el('div', { class: 'potm' }, el('span', { class: 'pill acc' }, 'PLAYER OF THE MATCH'), el('b', {}, potm.name), el('span', { class: 'muted' }, `${match.sides[potm.side].team.name} · ${potm.rating.toFixed(1)}`)) : null,
       el('div', { class: 'grid2' },
         el('div', {}, el('h3', { style: { marginBottom: '10px' } }, 'Match Stats'), statsPanel()),
@@ -77295,6 +78789,131 @@ const practiceScreen = {
 __M["src/modes/practice.js"] = { practiceScreen };
 })();
 
+/* ---- src/modes/vsattack.js ---- */
+;(function(){
+const { el, fmtNum } = __M["src/core/util.js"];
+const { app } = __M["src/ui/app.js"];
+const { selector, crest, nationBadge, cardEl } = __M["src/ui/components.js"];
+const { LEAGUES } = __M["src/data/leagues.js"];
+const { NATIONS } = __M["src/data/nations.js"];
+const { buildClubTeam, buildNationTeam } = __M["src/data/teams.js"];
+const { DIFFICULTIES, FORMATIONS } = __M["src/data/meta.js"];
+const { load, save } = __M["src/core/storage.js"];
+const { launchMatch, defaultHumans } = __M["src/ui/matchscreen.js"];
+// VS Attack: your whole team against a side that only has its keeper and defenders (no midfielders,
+// strikers or wingers). Each attack ends with a goal or when the defence wins the ball, then you go
+// again from halfway until the clock runs out. Every goal pays coins.
+
+
+
+
+
+
+
+
+
+
+
+// Coins for each goal by difficulty, plus bonuses for goals in a row and from outside the box.
+const PER_GOAL = [100, 150, 200, 300, 400, 500, 650];
+const STREAK_BONUS = 50;
+const LONG_BONUS = 100;
+const DEFENCES = [['Back three', '3-4-3'], ['Back four', '4-4-2'], ['Back five', '5-3-2']];
+const LENGTHS = [2, 3, 5];
+const DEF_ROLES = new Set(['GK', 'CB', 'LB', 'RB', 'LWB', 'RWB']);
+
+// Position names for a team's starting XI, from its formation.
+const rolesOf = (team) => (FORMATIONS[team.formation] || []).map((s) => s[0]);
+
+const st = { mode: 'clubs', me: { lg: 0, c: 11, n: 1 }, opp: { lg: 1, c: 0, n: 0 }, len: 1, def: 1, diff: null };
+
+const vsAttackScreen = {
+  render(params = {}) {
+    const wrap = el('div', { class: 'screen' });
+    const body = el('div', { class: 'content' });
+    wrap.append(app.topbar('vsattack'), body);
+    if (st.diff === null) st.diff = app.settings.difficulty ?? 3;
+    const rec = load('vsattack', { best: null, runs: 0, total: 0 });
+    const team = (k, formation) => {
+      if (st.mode === 'nations') return buildNationTeam(NATIONS[st[k].n].id, formation ? { formation } : {});
+      const lg = LEAGUES[st[k].lg];
+      return buildClubTeam(lg.clubs[Math.min(st[k].c, lg.clubs.length - 1)].id, formation ? { formation } : {});
+    };
+    const render = () => {
+      body.innerHTML = '';
+      const mine = team('me');
+      const opp = team('opp', DEFENCES[st.def][1]);
+      const roles = rolesOf(opp);
+      const defenders = opp.lineup.filter((p, i) => DEF_ROLES.has(roles[i]));
+      const picker = (k, label) => {
+        const box = el('div', { class: 'team-pick' }, el('div', { class: 'side-label' }, label));
+        if (st.mode === 'clubs') {
+          box.append(
+            selector('League', LEAGUES.map((l) => l.name), st[k].lg, (i) => { st[k].lg = i; st[k].c = 0; render(); }),
+            selector('Club', LEAGUES[st[k].lg].clubs.map((c) => c.name), Math.min(st[k].c, LEAGUES[st[k].lg].clubs.length - 1), (i) => { st[k].c = i; render(); }),
+          );
+        } else box.append(selector('Nation', NATIONS.map((n) => n.name), st[k].n, (i) => { st[k].n = i; render(); }));
+        const t = k === 'me' ? mine : opp;
+        const shown = k === 'me' ? t.lineup : defenders;
+        box.append(t.kind === 'nation' ? nationBadge(t.id, 64) : crest(t, 'big'), el('div', { class: 'team-name' }, k === 'me' ? t.name : `${t.name} defence`),
+          el('div', { class: 'card-row', style: { justifyContent: 'center' } }, ...shown.map((p) => cardEl(p, { mini: true, focusable: false }))));
+        return box;
+      };
+      const perGoal = PER_GOAL[st.diff];
+      const res = params.result;
+      body.append(
+        el('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '12px', flexWrap: 'wrap', marginBottom: '6px' } },
+          el('div', {}, el('h1', {}, 'VS Attack'), el('p', { class: 'muted', style: { margin: '6px 0 0', maxWidth: '720px' } }, 'Your whole team against their keeper and defenders only: no midfielders, no strikers, no wingers. Break them down as many times as you can before the clock runs out. When they win the ball the attack is over and you go again from halfway.')),
+          el('div', { class: 'btn-row' },
+            el('button', { class: 'btn small ' + (st.mode === 'clubs' ? '' : 'ghost'), onclick: () => { st.mode = 'clubs'; render(); } }, 'Clubs'),
+            el('button', { class: 'btn small ' + (st.mode === 'nations' ? '' : 'ghost'), onclick: () => { st.mode = 'nations'; render(); } }, 'Nations')),
+        ),
+        res ? el('div', { class: 'vs-result' },
+          el('div', {}, el('div', { class: 'muted' }, res.quit ? 'Last run (left early)' : 'Last run'), el('div', { class: 'big' }, `+${fmtNum(res.coins)} coins`)),
+          el('div', {}, el('b', {}, `${res.goals} goal${res.goals === 1 ? '' : 's'} from ${res.attacks} attack${res.attacks === 1 ? '' : 's'}`), el('div', { class: 'muted' }, `Best run: ${res.best} in a row${res.record ? ' · new record!' : ''}`))) : null,
+        el('div', { class: 'vs-rules' },
+          el('div', { class: 'panel' }, el('b', {}, `+${fmtNum(perGoal)} coins`), el('span', {}, `for every goal on ${DIFFICULTIES[st.diff]}`)),
+          el('div', { class: 'panel' }, el('b', {}, `+${STREAK_BONUS} more`), el('span', {}, 'for each goal in a row (score on the next attack too)')),
+          el('div', { class: 'panel' }, el('b', {}, `+${LONG_BONUS} bonus`), el('span', {}, 'for a goal struck from outside the box')),
+          el('div', { class: 'panel' }, el('b', {}, rec.best ? `${fmtNum(rec.best.coins)} best` : 'No record yet'), el('span', {}, rec.best ? `${rec.best.goals} goals · ${fmtNum(rec.total)} coins won in ${rec.runs} run${rec.runs === 1 ? '' : 's'}` : 'Coins are paid the moment you score')),
+        ),
+        el('div', { class: 'versus' }, picker('me', 'Your Attack'), el('div', { class: 'vs-mid' }, 'VS'), picker('opp', 'Their Defence')),
+        el('div', { class: 'settings-grid', style: { marginTop: '16px' } },
+          selector('Difficulty', DIFFICULTIES, st.diff, (i) => { st.diff = i; render(); }),
+          selector('Time', LENGTHS.map((l) => `${l} min`), st.len, (i) => { st.len = i; }),
+          selector('Defence', DEFENCES.map((d) => d[0]), st.def, (i) => { st.def = i; render(); }),
+        ),
+        el('div', { class: 'btn-row', style: { marginTop: '18px' } }, el('button', { class: 'btn', 'data-autofocus': true, onclick: () => play(mine, opp) }, '▶ Play VS Attack')),
+      );
+    };
+    const play = (mine, opp) => {
+      let live = null;
+      const stat = (label, v) => el('div', {}, el('b', {}, v), el('span', {}, label));
+      launchMatch({
+        home: mine, away: opp, humans: defaultHumans(0), difficulty: st.diff, skipIntro: true,
+        vsAttack: { minutes: LENGTHS[st.len], perGoal: PER_GOAL[st.diff], streakBonus: STREAK_BONUS, longBonus: LONG_BONUS },
+        quitWarning: 'Leave VS Attack? You keep the coins you have won.',
+        // Coins go into the wallet the moment each goal goes in.
+        onEvent: (ev, m) => { live = m; if (ev.type === 'goal' && ev.coins) app.addCoins(ev.coins); },
+        fullTimeExtra: (m) => el('div', { class: 'vs-ft' }, stat('Coins won', `+${fmtNum(m.vsEarned)}`), stat('Goals', String(m.sides[0].score)), stat('Attacks', String(m.attackN)), stat('Best run', `${m.bestStreak} in a row`)),
+      }, (sum, quit) => {
+        const m = live;
+        const result = m ? { coins: m.vsEarned, goals: m.sides[0].score, attacks: m.attackN, best: m.bestStreak, quit: !!quit } : { coins: 0, goals: 0, attacks: 0, best: 0, quit: true };
+        const r = load('vsattack', { best: null, runs: 0, total: 0 });
+        r.runs++; r.total += result.coins;
+        if (!r.best || result.coins > r.best.coins) { r.best = { coins: result.coins, goals: result.goals }; result.record = result.coins > 0; }
+        save('vsattack', r);
+        app.go('vsattack', { result }, { replace: true });
+      });
+    };
+    render();
+    return { el: wrap };
+  },
+};
+
+__M["src/modes/vsattack.js"] = { PER_GOAL, vsAttackScreen };
+})();
+
 /* ---- src/main.js ---- */
 ;(function(){
 const { app } = __M["src/ui/app.js"];
@@ -77344,6 +78963,7 @@ lazy('rush', './modes/rush.js', 'rushScreen');
 lazy('intl', './modes/intl.js', 'intlScreen');
 lazy('copa', './modes/copa.js', 'copaScreen');
 lazy('practice', './modes/practice.js', 'practiceScreen');
+lazy('vsattack', './modes/vsattack.js', 'vsAttackScreen');
 
 db();
 loadPlayerModel();
