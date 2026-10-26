@@ -734,6 +734,50 @@ kbd { display: inline-block; min-width: 20px; padding: 0 5px; border-radius: 4px
 .vs-ft b { display: block; font-family: var(--head); font-size: 34px; font-weight: 900; color: var(--gold); line-height: 1.1; }
 .vs-ft span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
 
+/* ---------- Auto Sim ---------- */
+.art-autosim { background: repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 10px, transparent 10px 20px), linear-gradient(120deg, #0b3d2a, #12805c 55%, #00e0c6); }
+.as-controls { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 16px 0; }
+.as-status { font-family: var(--head); font-size: 18px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.as-status.on { color: var(--accent); }
+.as-status.on::before { content: ''; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-right: 8px; animation: asPulse 1s ease-in-out infinite; }
+@keyframes asPulse { 50% { opacity: 0.25; } }
+.as-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.as-current { display: flex; flex-direction: column; gap: 10px; }
+.as-score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.as-team { display: flex; align-items: center; gap: 10px; font-family: var(--head); font-size: 26px; }
+.as-team.right { justify-content: flex-end; }
+.as-mid { text-align: center; }
+.as-goals { font-family: var(--head); font-weight: 900; font-size: 46px; line-height: 1; }
+.as-min { color: var(--accent); font-family: var(--head); font-size: 18px; letter-spacing: 1px; }
+.as-pitch { width: 100%; height: auto; border-radius: 8px; display: block; }
+.as-events { display: flex; flex-direction: column; gap: 4px; min-height: 24px; }
+.as-ev { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.as-ev.away { flex-direction: row-reverse; text-align: right; }
+.as-ev b { color: var(--muted); font-weight: 600; min-width: 34px; }
+.as-ev .ico { width: 12px; height: 14px; border-radius: 2px; display: inline-block; }
+.as-ev .ico.goal { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #cfd4da); box-shadow: inset 0 0 0 2px #333; }
+.as-ev .ico.yellow { background: #f5d000; }
+.as-ev .ico.red { background: #e3262f; }
+.as-random { font-size: 64px; line-height: 1.2; text-align: center; }
+.as-totals h3 { margin: 0 0 12px; }
+.as-wdl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.as-wdl div { text-align: center; border-radius: 10px; padding: 8px 4px; background: rgba(255,255,255,0.05); }
+.as-wdl b { display: block; font-family: var(--head); font-size: 36px; line-height: 1.05; }
+.as-wdl span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.as-wdl .w b { color: #39d98a; } .as-wdl .d b { color: #f1cf6b; } .as-wdl .l b { color: #ff5d6c; }
+.as-lines div, .as-scorers div { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.as-lines span, .as-scorers span { color: var(--muted); }
+.as-form { display: flex; align-items: center; gap: 5px; margin: 12px 0; flex-wrap: wrap; }
+.as-form i, .as-row i { font-style: normal; font-family: var(--head); font-weight: 800; font-size: 13px; width: 22px; height: 22px; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; color: #0b0f14; }
+.as-form i.w, .as-row i.w { background: #39d98a; } .as-form i.d, .as-row i.d { background: #f1cf6b; } .as-form i.l, .as-row i.l { background: #ff5d6c; }
+.as-scorers { margin-top: 8px; }
+.as-feed { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow: auto; }
+.as-row { display: grid; grid-template-columns: 48px 26px auto 1fr; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); }
+.as-row .as-n { color: var(--muted); font-size: 13px; }
+.as-row b { font-family: var(--head); font-size: 19px; white-space: nowrap; }
+.as-row small { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 860px) { .as-grid { grid-template-columns: 1fr; } .as-row { grid-template-columns: 40px 24px auto; } .as-row small { grid-column: 1 / -1; } }
+
 </style>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23d7ff3a'/%3E%3Ctext x='32' y='44' font-family='Arial Black,Arial' font-weight='900' font-size='30' text-anchor='middle' fill='%230b1020'%3EG26%3C/text%3E%3C/svg%3E">
   </head>
@@ -63788,7 +63832,8 @@ const home = {
           tile('span-4 rows-1', 'art-ut', 'Cash Cups', 'Short knockout cups · win up to 335,000 coins', () => app.go('ut', { tab: 'play' }), 'New', '💰'),
           tile('span-4 rows-1', 'art-vsattack', 'VS Attack', 'Your team against their defence only. Coins for every goal.', () => app.go('vsattack'), 'New', '⚔️'),
           tile('span-4 rows-1', 'art-copa', 'Copa do Brasil', copa ? `${copa.clubName} · ${copa.stageLabel}` : 'Flamengo, Palmeiras, Fluminense, Corinthians and 28 more · two-legged ties · prize money', () => app.go('copa'), 'New', '🇧🇷'),
-          tile('span-12 rows-1', 'art-settings', 'Settings & Controls', 'Difficulty, camera, accessibility (high contrast, pitch saturation), audio and the full controls list.', () => app.go('settings'), null, '⚙️'),
+          tile('span-4 rows-1', 'art-autosim', 'Auto Sim', 'Simulate a team\'s matches back to back until you press Stop', () => app.go('autosim'), 'New', '🔁'),
+          tile('span-8 rows-1', 'art-settings', 'Settings & Controls', 'Difficulty, camera, accessibility (high contrast, pitch saturation), audio and the full controls list.', () => app.go('settings'), null, '⚙️'),
         ),
         el('div', { class: 'section-title' }, el('h2', {}, 'This Season')),
         el('div', { class: 'news' },
@@ -78914,6 +78959,299 @@ const vsAttackScreen = {
 __M["src/modes/vsattack.js"] = { PER_GOAL, vsAttackScreen };
 })();
 
+/* ---- src/modes/autosim.js ---- */
+;(function(){
+const { el } = __M["src/core/util.js"];
+const { app } = __M["src/ui/app.js"];
+const { selector, crest, nationBadge } = __M["src/ui/components.js"];
+const { LEAGUES } = __M["src/data/leagues.js"];
+const { NATIONS } = __M["src/data/nations.js"];
+const { buildClubTeam, buildNationTeam, resolveKits } = __M["src/data/teams.js"];
+const { load, save } = __M["src/core/storage.js"];
+const { Match } = __M["src/match/match.js"];
+// Auto Sim: your team plays the same opponent (or a random one) again and again, simulated by the
+// match engine without rendering, until you press Stop. A live score and mini pitch follow the
+// current match; results and running totals (kept per team) build up underneath.
+
+
+
+
+
+
+
+
+
+
+// Simulation steps (1/30 s of play each) per real second; Max runs as fast as the machine allows.
+const SPEEDS = [['Watch', 360], ['Fast', 1800], ['Max', Infinity]];
+const LIMITS = [['Never', 0], ['10 matches', 10], ['50 matches', 50], ['100 matches', 100]];
+const VENUES = ['Home', 'Away', 'Alternate'];
+const DT = 1 / 30;
+
+const st = { mode: 'clubs', me: { lg: 0, c: 11, n: 1 }, opp: { lg: 0, c: 12, n: 0 }, random: false, venue: 0, speed: 1, limit: 0 };
+
+// Match minute as a broadcast shows it, with added time as 45+2' or 90+3'.
+function minute(m) {
+  const end = m.half === 1 ? 45 : 90, min = Math.max(1, Math.ceil(m.clock / 60));
+  return min > end ? `${end}+${min - end}'` : `${min}'`;
+}
+
+const emptyTotals = () => ({ p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, form: [], scorers: {}, best: null, worst: null, results: [] });
+
+const autoSimScreen = {
+  render() {
+    const wrap = el('div', { class: 'screen' });
+    const body = el('div', { class: 'content' });
+    wrap.append(app.topbar('autosim'), body);
+    const store = load('autosim', {});
+
+    const pickIds = () => {
+      if (st.mode === 'nations') return { me: NATIONS[st.me.n].id, opp: NATIONS[st.opp.n].id };
+      const club = (k) => LEAGUES[st[k].lg].clubs[Math.min(st[k].c, LEAGUES[st[k].lg].clubs.length - 1)].id;
+      return { me: club('me'), opp: club('opp') };
+    };
+    const build = (id) => (st.mode === 'nations' ? buildNationTeam(id) : buildClubTeam(id));
+    const teamKey = () => `${st.mode}:${pickIds().me}`;
+    const totals = () => (store[teamKey()] ||= emptyTotals());
+    const randomOpp = (me) => {
+      if (st.mode === 'nations') { let n; do n = NATIONS[Math.floor(Math.random() * NATIONS.length)].id; while (n === me); return n; }
+      const all = LEAGUES.flatMap((l) => l.clubs.map((c) => c.id)).filter((id) => id !== me);
+      return all[Math.floor(Math.random() * all.length)];
+    };
+
+    // ---- Simulation ----
+    let running = false, match = null, mySide = 0, timer = 0, gone = false, startedRun = 0, budget = 0, last = 0, live = [];
+    const newMatch = () => {
+      const ids = pickIds();
+      const n = totals().p;
+      const home = st.venue === 0 || (st.venue === 2 && n % 2 === 0);
+      const me = build(ids.me), opp = build(st.random ? randomOpp(ids.me) : ids.opp);
+      const [h, a] = home ? [me, opp] : [opp, me];
+      mySide = home ? 0 : 1;
+      match = new Match({
+        home: h, away: a, kits: resolveKits(h, a), humans: [], halfLength: app.settings.halfLength || 4,
+        difficulty: 3, preset: app.settings.preset || 'competitive', settings: { ...app.settings, replays: false }, skipIntro: true,
+      });
+      live = [];
+      match.on((e) => {
+        const min = Math.max(1, Math.ceil(e.clock / 60));
+        if (e.type === 'goal') live.push({ min, side: e.side, text: `${e.scorer ? e.scorer.name : 'Own goal'}${e.own ? ' (OG)' : ''}`, kind: 'goal' });
+        if (e.type === 'card') live.push({ min, side: e.player.side, text: e.player.name, kind: e.card === 'yellow' ? 'yellow' : 'red' });
+      });
+      drawCurrent();
+    };
+    const finishMatch = () => {
+      const m = match, T = totals();
+      const my = m.sides[mySide].score, their = m.sides[1 - mySide].score;
+      const res = my > their ? 'W' : my < their ? 'L' : 'D';
+      T.p++; T.gf += my; T.ga += their; T[res.toLowerCase()]++;
+      T.form = [res, ...T.form].slice(0, 10);
+      for (const g of m.goals) if (g.side === mySide && g.scorer && !g.own) T.scorers[g.scorer.name] = (T.scorers[g.scorer.name] || 0) + 1;
+      const opp = m.sides[1 - mySide].team;
+      const r = { n: T.p, res, home: m.sides[0].team.short, away: m.sides[1].team.short, hs: m.sides[0].score, as: m.sides[1].score, opp: opp.name, goals: m.goals.map((g) => ({ side: g.side, name: g.scorer ? g.scorer.name : '?', own: g.own, min: Math.ceil(g.clock / 60) })) };
+      const margin = my - their;
+      if (margin > 0 && (!T.best || margin > T.best.margin)) T.best = { margin, text: `${my}–${their} vs ${opp.name}` };
+      if (margin < 0 && (!T.worst || margin < T.worst.margin)) T.worst = { margin, text: `${my}–${their} vs ${opp.name}` };
+      T.results = [r, ...T.results].slice(0, 60);
+      save('autosim', store);
+      match = null;
+      drawTotals(); drawFeed();
+      const lim = LIMITS[st.limit][1];
+      if (lim && T.p - startedRun >= lim) stop();
+    };
+    const tick = () => {
+      timer = 0;
+      if (!running || gone) return;
+      const now = performance.now();
+      const rate = SPEEDS[st.speed][1];
+      // Steps owed since the last tick at this speed (capped so a slow frame doesn't pile up).
+      budget = rate === Infinity ? Infinity : Math.min(budget + ((now - last) / 1000) * rate, rate * 0.25);
+      last = now;
+      const t0 = now;
+      let steps = 0;
+      while (running && performance.now() - t0 < (rate === Infinity ? 45 : 14) && steps < budget) {
+        if (!match) newMatch();
+        match.update(DT);
+        steps++;
+        if (match.state === 'postgoal') match.resumeAfterGoal();
+        if (match.state === 'halftime') match.startNextHalf();
+        if (match.state === 'fulltime' || match.time > 60 * 40) { drawCurrent(); finishMatch(); if (rate !== Infinity) break; }
+      }
+      if (rate !== Infinity) budget -= steps;
+      drawLive();
+      timer = setTimeout(tick, rate === Infinity ? 0 : 16);
+    };
+    const start = () => {
+      if (running) return;
+      running = true; startedRun = totals().p; last = performance.now(); budget = 0;
+      drawControls();
+      tick();
+    };
+    function stop() {
+      running = false;
+      clearTimeout(timer); timer = 0;
+      drawControls();
+    }
+
+    // ---- Layout ----
+    const controls = el('div', { class: 'as-controls' });
+    const current = el('div', { class: 'panel as-current' });
+    const pitch = el('canvas', { class: 'as-pitch', width: 420, height: 272 });
+    const pg = pitch.getContext('2d');
+    const events = el('div', { class: 'as-events' });
+    const totalsEl = el('div', { class: 'panel as-totals' });
+    const feed = el('div', { class: 'as-feed' });
+    const setup = el('div', {});
+
+    const drawSetup = () => {
+      setup.innerHTML = '';
+      const ids = pickIds();
+      const picker = (k, label) => {
+        const box = el('div', { class: 'team-pick' }, el('div', { class: 'side-label' }, label));
+        if (k === 'opp' && st.random) { box.append(el('div', { class: 'as-random' }, '🎲'), el('div', { class: 'team-name' }, 'A random opponent every match')); return box; }
+        if (st.mode === 'clubs') {
+          box.append(
+            selector('League', LEAGUES.map((l) => l.name), st[k].lg, (i) => { st[k].lg = i; st[k].c = 0; changed(); }),
+            selector('Club', LEAGUES[st[k].lg].clubs.map((c) => c.name), Math.min(st[k].c, LEAGUES[st[k].lg].clubs.length - 1), (i) => { st[k].c = i; changed(); }));
+        } else box.append(selector('Nation', NATIONS.map((n) => n.name), st[k].n, (i) => { st[k].n = i; changed(); }));
+        const t = build(ids[k]);
+        box.append(st.mode === 'nations' ? nationBadge(t.id, 64) : crest(t, 'big'), el('div', { class: 'team-name' }, `${t.name} · ${t.rating}`));
+        return box;
+      };
+      setup.append(
+        el('div', { class: 'versus' }, picker('me', 'Your Team'), el('div', { class: 'vs-mid' }, 'VS'), picker('opp', 'Opponent')),
+        el('div', { class: 'settings-grid', style: { marginTop: '14px' } },
+          selector('Opponent', ['Same every match', 'Random every match'], st.random ? 1 : 0, (i) => { st.random = !!i; changed(); }),
+          selector('Venue', VENUES, st.venue, (i) => { st.venue = i; }),
+          selector('Speed', SPEEDS.map((s) => s[0]), st.speed, (i) => { st.speed = i; }),
+          selector('Stop after', LIMITS.map((l) => l[0]), st.limit, (i) => { st.limit = i; })));
+    };
+    // A different team or opponent: stop, and show that team's totals.
+    const changed = () => { stop(); match = null; drawSetup(); drawCurrent(); drawTotals(); drawFeed(); };
+
+    function drawControls() {
+      controls.innerHTML = '';
+      controls.append(
+        running
+          ? el('button', { class: 'btn danger', 'data-autofocus': true, onclick: stop }, '■ Stop')
+          : el('button', { class: 'btn', 'data-autofocus': true, onclick: start }, totals().p ? '▶ Start again' : '▶ Start Auto Sim'),
+        el('span', { class: 'as-status' + (running ? ' on' : '') }, running ? `Simulating… ${SPEEDS[st.speed][0]} speed` : 'Stopped'),
+        el('button', { class: 'btn small ghost', disabled: running, onclick: async () => { if (await app.confirm(`Clear the results and totals for ${build(pickIds().me).name}?`, 'Clear')) { store[teamKey()] = emptyTotals(); save('autosim', store); drawTotals(); drawFeed(); drawControls(); } } }, 'Clear totals'));
+    }
+
+    function drawCurrent() {
+      current.innerHTML = '';
+      if (!match) {
+        current.append(el('div', { class: 'muted', style: { padding: '30px 0', textAlign: 'center' } }, running ? 'Next match…' : 'Press Start and matches will play back to back until you press Stop.'), pitch);
+        drawPitch();
+        return;
+      }
+      const s = match.sides;
+      const badge = (t) => (t.kind === 'nation' ? nationBadge(t.nation || t.id, 40) : crest(t, 'sm'));
+      current.append(
+        el('div', { class: 'as-score' },
+          el('div', { class: 'as-team' }, badge(s[0].team), el('b', {}, s[0].team.short)),
+          el('div', { class: 'as-mid' }, el('div', { class: 'as-goals' }, el('span', { 'data-h': 1 }, '0'), ' – ', el('span', { 'data-a': 1 }, '0')), el('div', { class: 'as-min' }, "0'")),
+          el('div', { class: 'as-team right' }, el('b', {}, s[1].team.short), badge(s[1].team))),
+        pitch, events);
+      drawLive();
+    }
+
+    function drawLive() {
+      if (!match) return;
+      const s = match.sides;
+      const h = current.querySelector('[data-h]'), a = current.querySelector('[data-a]'), mn = current.querySelector('.as-min');
+      if (h) { h.textContent = s[0].score; a.textContent = s[1].score; }
+      if (mn) mn.textContent = match.state === 'fulltime' ? 'FT' : match.state === 'halftime' ? 'HT' : minute(match);
+      if (events.childElementCount !== live.length) {
+        events.innerHTML = '';
+        for (const e of live.slice(-8)) events.append(el('div', { class: `as-ev ${e.side ? 'away' : ''}` }, el('b', {}, `${e.min}'`), el('span', { class: `ico ${e.kind}` }), e.text));
+      }
+      drawPitch();
+    }
+
+    // Top-down view of the current match: players in their kit colours and the ball.
+    function drawPitch() {
+      const W = pitch.width, H = pitch.height;
+      pg.fillStyle = '#1d7a3a'; pg.fillRect(0, 0, W, H);
+      for (let i = 0; i < 10; i++) { pg.fillStyle = i % 2 ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'; pg.fillRect((i * W) / 10, 0, W / 10, H); }
+      const P = match ? match.pitch : { L: 105, W: 68, boxD: 16.5, boxW: 40.3 };
+      const sx = (x) => ((x + P.L / 2) / P.L) * (W - 20) + 10, sz = (z) => ((z + P.W / 2) / P.W) * (H - 20) + 10;
+      pg.strokeStyle = 'rgba(255,255,255,0.75)'; pg.lineWidth = 1.5;
+      pg.strokeRect(10, 10, W - 20, H - 20);
+      pg.beginPath(); pg.moveTo(W / 2, 10); pg.lineTo(W / 2, H - 10); pg.stroke();
+      pg.beginPath(); pg.arc(W / 2, H / 2, (9.15 / P.L) * (W - 20), 0, Math.PI * 2); pg.stroke();
+      for (const sgn of [-1, 1]) pg.strokeRect(sgn < 0 ? 10 : sx(P.L / 2 - P.boxD), sz(-P.boxW / 2), (P.boxD / P.L) * (W - 20), (P.boxW / P.W) * (H - 20));
+      if (!match) return;
+      for (const s of match.sides) {
+        for (const p of s.players) {
+          if (!match.active(p)) continue;
+          const x = sx(p.pos.x), y = sz(p.pos.z);
+          pg.beginPath(); pg.arc(x, y, 4.5, 0, Math.PI * 2);
+          pg.fillStyle = p.isGK ? s.kit.gk : s.kit.primary; pg.fill();
+          pg.lineWidth = 1.5; pg.strokeStyle = s.kit.secondary; pg.stroke();
+        }
+      }
+      const b = match.ball;
+      pg.beginPath(); pg.arc(sx(b.pos.x), sz(b.pos.z), 3 + Math.min(3, b.pos.y * 0.6), 0, Math.PI * 2);
+      pg.fillStyle = '#fff'; pg.fill(); pg.strokeStyle = '#111'; pg.lineWidth = 1; pg.stroke();
+    }
+
+    function drawTotals() {
+      const T = totals();
+      totalsEl.innerHTML = '';
+      const pct = T.p ? Math.round((T.w / T.p) * 100) : 0;
+      const top = Object.entries(T.scorers).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      totalsEl.append(
+        el('h3', {}, `${build(pickIds().me).name}: ${T.p} match${T.p === 1 ? '' : 'es'}`),
+        el('div', { class: 'as-wdl' },
+          el('div', { class: 'w' }, el('b', {}, String(T.w)), el('span', {}, 'Won')),
+          el('div', { class: 'd' }, el('b', {}, String(T.d)), el('span', {}, 'Drawn')),
+          el('div', { class: 'l' }, el('b', {}, String(T.l)), el('span', {}, 'Lost'))),
+        el('div', { class: 'as-lines' },
+          el('div', {}, el('span', {}, 'Goals'), el('b', {}, `${T.gf} – ${T.ga}`)),
+          el('div', {}, el('span', {}, 'Win rate'), el('b', {}, `${pct}%`)),
+          el('div', {}, el('span', {}, 'Goals per match'), el('b', {}, T.p ? ((T.gf + T.ga) / T.p).toFixed(1) : '–')),
+          el('div', {}, el('span', {}, 'Biggest win'), el('b', {}, T.best ? T.best.text : '–')),
+          el('div', {}, el('span', {}, 'Heaviest defeat'), el('b', {}, T.worst ? T.worst.text : '–'))),
+        el('div', { class: 'as-form' }, el('span', { class: 'muted' }, 'Form'), ...(T.form.length ? T.form.map((r) => el('i', { class: r.toLowerCase() }, r)) : [el('span', { class: 'muted' }, '–')])),
+        top.length ? el('div', { class: 'as-scorers' }, el('div', { class: 'muted' }, 'Top scorers'), ...top.map(([n, g]) => el('div', {}, el('span', {}, n), el('b', {}, `${g}`)))) : null,
+      );
+    }
+
+    function drawFeed() {
+      const T = totals();
+      feed.innerHTML = '';
+      if (!T.results.length) { feed.append(el('div', { class: 'muted' }, 'Results will appear here.')); return; }
+      for (const r of T.results) {
+        const scorers = (side) => r.goals.filter((g) => g.side === side).map((g) => `${g.name}${g.own ? ' (OG)' : ''} ${g.min}'`).join(', ');
+        feed.append(el('div', { class: `as-row ${r.res.toLowerCase()}` },
+          el('span', { class: 'as-n' }, `#${r.n}`), el('i', { class: r.res.toLowerCase() }, r.res),
+          el('b', {}, `${r.home} ${r.hs}–${r.as} ${r.away}`),
+          el('small', {}, [scorers(0), scorers(1)].filter(Boolean).join(' · ') || 'No goals')));
+      }
+    }
+
+    body.append(
+      el('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '12px', flexWrap: 'wrap', marginBottom: '10px' } },
+        el('div', {}, el('h1', {}, 'Auto Sim'), el('p', { class: 'muted', style: { margin: '6px 0 0', maxWidth: '680px' } }, 'Pick a team and let the matches play themselves, one after another, until you press Stop. Every match is played out in full by the match engine; results and totals build up as it goes.')),
+        el('div', { class: 'btn-row' },
+          el('button', { class: 'btn small ' + (st.mode === 'clubs' ? '' : 'ghost'), onclick: () => { st.mode = 'clubs'; changed(); rerenderModes(); } }, 'Clubs'),
+          el('button', { class: 'btn small ' + (st.mode === 'nations' ? '' : 'ghost'), onclick: () => { st.mode = 'nations'; changed(); rerenderModes(); } }, 'Nations'))),
+      setup, controls,
+      el('div', { class: 'as-grid' }, current, totalsEl),
+      el('div', { class: 'section-title' }, el('h2', {}, 'Results')), feed,
+    );
+    const rerenderModes = () => { const btns = body.querySelectorAll('.btn-row .btn.small'); btns[0].className = 'btn small ' + (st.mode === 'clubs' ? '' : 'ghost'); btns[1].className = 'btn small ' + (st.mode === 'nations' ? '' : 'ghost'); };
+    drawSetup(); drawControls(); drawCurrent(); drawTotals(); drawFeed();
+    return { el: wrap, destroy() { gone = true; stop(); } };
+  },
+};
+
+
+__M["src/modes/autosim.js"] = { autoSimScreen };
+})();
+
 /* ---- src/main.js ---- */
 ;(function(){
 const { app } = __M["src/ui/app.js"];
@@ -78964,6 +79302,7 @@ lazy('intl', './modes/intl.js', 'intlScreen');
 lazy('copa', './modes/copa.js', 'copaScreen');
 lazy('practice', './modes/practice.js', 'practiceScreen');
 lazy('vsattack', './modes/vsattack.js', 'vsAttackScreen');
+lazy('autosim', './modes/autosim.js', 'autoSimScreen');
 
 db();
 loadPlayerModel();
