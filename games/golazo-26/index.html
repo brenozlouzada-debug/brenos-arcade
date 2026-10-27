@@ -772,11 +772,17 @@ kbd { display: inline-block; min-width: 20px; padding: 0 5px; border-radius: 4px
 .as-form i.w, .as-row i.w { background: #39d98a; } .as-form i.d, .as-row i.d { background: #f1cf6b; } .as-form i.l, .as-row i.l { background: #ff5d6c; }
 .as-scorers { margin-top: 8px; }
 .as-feed { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow: auto; }
-.as-row { display: grid; grid-template-columns: 48px 26px auto 1fr; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); }
+.as-row { display: grid; grid-template-columns: 48px 26px auto 64px 1fr; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); }
+.as-row .as-pay { font-style: normal; font-family: var(--head); font-weight: 800; color: var(--gold); font-size: 16px; }
+.as-coins { display: inline-flex; align-items: center; gap: 8px; font-family: var(--head); font-weight: 800; font-size: 20px; color: var(--gold); }
+.as-coins:empty { display: none; }
+.as-coins .ico { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff3b0, #f1cf6b 45%, #b8892b); box-shadow: inset 0 0 0 2px rgba(120,80,10,0.5); }
+.as-coins.bump { animation: vsBump 0.5s ease; }
+.as-lines .as-earned b { color: var(--gold); }
 .as-row .as-n { color: var(--muted); font-size: 13px; }
 .as-row b { font-family: var(--head); font-size: 19px; white-space: nowrap; }
 .as-row small { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (max-width: 860px) { .as-grid { grid-template-columns: 1fr; } .as-row { grid-template-columns: 40px 24px auto; } .as-row small { grid-column: 1 / -1; } }
+@media (max-width: 860px) { .as-grid { grid-template-columns: 1fr; } .as-row { grid-template-columns: 40px 24px auto auto; } .as-row small { grid-column: 1 / -1; } }
 
 </style>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23d7ff3a'/%3E%3Ctext x='32' y='44' font-family='Arial Black,Arial' font-weight='900' font-size='30' text-anchor='middle' fill='%230b1020'%3EG26%3C/text%3E%3C/svg%3E">
@@ -78961,7 +78967,8 @@ __M["src/modes/vsattack.js"] = { PER_GOAL, vsAttackScreen };
 
 /* ---- src/modes/autosim.js ---- */
 ;(function(){
-const { el } = __M["src/core/util.js"];
+const { el, fmtNum } = __M["src/core/util.js"];
+const { audio } = __M["src/core/audio.js"];
 const { app } = __M["src/ui/app.js"];
 const { selector, crest, nationBadge } = __M["src/ui/components.js"];
 const { LEAGUES } = __M["src/data/leagues.js"];
@@ -78982,10 +78989,14 @@ const { Match } = __M["src/match/match.js"];
 
 
 
+
 // Simulation steps (1/30 s of play each) per real second; Max runs as fast as the machine allows.
 const SPEEDS = [['Watch', 360], ['Fast', 1800], ['Max', Infinity]];
 const LIMITS = [['Never', 0], ['10 matches', 10], ['50 matches', 50], ['100 matches', 100]];
 const VENUES = ['Home', 'Away', 'Alternate'];
+// Coins for each simulated match: about a third of a played Ultimate Team match.
+const SIM_PAY = { W: 300, D: 150, L: 75, goal: 30 };
+const simCoins = (res, goals) => SIM_PAY[res] + goals * SIM_PAY.goal;
 const DT = 1 / 30;
 
 const st = { mode: 'clubs', me: { lg: 0, c: 11, n: 1 }, opp: { lg: 0, c: 12, n: 0 }, random: false, venue: 0, speed: 1, limit: 0 };
@@ -78996,7 +79007,7 @@ function minute(m) {
   return min > end ? `${end}+${min - end}'` : `${min}'`;
 }
 
-const emptyTotals = () => ({ p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, form: [], scorers: {}, best: null, worst: null, results: [] });
+const emptyTotals = () => ({ p: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, coins: 0, form: [], scorers: {}, best: null, worst: null, results: [] });
 
 const autoSimScreen = {
   render() {
@@ -79020,7 +79031,7 @@ const autoSimScreen = {
     };
 
     // ---- Simulation ----
-    let running = false, match = null, mySide = 0, timer = 0, gone = false, startedRun = 0, budget = 0, last = 0, live = [];
+    let running = false, match = null, mySide = 0, timer = 0, gone = false, startedRun = 0, budget = 0, last = 0, live = [], runCoins = 0, coinT = 0;
     const newMatch = () => {
       const ids = pickIds();
       const n = totals().p;
@@ -79045,17 +79056,25 @@ const autoSimScreen = {
       const my = m.sides[mySide].score, their = m.sides[1 - mySide].score;
       const res = my > their ? 'W' : my < their ? 'L' : 'D';
       T.p++; T.gf += my; T.ga += their; T[res.toLowerCase()]++;
+      // Paid straight into the wallet, like any other match.
+      const coins = simCoins(res, my);
+      app.addCoins(coins);
+      T.coins = (T.coins || 0) + coins;
+      runCoins += coins;
+      app.refreshWallet();
+      // At Max speed matches end many times a second: one coin sound at most every half second.
+      if (performance.now() - coinT > 500) { coinT = performance.now(); audio.ui('coin'); }
       T.form = [res, ...T.form].slice(0, 10);
       for (const g of m.goals) if (g.side === mySide && g.scorer && !g.own) T.scorers[g.scorer.name] = (T.scorers[g.scorer.name] || 0) + 1;
       const opp = m.sides[1 - mySide].team;
-      const r = { n: T.p, res, home: m.sides[0].team.short, away: m.sides[1].team.short, hs: m.sides[0].score, as: m.sides[1].score, opp: opp.name, goals: m.goals.map((g) => ({ side: g.side, name: g.scorer ? g.scorer.name : '?', own: g.own, min: Math.ceil(g.clock / 60) })) };
+      const r = { n: T.p, res, coins, home: m.sides[0].team.short, away: m.sides[1].team.short, hs: m.sides[0].score, as: m.sides[1].score, opp: opp.name, goals: m.goals.map((g) => ({ side: g.side, name: g.scorer ? g.scorer.name : '?', own: g.own, min: Math.ceil(g.clock / 60) })) };
       const margin = my - their;
       if (margin > 0 && (!T.best || margin > T.best.margin)) T.best = { margin, text: `${my}–${their} vs ${opp.name}` };
       if (margin < 0 && (!T.worst || margin < T.worst.margin)) T.worst = { margin, text: `${my}–${their} vs ${opp.name}` };
       T.results = [r, ...T.results].slice(0, 60);
       save('autosim', store);
       match = null;
-      drawTotals(); drawFeed();
+      drawTotals(); drawFeed(); drawRunCoins();
       const lim = LIMITS[st.limit][1];
       if (lim && T.p - startedRun >= lim) stop();
     };
@@ -79083,7 +79102,7 @@ const autoSimScreen = {
     };
     const start = () => {
       if (running) return;
-      running = true; startedRun = totals().p; last = performance.now(); budget = 0;
+      running = true; startedRun = totals().p; last = performance.now(); budget = 0; runCoins = 0;
       drawControls();
       tick();
     };
@@ -79136,7 +79155,17 @@ const autoSimScreen = {
           ? el('button', { class: 'btn danger', 'data-autofocus': true, onclick: stop }, '■ Stop')
           : el('button', { class: 'btn', 'data-autofocus': true, onclick: start }, totals().p ? '▶ Start again' : '▶ Start Auto Sim'),
         el('span', { class: 'as-status' + (running ? ' on' : '') }, running ? `Simulating… ${SPEEDS[st.speed][0]} speed` : 'Stopped'),
+        runCoinsEl,
         el('button', { class: 'btn small ghost', disabled: running, onclick: async () => { if (await app.confirm(`Clear the results and totals for ${build(pickIds().me).name}?`, 'Clear')) { store[teamKey()] = emptyTotals(); save('autosim', store); drawTotals(); drawFeed(); drawControls(); } } }, 'Clear totals'));
+    }
+
+    // Coins won since Start was pressed.
+    const runCoinsEl = el('span', { class: 'as-coins' });
+    function drawRunCoins() {
+      runCoinsEl.innerHTML = '';
+      if (!runCoins) return;
+      runCoinsEl.append(el('span', { class: 'ico' }), `+${fmtNum(runCoins)} this run`);
+      runCoinsEl.classList.remove('bump'); void runCoinsEl.offsetWidth; runCoinsEl.classList.add('bump');
     }
 
     function drawCurrent() {
@@ -79212,6 +79241,7 @@ const autoSimScreen = {
           el('div', {}, el('span', {}, 'Goals'), el('b', {}, `${T.gf} – ${T.ga}`)),
           el('div', {}, el('span', {}, 'Win rate'), el('b', {}, `${pct}%`)),
           el('div', {}, el('span', {}, 'Goals per match'), el('b', {}, T.p ? ((T.gf + T.ga) / T.p).toFixed(1) : '–')),
+          el('div', { class: 'as-earned' }, el('span', {}, 'Coins earned'), el('b', {}, `${fmtNum(T.coins || 0)}`)),
           el('div', {}, el('span', {}, 'Biggest win'), el('b', {}, T.best ? T.best.text : '–')),
           el('div', {}, el('span', {}, 'Heaviest defeat'), el('b', {}, T.worst ? T.worst.text : '–'))),
         el('div', { class: 'as-form' }, el('span', { class: 'muted' }, 'Form'), ...(T.form.length ? T.form.map((r) => el('i', { class: r.toLowerCase() }, r)) : [el('span', { class: 'muted' }, '–')])),
@@ -79228,13 +79258,14 @@ const autoSimScreen = {
         feed.append(el('div', { class: `as-row ${r.res.toLowerCase()}` },
           el('span', { class: 'as-n' }, `#${r.n}`), el('i', { class: r.res.toLowerCase() }, r.res),
           el('b', {}, `${r.home} ${r.hs}–${r.as} ${r.away}`),
+          r.coins ? el('em', { class: 'as-pay' }, `+${fmtNum(r.coins)}`) : el('em'),
           el('small', {}, [scorers(0), scorers(1)].filter(Boolean).join(' · ') || 'No goals')));
       }
     }
 
     body.append(
       el('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '12px', flexWrap: 'wrap', marginBottom: '10px' } },
-        el('div', {}, el('h1', {}, 'Auto Sim'), el('p', { class: 'muted', style: { margin: '6px 0 0', maxWidth: '680px' } }, 'Pick a team and let the matches play themselves, one after another, until you press Stop. Every match is played out in full by the match engine; results and totals build up as it goes.')),
+        el('div', {}, el('h1', {}, 'Auto Sim'), el('p', { class: 'muted', style: { margin: '6px 0 0', maxWidth: '680px' } }, `Pick a team and let the matches play themselves, one after another, until you press Stop. Every match is played out in full by the match engine, and pays coins into your wallet: ${SIM_PAY.W} for a win, ${SIM_PAY.D} for a draw, ${SIM_PAY.L} for a defeat, plus ${SIM_PAY.goal} for each goal your team scores.`)),
         el('div', { class: 'btn-row' },
           el('button', { class: 'btn small ' + (st.mode === 'clubs' ? '' : 'ghost'), onclick: () => { st.mode = 'clubs'; changed(); rerenderModes(); } }, 'Clubs'),
           el('button', { class: 'btn small ' + (st.mode === 'nations' ? '' : 'ghost'), onclick: () => { st.mode = 'nations'; changed(); rerenderModes(); } }, 'Nations'))),
@@ -79249,7 +79280,7 @@ const autoSimScreen = {
 };
 
 
-__M["src/modes/autosim.js"] = { autoSimScreen };
+__M["src/modes/autosim.js"] = { SIM_PAY, simCoins, autoSimScreen };
 })();
 
 /* ---- src/main.js ---- */
