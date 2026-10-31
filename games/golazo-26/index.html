@@ -900,6 +900,43 @@ kbd { display: inline-block; min-width: 20px; padding: 0 5px; border-radius: 4px
 .selector.number .value.editable { cursor: text; text-transform: none; }
 .selector.number .value.editable:hover { text-decoration: underline dotted; text-underline-offset: 4px; }
 .selector .num-input { width: 96px; font-family: var(--head); font-weight: 700; font-size: 20px; text-align: center; color: inherit; background: rgba(0,0,0,0.35); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; outline: none; }
+/* Pack scenes: the stage, the track playing and the walkout titles take the scene's colours. */
+.pack-track { position: absolute; left: 16px; top: 14px; z-index: 6; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.75); background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 12px; pointer-events: none; }
+.pack-stage.th-premium { background: radial-gradient(circle at 50% 60%, #3a2a08, #02030a 70%); }
+.pack-stage.th-neon { background: radial-gradient(circle at 30% 40%, rgba(0,229,255,0.25), transparent 50%), radial-gradient(circle at 70% 65%, rgba(255,59,212,0.25), transparent 50%), #05030c; }
+.pack-stage.th-totw { background: radial-gradient(circle at 50% 55%, #3a2f12, #000 70%); }
+.pack-stage.th-icon, .pack-stage.th-legends { background: radial-gradient(circle at 50% 45%, #fff6dc 0, #c9a24a 22%, #2a1f08 60%, #050403); }
+.pack-stage.th-hero { background: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1.6px) 0 0 / 9px 9px, radial-gradient(circle at 50% 50%, #6a35e8, #12063d 70%); }
+.pack-stage.th-copa { background: radial-gradient(circle at 50% 50%, #1c3f94 0 12%, transparent 13%), linear-gradient(135deg, #00873a, #ffdf00 50%, #00873a); }
+.pack-stage.th-streak { background: radial-gradient(circle at 50% 70%, #ff4d1f, #6a0016 40%, #0a0003 75%); }
+.pack-stage.th-ultimate { background: radial-gradient(circle at 50% 60%, #3b1e8f, #0a0518 70%); }
+.wo.th-icon .wo-big, .wo.th-legends .wo-big, .wo.th-totw .wo-big { color: #fff4cf; text-shadow: 0 0 24px #d4a537, 0 0 70px #d4a537, 0 5px 0 rgba(0,0,0,0.35); }
+.wo.th-hero .wo-big { color: #ffe066; transform: skewX(-8deg); text-shadow: 4px 4px 0 #5b2dff, 0 0 50px #b48cff; }
+.wo.th-copa .wo-big { color: #ffdf00; text-shadow: 0 0 24px #00c853, 0 4px 0 #1c3f94; }
+.wo.th-streak .wo-big { text-shadow: 0 0 24px #ff3b5c, 0 0 70px #ff5a1f, 0 5px 0 rgba(0,0,0,0.4); }
+.wo.th-neon .wo-big { text-shadow: 0 0 18px #00e5ff, 0 0 60px #ff3bd4; }
+/* Pack burst: the sealed pack shakes, then tears open in its scene's colours and particle shapes. */
+.pack.sealed.tearing { animation: packShake 0.42s ease-in-out, packPop 0.45s 0.42s ease-in forwards; }
+@keyframes packShake { 20% { transform: rotate(-4deg) scale(1.03); } 40% { transform: rotate(4deg) scale(1.05); } 60% { transform: rotate(-3deg) scale(1.07); } 80% { transform: rotate(3deg) scale(1.09); } }
+@keyframes packPop { to { transform: scale(1.6); opacity: 0; filter: brightness(3) blur(6px); } }
+.pb-fx { position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
+.pb-flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, var(--t1), transparent 62%); opacity: 0; animation: pbFlash 0.75s 0.42s ease-out both; }
+@keyframes pbFlash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
+.pb-ring { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; border: 4px solid var(--t1); box-shadow: 0 0 30px var(--t1), inset 0 0 22px var(--t2); opacity: 0; animation: pbRing 0.9s 0.44s ease-out both; }
+.pb-ring.two { border-color: var(--t2); animation-delay: 0.56s; }
+@keyframes pbRing { 0% { transform: scale(0.2); opacity: 1; } 100% { transform: scale(22); opacity: 0; } }
+.pb-p { position: absolute; left: 50%; top: 50%; width: var(--s); height: var(--s); margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2); background: var(--c); border-radius: 50%; box-shadow: 0 0 12px var(--c); opacity: 0; transform: rotate(var(--a)); animation: pbFly var(--d) var(--w) cubic-bezier(.12,.8,.3,1) forwards; }
+@keyframes pbFly { 0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(1); } 100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--dist))) scale(0.6); } }
+.pb-p.streak { width: 3px; height: 70px; border-radius: 2px; margin: -35px 0 0 -1.5px; }
+.pb-p.feather { width: 10px; height: 24px; border-radius: 50% 50% 50% 50% / 85% 85% 15% 15%; margin: -12px 0 0 -5px; box-shadow: 0 0 10px rgba(255,236,180,0.8); }
+.pb-p.bolt { width: 26px; height: 44px; margin: -22px 0 0 -13px; border-radius: 0; clip-path: polygon(45% 0, 100% 0, 62% 42%, 92% 42%, 18% 100%, 40% 54%, 6% 54%); box-shadow: none; filter: drop-shadow(0 0 8px var(--c)); }
+.pb-p.confetti { width: 9px; height: 15px; border-radius: 1px; margin: -7px 0 0 -4px; box-shadow: none; }
+.pb-p.ember { box-shadow: 0 0 10px var(--c), 0 0 22px #ff3b1f; }
+.pb-word { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-8deg); font-family: var(--head); font-weight: 900; font-style: italic; font-size: clamp(54px, 10vw, 140px); color: #fff; opacity: 0; animation: pbWord 1s 0.45s cubic-bezier(.2,1.6,.4,1) both; text-shadow: 0 0 30px var(--t1); white-space: nowrap; }
+.pb-fx.th-hero .pb-word { color: #ffe066; -webkit-text-stroke: 4px #2a0f7a; text-shadow: 8px 8px 0 #5b2dff; }
+.pb-fx.th-copa .pb-word { color: #ffdf00; text-shadow: 0 5px 0 #00873a, 0 0 30px #00c853; }
+.pb-fx.th-streak .pb-word { font-size: clamp(36px, 6vw, 84px); color: #ffe9b0; text-shadow: 0 0 24px #ff3b5c, 0 0 60px #ff5a1f; }
+@keyframes pbWord { 0% { opacity: 0; transform: translate(-50%, -50%) rotate(-8deg) scale(0.3); } 30% { opacity: 1; transform: translate(-50%, -50%) rotate(-8deg) scale(1.1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) rotate(-8deg) scale(1.25); } }
 
 </style>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23d7ff3a'/%3E%3Ctext x='32' y='44' font-family='Arial Black,Arial' font-weight='900' font-size='30' text-anchor='middle' fill='%230b1020'%3EG26%3C/text%3E%3C/svg%3E">
@@ -54172,10 +54209,418 @@ function saveSettings(s) {
 __M["src/core/storage.js"] = { load, save, remove, DEFAULT_SETTINGS, loadSettings, saveSettings };
 })();
 
+/* ---- src/core/music.js ---- */
+;(function(){
+// Generative music: the menu loop and one track per pack-opening scene. Each song is a step
+// sequencer in 16th notes; the audio engine calls step() a little ahead of time and the song
+// schedules synthesized instruments (drums, bass, pads, strings, choir, brass, bells, samba
+// percussion...). Everything is made with Web Audio, so the game ships no audio files.
+
+const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
+const hz = (ms) => ms.map(midi);
+
+// Instruments playing into `out` (a song's own gain, so songs can cross-fade).
+function instruments(c, noise, out) {
+  const filt = (dest, type, f, q = 0.7) => { const b = c.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.connect(dest); return b; };
+  // Percussive envelope: fast attack, exponential decay.
+  const perc = (dest, t, peak, dec, att = 0.002) => {
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + att);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dec);
+    g.connect(dest);
+    return g;
+  };
+  // Sustained envelope: attack, hold, release.
+  const sus = (dest, t, peak, dur, att, rel) => {
+    const g = c.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(peak, t + att);
+    g.gain.setValueAtTime(peak, t + Math.max(att, dur - rel));
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    g.connect(dest);
+    return g;
+  };
+  const osc = (type, f, t, dur, dest, det = 0) => { const o = c.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); o.detune.value = det; o.connect(dest); o.start(t); o.stop(t + dur + 0.05); return o; };
+  const nz = (t, dur, dest) => { const n = c.createBufferSource(); n.buffer = noise; n.connect(dest); n.start(t, Math.random() * 3, dur + 0.05); return n; };
+  const vib = (o, t, dur, rate = 5, cents = 6) => { const l = c.createOscillator(); l.frequency.value = rate; const g = c.createGain(); g.gain.value = cents; l.connect(g).connect(o.detune); l.start(t); l.stop(t + dur + 0.05); };
+  let shaper = null;
+  const drive = (dest) => {
+    if (!shaper) {
+      const curve = new Float32Array(1024);
+      for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; curve[i] = Math.tanh(x * 2.4); }
+      shaper = curve;
+    }
+    const w = c.createWaveShaper(); w.curve = shaper; w.connect(dest); return w;
+  };
+
+  const I = {
+    kick(t, amp = 0.45, f0 = 130, f1 = 42, dec = 0.3) {
+      const g = perc(out, t, amp, dec);
+      const o = c.createOscillator();
+      o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dec * 0.45);
+      o.connect(g); o.start(t); o.stop(t + dec + 0.05);
+    },
+    snare(t, amp = 0.22, dec = 0.18, tone = 190) {
+      nz(t, dec, filt(perc(out, t, amp, dec), 'bandpass', 1900, 0.7));
+      const o = osc('triangle', tone, t, dec, perc(out, t, amp * 0.7, dec * 0.5));
+      o.frequency.exponentialRampToValueAtTime(tone * 0.6, t + dec * 0.5);
+    },
+    clap(t, amp = 0.2) {
+      const bp = filt(out, 'bandpass', 1500, 1);
+      for (const d of [0, 0.011, 0.023]) nz(t + d, 0.02, perc(bp, t + d, amp, 0.02));
+      nz(t + 0.03, 0.16, perc(bp, t + 0.03, amp * 0.8, 0.16));
+    },
+    hat(t, amp = 0.05, open = false) { nz(t, open ? 0.3 : 0.06, filt(perc(out, t, amp, open ? 0.28 : 0.045), 'highpass', 7200)); },
+    crash(t, amp = 0.1, dec = 1.8) { nz(t, dec, filt(perc(out, t, amp, dec), 'highpass', 4500)); },
+    swell(t, dur = 2, amp = 0.09) {
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(amp, t + dur); g.gain.linearRampToValueAtTime(0, t + dur + 0.05);
+      g.connect(out);
+      nz(t, dur + 0.1, filt(g, 'highpass', 3500));
+    },
+    tom(t, f = 110, amp = 0.35, dec = 0.35) {
+      const o = osc('sine', f, t, dec, perc(out, t, amp, dec));
+      o.frequency.exponentialRampToValueAtTime(f * 0.62, t + dec);
+      nz(t, 0.05, filt(perc(out, t, amp * 0.25, 0.05), 'lowpass', 1800));
+    },
+    taiko(t, amp = 0.5) {
+      I.tom(t, 62, amp, 0.7);
+      nz(t, 0.25, filt(perc(out, t, amp * 0.5, 0.25), 'lowpass', 600));
+    },
+    timpani(t, f = 73, amp = 0.4, dec = 1.5) {
+      const o = osc('sine', f * 1.03, t, dec, perc(out, t, amp, dec, 0.004));
+      o.frequency.exponentialRampToValueAtTime(f, t + 0.12);
+      osc('sine', f * 1.5, t, dec * 0.6, perc(out, t, amp * 0.25, dec * 0.6));
+      nz(t, 0.3, filt(perc(out, t, amp * 0.35, 0.3), 'lowpass', 450));
+    },
+    bass(t, f, dur, amp = 0.22, type = 'triangle', cutoff = 0) {
+      const g = perc(out, t, amp, dur, 0.004);
+      osc(type, f, t, dur, cutoff ? filt(g, 'lowpass', cutoff, 1) : g);
+    },
+    // 808: a long sine with a little drive, optionally sliding to another note.
+    sub(t, f, dur, amp = 0.38, slideTo = 0) {
+      const g = perc(out, t, amp, dur, 0.004);
+      const o = osc('sine', f, t, dur, drive(g));
+      if (slideTo) { o.frequency.setValueAtTime(f, t + dur * 0.35); o.frequency.exponentialRampToValueAtTime(slideTo, t + dur * 0.6); }
+    },
+    pad(t, freqs, dur, amp = 0.045, cutoff = 1200, att = 0.35, type = 'sawtooth') {
+      const lp = filt(sus(out, t, amp, dur, att, Math.min(0.5, dur * 0.3)), 'lowpass', cutoff);
+      for (const f of freqs) for (const d of [-7, 7]) osc(type, f, t, dur, lp, d);
+    },
+    supersaw(t, freqs, dur, amp = 0.03, cutoff = 4200, att = 0.005) {
+      const lp = filt(sus(out, t, amp, dur, att, Math.min(0.12, dur * 0.4)), 'lowpass', cutoff);
+      for (const f of freqs) for (const d of [-16, -6, 6, 16]) osc('sawtooth', f, t, dur, lp, d);
+    },
+    pluck(t, f, dur, amp = 0.05, type = 'square', cutoff = 3200) {
+      const lp = filt(perc(out, t, amp, dur), 'lowpass', cutoff);
+      lp.frequency.setValueAtTime(cutoff, t); lp.frequency.exponentialRampToValueAtTime(Math.max(200, cutoff * 0.15), t + dur);
+      osc(type, f, t, dur, lp);
+    },
+    strum(t, freqs, amp = 0.04, gap = 0.014, dur = 0.35) { freqs.forEach((f, i) => I.pluck(t + i * gap, f, dur, amp, 'triangle', 4200)); },
+    bell(t, f, dur = 1.3, amp = 0.06) {
+      osc('sine', f, t, dur, perc(out, t, amp, dur));
+      osc('sine', f * 2.76, t, dur * 0.5, perc(out, t, amp * 0.35, dur * 0.5));
+      osc('sine', f * 5.4, t, dur * 0.25, perc(out, t, amp * 0.18, dur * 0.25));
+    },
+    // An "ah" choir: saws through two vowel formants, with a slow vibrato.
+    choir(t, freqs, dur, amp = 0.05, att = 0.45) {
+      const g = sus(out, t, amp, dur, att, Math.min(0.6, dur * 0.35));
+      const f1 = filt(g, 'bandpass', 720, 5), f2 = filt(g, 'bandpass', 1150, 6);
+      const mix = c.createGain(); mix.gain.value = 1.6; mix.connect(f1); mix.connect(f2);
+      for (const f of freqs) for (const d of [-9, 9]) { const o = osc('sawtooth', f, t, dur, mix, d); vib(o, t, dur, 4.6 + Math.random(), 7); }
+    },
+    strings(t, freqs, dur, amp = 0.04, att = 0.3) {
+      const lp = filt(sus(out, t, amp, dur, att, Math.min(0.5, dur * 0.3)), 'lowpass', 2600);
+      for (const f of freqs) for (const d of [-8, 8]) { const o = osc('sawtooth', f, t, dur, lp, d); vib(o, t, dur, 5.2, 5); }
+    },
+    stac(t, f, amp = 0.05, dec = 0.14) {
+      const lp = filt(perc(out, t, amp, dec, 0.006), 'lowpass', 2000);
+      for (const d of [-6, 6]) osc('sawtooth', f, t, dec, lp, d);
+    },
+    brass(t, freqs, dur, amp = 0.05) {
+      const g = sus(out, t, amp, dur, 0.03, Math.min(0.2, dur * 0.3));
+      const lp = filt(g, 'lowpass', 500, 2);
+      lp.frequency.setValueAtTime(500, t); lp.frequency.exponentialRampToValueAtTime(2800, t + 0.09); lp.frequency.exponentialRampToValueAtTime(1500, t + Math.max(0.12, dur));
+      for (const f of freqs) for (const d of [-5, 5]) osc('sawtooth', f, t, dur, lp, d);
+    },
+    // Trailer "braam": a huge low brass chord opening up, driven.
+    braam(t, f, dur = 2.6, amp = 0.1) {
+      const g = sus(out, t, amp, dur, 0.04, 1.2);
+      const lp = filt(drive(g), 'lowpass', 180, 3);
+      lp.frequency.setValueAtTime(180, t); lp.frequency.exponentialRampToValueAtTime(1700, t + 0.5); lp.frequency.exponentialRampToValueAtTime(400, t + dur);
+      for (const [k, d] of [[1, 0], [1, 12], [0.5, -6], [1.5, 4], [2, -8]]) osc('sawtooth', f * k, t, dur, lp, d);
+    },
+    tick(t, amp = 0.05) {
+      nz(t, 0.02, filt(perc(out, t, amp, 0.02), 'highpass', 5000));
+      osc('sine', 2600, t, 0.03, perc(out, t, amp * 0.6, 0.03));
+    },
+    agogo(t, hi, amp = 0.05) {
+      const f = hi ? 1180 : 790;
+      osc('square', f, t, 0.2, filt(perc(out, t, amp, 0.2), 'bandpass', f, 6));
+      osc('sine', f * 1.48, t, 0.12, perc(out, t, amp * 0.5, 0.12));
+    },
+    tamborim(t, amp = 0.06) {
+      osc('triangle', 820, t, 0.06, perc(out, t, amp, 0.06));
+      nz(t, 0.03, filt(perc(out, t, amp * 0.6, 0.03), 'highpass', 3000));
+    },
+    shaker(t, amp = 0.022) { nz(t, 0.07, filt(perc(out, t, amp, 0.07, 0.018), 'bandpass', 6500, 1)); },
+    // Samba whistle (apito): a fast trill.
+    whistle(t, dur = 0.22, amp = 0.045) {
+      const o = osc('sine', 2900, t, dur, sus(out, t, amp, dur, 0.01, 0.04));
+      vib(o, t, dur, 26, 70);
+    },
+    cuica(t, f0, f1, dur = 0.3, amp = 0.06) {
+      const o = osc('sine', f0, t, dur, filt(perc(out, t, amp, dur, 0.02), 'bandpass', (f0 + f1) / 2, 2));
+      o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    },
+    impact(t, amp = 0.45) {
+      I.kick(t, amp, 95, 30, 1.3);
+      nz(t, 1, filt(perc(out, t, amp * 0.6, 0.9), 'lowpass', 1100));
+      I.crash(t, amp * 0.25, 2.2);
+    },
+    zap(t, amp = 0.04) { const o = osc('square', 2200, t, 0.22, filt(perc(out, t, amp, 0.22), 'lowpass', 3000)); o.frequency.exponentialRampToValueAtTime(110, t + 0.22); },
+    thunder(t, amp = 0.35) {
+      nz(t, 2.4, filt(perc(out, t, amp, 2.4, 0.01), 'lowpass', 420));
+      for (let i = 0; i < 14; i++) { const at = t + Math.random() * 0.35; nz(at, 0.04, filt(perc(out, at, amp * 0.5, 0.04), 'highpass', 1500)); }
+    },
+  };
+  return I;
+}
+
+// Melody helper: a [step, midi, lengthInSteps] list, played when the step matches.
+const play = (mel, p, fn) => { for (const [st, m, len] of mel) if (st === p) fn(midi(m), len); };
+
+// Each song: name (shown while it plays), bpm, wet (reverb send), gain (balance), step(I, s, t, spb).
+const SONGS = {
+  // Menus: a light four-on-the-floor loop.
+  menu: {
+    name: 'Golazo Lounge', bpm: 118, wet: 0.1, gain: 1,
+    step(I, s, t, spb) {
+      const bar = (s >> 4) % 4, p = s % 16;
+      const chords = [[57, 60, 64, 67], [53, 57, 60, 64], [48, 52, 55, 59], [55, 59, 62, 65]];
+      if (p % 4 === 0) I.kick(t, 0.42);
+      if (p % 4 === 2) I.hat(t, 0.05);
+      if (p % 8 === 4) I.clap(t, 0.18);
+      if (p === 0) I.pad(t, hz(chords[bar]), spb * 16, 0.05, 1100);
+      if (p % 4 === 2 || p === 0) I.bass(t, midi([45, 41, 36, 43][bar]), spb * 1.6);
+      if ((p === 6 || p === 11 || p === 14) && Math.random() < 0.7) I.pluck(t, midi(chords[bar][Math.floor(Math.random() * 4)] + 12), spb * 2, 0.045);
+    },
+  },
+
+  // Bronze, silver and gold packs: a stomp-clap stadium anthem with a crowd chant (D major).
+  classic: {
+    name: 'Stadium Anthem', bpm: 122, wet: 0.2, gain: 1.05,
+    step(I, s, t, spb) {
+      const bar = (s >> 4) % 4, p = s % 16, intro = s < 32;
+      const C = [[62, 66, 69], [57, 61, 64], [59, 62, 66], [55, 59, 62]][bar], B = [38, 33, 35, 31][bar];
+      if (p === 0 || p === 8) I.tom(t, 68, 0.42, 0.45);
+      if (p === 4 || p === 12) I.clap(t, 0.24);
+      if (intro) return;
+      if (p % 4 === 0) I.kick(t, 0.36);
+      if (p % 2 === 1) I.hat(t, 0.03);
+      if (p % 4 === 2) I.bass(t, midi(B), spb * 1.8, 0.2);
+      if (p === 0) I.pad(t, hz(C), spb * 16, 0.035, 1500);
+      if ([2, 7, 10, 15].includes(p)) for (const f of hz(C.map((m) => m + 12))) I.pluck(t, f, spb * 1.5, 0.022, 'triangle', 5000);
+      // "Oh-oh-oh" chant over two bars.
+      const chant = (s >> 4) % 2 === 0 ? [[0, 74, 3], [4, 74, 3], [8, 76, 2], [10, 78, 6]] : [[0, 76, 3], [4, 74, 3], [8, 71, 3], [12, 69, 4]];
+      play(chant, p, (f, len) => I.choir(t, [f, f / 2], spb * len, 0.05, 0.05));
+    },
+  },
+
+  // Premium, Rare, Jumbo and Mega packs: big-room EDM, a two-bar build then the drop (A minor).
+  premium: {
+    name: 'Big Room Drop', bpm: 128, wet: 0.16, gain: 1.2,
+    step(I, s, t, spb) {
+      const bar8 = (s >> 4) % 8, bar = (s >> 4) % 4, p = s % 16;
+      const C = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]][bar], B = [33, 29, 36, 31][bar];
+      if (bar8 < 2) {
+        // Build: a snare roll speeding up, the chords filtering open, a noise swell.
+        const every = bar8 === 0 ? (p < 8 ? 4 : 2) : (p < 8 ? 2 : 1);
+        if (p % every === 0) I.snare(t, 0.08 + (bar8 * 16 + p) * 0.004, 0.12);
+        if (p === 0) I.pad(t, hz(C), spb * 16, 0.04, 500 + bar8 * 1400);
+        if (bar8 === 0 && p === 0) I.swell(t, spb * 32, 0.1);
+        if (bar8 === 1 && p === 15) I.crash(t + spb, 0.12);
+        return;
+      }
+      if (p % 4 === 0) I.kick(t, 0.5, 150, 40, 0.32);
+      if (p === 4 || p === 12) I.clap(t, 0.2);
+      if (p % 2 === 1) I.hat(t, 0.04, p % 4 === 3);
+      if (p % 4 === 2) I.bass(t, midi(B + 12), spb * 1.6, 0.18, 'sawtooth', 900);
+      if ([0, 3, 6, 10, 12].includes(p)) I.supersaw(t, hz(C.map((m) => m + 12)), spb * 1.4, 0.022);
+    },
+  },
+
+  // 83+ and 86+ packs: synthwave, gated snare and a pulsing arpeggio (F minor).
+  neon: {
+    name: 'Synthwave Drive', bpm: 104, wet: 0.3, gain: 1.3,
+    step(I, s, t, spb) {
+      const bar = (s >> 4) % 4, p = s % 16;
+      const C = [[53, 56, 60], [49, 53, 56], [56, 60, 63], [51, 55, 58]][bar];
+      if (p === 0 || p === 8 || p === 10) I.kick(t, 0.42);
+      if (p === 4 || p === 12) I.snare(t, 0.26, 0.32, 170);
+      if (p % 2 === 0) I.hat(t, 0.03);
+      if (p % 2 === 0) I.bass(t, midi(C[0] - 24 + (p % 4 === 2 ? 12 : 0)), spb * 1.8, 0.18, 'sawtooth', 700);
+      const arp = [0, 1, 2, 3, 2, 1][p % 6];
+      I.pluck(t, midi([C[0], C[1], C[2], C[0] + 12][arp] + 12), spb * 1.2, 0.025, 'sawtooth', 2600);
+      if (p === 0) I.pad(t, hz(C), spb * 16, 0.03, 1600, 0.6);
+      if ((s >> 6) % 2 === 1) play([[0, 72, 6], [6, 70, 2], [8, 68, 4], [12, 67, 4]], p, (f, len) => I.pluck(t, f, spb * len, 0.04, 'square', 2000));
+    },
+  },
+
+  // Team of the Week packs: dark black-and-gold trap, 808s and hi-hat rolls (C minor).
+  totw: {
+    name: 'Gold Trap', bpm: 140, wet: 0.18, gain: 1.1,
+    step(I, s, t, spb) {
+      const bar = (s >> 4) % 4, p = s % 16;
+      const R = [36, 32, 29, 31][bar];
+      if (p === 0 || p === 7 || p === 10) { I.kick(t, 0.4, 120, 45, 0.2); I.sub(t, midi(R), spb * (p === 0 ? 6 : 3), 0.32, p === 10 && bar === 3 ? midi(R + 5) : 0); }
+      if (p === 8) { I.snare(t, 0.22, 0.2); I.clap(t, 0.16); }
+      if (p % 2 === 0) I.hat(t, 0.035);
+      // Hi-hat rolls in 32nds at the end of every other bar.
+      if (bar % 2 === 1 && p >= 12) { I.hat(t, 0.03); I.hat(t + spb / 2, 0.025); }
+      if (p === 0) I.strings(t, hz([R + 24, R + 27, R + 31]), spb * 16, 0.022, 1);
+      play([[0, 72, 2], [3, 75, 2], [6, 79, 2], [10, 77, 2], [13, 75, 3]], p, (f) => I.bell(t, f, 1.1, 0.045));
+    },
+  },
+
+  // Icon packs: an orchestra, timpani, low strings, choir and a brass theme (D minor).
+  icon: {
+    name: 'Legends Orchestra', bpm: 84, wet: 0.42, gain: 1.12,
+    step(I, s, t, spb) {
+      const bar = (s >> 4) % 4, bar8 = (s >> 4) % 8, p = s % 16;
+      const C = [[50, 53, 57], [46, 50, 53], [53, 57, 60], [48, 52, 55]][bar];
+      if (p === 0) { I.timpani(t, midi(C[0] - 12), 0.42); I.strings(t, hz(C.map((m) => m + 12)), spb * 16, 0.03, 0.5); }
+      if (bar === 3 && p >= 12) I.timpani(t, midi(45), 0.12 + (p - 12) * 0.07, 0.4);
+      if (p % 2 === 0) I.stac(t, midi(C[0] - 12 + (p % 4 === 2 ? 7 : 0)), 0.045);
+      if (s >= 32 && p === 0) I.choir(t, hz([C[0] + 12, C[1] + 12, C[2] + 12]), spb * 16, 0.04, 0.8);
+      if (bar8 >= 4) play([[0, 62, 6], [6, 65, 2], [8, 69, 6], [14, 67, 2]], p, (f, len) => I.brass(t, [f, f / 2], spb * len, 0.045));
+      if (bar8 < 4 && p === 0 && bar % 2 === 0) I.brass(t, hz([C[0], C[2]]), spb * 3, 0.035);
+      if (p === 0 && bar === 0) I.crash(t, 0.07, 3);
+      if ((p === 6 || p === 14) && Math.random() < 0.5) I.bell(t, midi(C[2] + 24), 1.6, 0.025);
+    },
+  },
+
+  // Hero packs: comic-book action, driving bass, brass stabs and toms (E minor).
+  hero: {
+    name: 'Comic Action', bpm: 150, wet: 0.2, gain: 1.1,
+    step(I, s, t, spb) {
+      const bar = (s >> 4) % 4, p = s % 16;
+      const C = [[52, 55, 59], [48, 52, 55], [50, 54, 57], [47, 51, 54]][bar];
+      if (p === 0 || p === 8 || p === 11) I.kick(t, 0.42);
+      if (p === 4 || p === 12) I.snare(t, 0.24, 0.16);
+      if (p % 2 === 0) I.hat(t, 0.035);
+      if (p % 2 === 0) I.bass(t, midi(C[0] - 24), spb * 1.5, 0.2, 'sawtooth', 1000);
+      if ([0, 6, 10].includes(p)) I.brass(t, hz(C.map((m) => m + 12)), spb * (p === 0 ? 3 : 1.5), 0.04);
+      if (bar === 0 && p === 0) I.impact(t, 0.3);
+      if (bar === 3 && p >= 12) I.tom(t, [180, 150, 120, 95][p - 12], 0.3);
+      if (bar === 1 || bar === 2) I.pluck(t, midi(C[p % 3] + 24 + (p >= 8 ? 12 : 0)), spb, 0.02, 'sawtooth', 3600);
+    },
+  },
+
+  // Copa do Brasil packs: a samba batucada, surdo, caixa, tamborim, agogô, apito and cavaquinho.
+  copa: {
+    name: 'Samba Batucada', bpm: 104, wet: 0.14, gain: 1.25,
+    step(I, s, t, spb) {
+      const bar = (s >> 4) % 4, p = s % 16;
+      const C = [[60, 64, 67, 72], [57, 60, 64, 69], [62, 65, 69, 74], [55, 59, 62, 65]][bar];
+      // Surdo: open on beat 2 of each half, muted on beat 1.
+      if (p === 4 || p === 12) I.tom(t, 58, 0.5, 0.5);
+      if (p === 0 || p === 8) I.tom(t, 72, 0.22, 0.18);
+      I.snare(t, [0, 3, 6, 8, 11, 14].includes(p) ? 0.07 : 0.025, 0.07, 260);
+      if ([0, 3, 6, 10, 12].includes(p)) I.tamborim(t, 0.05);
+      const ag = { 0: 1, 2: 0, 4: 1, 7: 0, 8: 1, 10: 0, 12: 1, 14: 0 }[p];
+      if (ag !== undefined) I.agogo(t, ag === 1, 0.04);
+      I.shaker(t, p % 2 ? 0.014 : 0.024);
+      if ([2, 5, 8, 11, 14].includes(p)) I.strum(t, hz(C.map((m) => m + 12)), 0.026);
+      if (p === 0 || p === 10) I.bass(t, midi(C[0] - 24), spb * 2, 0.16);
+      if (bar === 3 && [0, 2, 4].includes(p)) I.whistle(t, p === 4 ? 0.4 : 0.14);
+      if ((bar === 1 && p === 6) || (bar === 2 && p === 14)) I.cuica(t, 380, 760, 0.28);
+    },
+  },
+
+  // Exclusive (Daily Quests) packs: a crimson movie trailer, braams, ticking clock and taiko.
+  streak: {
+    name: 'Crimson Trailer', bpm: 90, wet: 0.38, gain: 0.88,
+    step(I, s, t, spb) {
+      const bar = (s >> 4) % 4, p = s % 16;
+      const R = [38, 34, 31, 33][bar];
+      if (p % 2 === 0) I.tick(t, p % 4 === 0 ? 0.05 : 0.03);
+      if (p === 0 && bar % 2 === 0) I.braam(t, midi(R - 12), spb * 28, 0.085);
+      if ([0, 3, 6, 8, 10, 11].includes(p)) I.taiko(t, 0.18 + bar * 0.06 + (p === 0 ? 0.1 : 0));
+      if (s >= 32) I.stac(t, midi(R + 12 + [0, 12, 7, 12][p % 4]), 0.035, 0.1);
+      if (p === 0 && bar === 0) I.impact(t, 0.38);
+      if (p === 0) I.choir(t, hz([R, R + 3, R + 7]), spb * 16, 0.03, 1);
+      if (bar === 3 && p === 8) I.swell(t, spb * 8, 0.07);
+    },
+  },
+
+  // Ultimate packs: a festival anthem with supersaw chords and a lead (F major).
+  ultimate: {
+    name: 'Festival Anthem', bpm: 128, wet: 0.2, gain: 1.1,
+    step(I, s, t, spb) {
+      const bar = (s >> 4) % 4, bar8 = (s >> 4) % 8, p = s % 16;
+      const C = [[53, 57, 60], [48, 52, 55], [50, 53, 57], [46, 50, 53]][bar];
+      if (bar8 === 7) {
+        if (p % (p < 8 ? 2 : 1) === 0) I.snare(t, 0.06 + p * 0.008, 0.1);
+        if (p === 0) I.swell(t, spb * 16, 0.09);
+        if (p === 0) I.supersaw(t, hz(C), spb * 16, 0.016, 1500, 0.4);
+        return;
+      }
+      if (p % 4 === 0) I.kick(t, 0.48, 150, 40, 0.3);
+      if (p === 4 || p === 12) I.clap(t, 0.2);
+      if (p % 4 === 2) I.hat(t, 0.06, true);
+      if (p % 4 === 2) I.supersaw(t, hz(C.map((m) => m + 12)), spb * 1.8, 0.02);
+      if (p % 4 === 2) I.bass(t, midi(C[0] - 12), spb * 1.8, 0.18, 'sawtooth', 800);
+      I.pluck(t, midi(C[p % 3] + 24), spb, 0.016, 'square', 2600);
+      if (bar8 === 0 && p === 0) I.crash(t, 0.1);
+      play((s >> 4) % 2 === 0 ? [[0, 77, 3], [3, 76, 3], [6, 72, 2], [8, 74, 6]] : [[0, 72, 3], [3, 74, 3], [6, 76, 2], [8, 77, 6]], p, (f, len) => I.supersaw(t, [f], spb * len, 0.03, 5000));
+    },
+  },
+
+  // Ultimate Legends packs: hall of fame, a heroic orchestra with trailer drums (G major).
+  legends: {
+    name: 'Hall of Fame', bpm: 96, wet: 0.4, gain: 0.9,
+    step(I, s, t, spb) {
+      const bar = (s >> 4) % 4, bar8 = (s >> 4) % 8, p = s % 16;
+      const C = [[55, 59, 62], [50, 54, 57], [52, 55, 59], [48, 52, 55]][bar];
+      if (p === 0 || p === 6 || p === 8) I.taiko(t, p === 0 ? 0.45 : 0.3);
+      if (p === 4 || p === 12) I.snare(t, 0.16, 0.3, 160);
+      if (p === 0) { I.strings(t, hz(C.map((m) => m + 12)), spb * 16, 0.03, 0.3); I.choir(t, hz(C), spb * 16, 0.035, 0.6); }
+      if (p % 2 === 0) I.stac(t, midi(C[0] - 12 + (p % 8 === 4 ? 7 : 0)), 0.04);
+      play(bar8 < 4 ? [[0, 67, 3], [3, 71, 1], [4, 74, 8], [12, 72, 2], [14, 71, 2]] : [[0, 74, 6], [6, 76, 2], [8, 79, 8]], p, (f, len) => I.brass(t, [f, f / 2], spb * len, 0.045));
+      if (bar === 3 && p >= 12) I.timpani(t, midi(43), 0.15 + (p - 12) * 0.08, 0.5);
+      if (p === 0 && bar === 0) { I.crash(t, 0.09, 3); I.timpani(t, midi(43), 0.4); }
+      if (p % 4 === 2 && Math.random() < 0.4) I.bell(t, midi(C[(p >> 2) % 3] + 24), 1.4, 0.022);
+    },
+  },
+};
+
+// One-off hits played when a pack bursts open, in the scene's style.
+function sting(I, id, t) {
+  const C = (ms) => hz(ms);
+  switch (id) {
+    case 'icon': case 'legends': I.timpani(t, midi(38), 0.5); I.choir(t, C([62, 66, 69, 74]), 2.4, 0.07, 0.15); I.crash(t, 0.12, 2.5); I.bell(t + 0.1, midi(86), 2, 0.05); break;
+    case 'hero': I.thunder(t, 0.4); I.brass(t + 0.05, C([52, 59, 64]), 0.7, 0.07); break;
+    case 'copa': I.whistle(t, 0.18); I.whistle(t + 0.24, 0.18); I.tom(t + 0.45, 58, 0.6, 0.5); I.agogo(t + 0.45, true, 0.07); I.agogo(t + 0.6, false, 0.07); break;
+    case 'totw': I.sub(t, midi(36), 1.2, 0.45); I.kick(t, 0.5); I.bell(t, midi(84), 1.6, 0.06); I.bell(t + 0.12, midi(91), 1.4, 0.04); break;
+    case 'streak': I.braam(t, midi(26), 2.6, 0.13); I.impact(t, 0.4); break;
+    case 'neon': I.zap(t, 0.06); I.supersaw(t + 0.05, C([65, 68, 72]), 0.8, 0.03, 3000); I.kick(t, 0.45); break;
+    case 'premium': case 'ultimate': I.impact(t, 0.45); I.supersaw(t, C([57, 64, 69, 72]), 0.9, 0.03); break;
+    default: I.impact(t, 0.4); I.clap(t, 0.25); break;
+  }
+}
+
+__M["src/core/music.js"] = { instruments, SONGS, sting };
+})();
+
 /* ---- src/core/audio.js ---- */
 ;(function(){
+const { SONGS, instruments, sting } = __M["src/core/music.js"];
 // Procedural audio: crowd ambience, whistles, kicks, post hits, nets, UI blips and menu music.
 // Everything is synthesized with Web Audio so the game ships no audio files.
+
+
 
 class AudioEngine {
   constructor() {
@@ -54558,118 +55003,72 @@ class AudioEngine {
     });
   }
 
-  // ---- Menu music: a light generative four-on-the-floor loop ----
-  startMusic() {
-    if (!this.ctx || this.musicOn) return;
+  // ---- Music: the menu loop and the pack-opening tracks (src/core/music.js) ----
+  // startMusic(id) cross-fades to that song (it carries on if it's already playing).
+  startMusic(id = 'menu') {
+    if (!this.ctx) return;
+    if (this.music && this.music.id === id) return;
+    this.stopMusic(0.5);
+    const song = SONGS[id] || SONGS.menu;
+    const c = this.ctx;
+    if (!this.reverb) {
+      // A shared hall reverb (decaying noise impulse) the songs send to.
+      const len = Math.floor(c.sampleRate * 2.6), ir = c.createBuffer(2, len, c.sampleRate);
+      for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+      this.reverb = c.createConvolver();
+      this.reverb.buffer = ir;
+      this.reverb.connect(this.musicBus);
+    }
+    const out = c.createGain();
+    out.gain.value = 0;
+    out.gain.setTargetAtTime(song.gain || 1, c.currentTime, id === 'menu' ? 1.2 : 0.25);
+    out.connect(this.musicBus);
+    const send = c.createGain();
+    send.gain.value = song.wet || 0;
+    out.connect(send).connect(this.reverb);
+    const inst = { id, song, out, send, step: 0, nextT: c.currentTime + 0.08, on: true, I: instruments(c, this.noiseBuf, out) };
+    this.music = inst;
     this.musicOn = true;
-    this.musicGain = this.ctx.createGain();
-    this.musicGain.gain.value = 0;
-    this.musicGain.connect(this.musicBus);
-    this.musicGain.gain.setTargetAtTime(1, this.ctx.currentTime, 1.2);
-    this.bpm = 118;
-    this.step = 0;
-    this.nextT = this.ctx.currentTime + 0.1;
-    const chords = [[57, 60, 64, 67], [53, 57, 60, 64], [48, 52, 55, 59], [55, 59, 62, 65]];
-    const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
     const tick = () => {
-      if (!this.musicOn) return;
-      const spb = 60 / this.bpm / 4; // 16th notes
-      while (this.nextT < this.ctx.currentTime + 0.25) {
-        const s = this.step % 64;
-        const t = this.nextT;
-        const bar = Math.floor(s / 16);
-        if (s % 4 === 0) this._mKick(t);
-        if (s % 4 === 2) this._mHat(t, 0.05);
-        if (s % 8 === 4) this._mClap(t);
-        if (s % 16 === 0) this._mPad(t, chords[bar].map(midi), spb * 16);
-        const bassNotes = [45, 41, 36, 43];
-        if (s % 4 === 2 || s % 16 === 0) this._mBass(t, midi(bassNotes[bar]), spb * 1.6);
-        if ((s % 16 === 6 || s % 16 === 11 || s % 16 === 14) && Math.random() < 0.7) {
-          const ch = chords[bar];
-          this._mPluck(t, midi(ch[Math.floor(Math.random() * 4)] + 12), spb * 2);
-        }
-        this.step++;
-        this.nextT += spb;
+      if (!inst.on) return;
+      const spb = 60 / song.bpm / 4; // 16th notes
+      while (inst.nextT < c.currentTime + 0.25) {
+        try { song.step(inst.I, inst.step, inst.nextT, spb); } catch (e) { console.warn(e); }
+        inst.step++;
+        inst.nextT += spb;
       }
-      this.musicTimer = setTimeout(tick, 60);
+      inst.timer = setTimeout(tick, 60);
     };
     tick();
   }
 
-  stopMusic() {
-    if (!this.musicOn) return;
+  // The name of the song playing (shown during pack openings).
+  get musicName() { return this.music ? this.music.song.name : ''; }
+  get musicId() { return this.music ? this.music.id : null; }
+
+  stopMusic(fade = 0.4) {
+    const inst = this.music;
+    if (!inst) return;
+    this.music = null;
     this.musicOn = false;
-    clearTimeout(this.musicTimer);
-    if (this.musicGain) {
-      const g = this.musicGain;
-      g.gain.setTargetAtTime(0, this.ctx.currentTime, 0.4);
-      setTimeout(() => g.disconnect(), 2500);
-    }
+    inst.on = false;
+    clearTimeout(inst.timer);
+    inst.out.gain.cancelScheduledValues(this.ctx.currentTime);
+    inst.out.gain.setTargetAtTime(0, this.ctx.currentTime, fade);
+    setTimeout(() => { inst.out.disconnect(); inst.send.disconnect(); }, fade * 6000 + 500);
   }
 
-  _mKick(t) {
-    const c = this.ctx;
-    const o = c.createOscillator();
-    o.frequency.setValueAtTime(130, t);
-    o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
-    const g = c.createGain();
-    g.gain.setValueAtTime(0.42, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-    o.connect(g).connect(this.musicGain);
-    o.start(t); o.stop(t + 0.32);
+  // A one-off hit in a pack scene's style (when the pack bursts open).
+  sting(id) {
+    if (!this.ctx) return;
+    if (!this.stingI) this.stingI = instruments(this.ctx, this.noiseBuf, this.sfxBus);
+    sting(this.stingI, id, this.ctx.currentTime + 0.01);
   }
-  _mHat(t, a) {
-    const c = this.ctx;
-    const n = c.createBufferSource(); n.buffer = this.noiseBuf;
-    const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000;
-    const g = c.createGain();
-    g.gain.setValueAtTime(a, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-    n.connect(hp).connect(g).connect(this.musicGain);
-    n.start(t, Math.random() * 3, 0.06);
-  }
-  _mClap(t) {
-    const c = this.ctx;
-    const n = c.createBufferSource(); n.buffer = this.noiseBuf;
-    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1600; bp.Q.value = 1;
-    const g = c.createGain();
-    g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-    n.connect(bp).connect(g).connect(this.musicGain);
-    n.start(t, Math.random() * 3, 0.16);
-  }
-  _mPad(t, freqs, dur) {
-    const c = this.ctx;
-    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1100;
-    const g = c.createGain();
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.05, t + 0.3);
-    g.gain.setValueAtTime(0.05, t + dur - 0.3);
-    g.gain.linearRampToValueAtTime(0, t + dur);
-    lp.connect(g).connect(this.musicGain);
-    for (const f of freqs) {
-      for (const det of [-7, 7]) {
-        const o = c.createOscillator();
-        o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = det;
-        o.connect(lp); o.start(t); o.stop(t + dur + 0.05);
-      }
-    }
-  }
-  _mBass(t, f, dur) {
-    const c = this.ctx;
-    const o = c.createOscillator(); o.type = 'triangle'; o.frequency.value = f;
-    const g = c.createGain();
-    g.gain.setValueAtTime(0.22, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g).connect(this.musicGain);
-    o.start(t); o.stop(t + dur + 0.02);
-  }
-  _mPluck(t, f, dur) {
-    const c = this.ctx;
-    const o = c.createOscillator(); o.type = 'square'; o.frequency.value = f;
-    const lp = c.createBiquadFilter(); lp.type = 'lowpass';
-    lp.frequency.setValueAtTime(3000, t); lp.frequency.exponentialRampToValueAtTime(400, t + dur);
-    const g = c.createGain();
-    g.gain.setValueAtTime(0.045, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(lp).connect(g).connect(this.musicGain);
-    o.start(t); o.stop(t + dur + 0.02);
+
+  thunder(strength = 1) {
+    if (!this.ctx) return;
+    if (!this.stingI) this.stingI = instruments(this.ctx, this.noiseBuf, this.sfxBus);
+    this.stingI.thunder(this.ctx.currentTime + 0.01, 0.35 * strength);
   }
 }
 
@@ -75511,6 +75910,543 @@ function cupOpponent(cup, active) {
 __M["src/modes/utdata.js"] = { loadUT, saveUT, saveDesign, cardData, addCards, makeCard, newUT, weekNo, cardByUid, chemistry, styleBoost, squadInfo, designKit, utTeam, makeOpponent, PACKS, PACK_ART, PACK_BY_ID, openPack, quickSellValue, marketPrice, SBCS, sbcCheck, EVOS, applyEvo, OBJECTIVES, SB_DIFF, sbOpponents, rivalsOpponent, clubName, CUP_ROUNDS, CASH_CUPS, CUP_BY_ID, dayNo, doubleCup, cupMult, cupTotal, cupState, cupUnlocked, cupOpponent };
 })();
 
+/* ---- src/ui/packscenes.js ---- */
+;(function(){
+// Pack-opening scenes: each pack has its own cutscene set, effects and music track (the song ids
+// in src/core/music.js match the scene ids). The pack decides the scene; an Icon, Hero, In-Form or
+// Exclusive pulled from an ordinary pack switches to that card's scene when the pack bursts open.
+//
+// colors: the set's light colours (null: the walkout card's colours); set: the tunnel's look;
+// led: the scrolling LED ribbon; banners: FC 26-style hanging banners for the reveals; fx: extra
+// effects in the 3D walkout (walkoutfx.js); confetti / pyro: colours; fireworks: how many bursts
+// over the stand; particles: the burst shapes when the pack tears open.
+
+const SCENES = {
+  classic: { name: 'Stadium Tunnel', colors: null, set: 'concrete', led: 'GOLAZO 26  ✦  WALKOUT  ✦', fx: [], fireworks: 3, particles: 'spark' },
+  premium: { name: 'Big Night', colors: ['#ffd34d', '#ff8a1f'], set: 'concrete', led: 'PREMIUM  ✦  BIG NIGHT  ✦', banners: true, fx: ['lasers', 'co2'], fireworks: 5, particles: 'spark' },
+  neon: { name: 'Neon Nights', colors: ['#00e5ff', '#ff3bd4'], set: 'neon', led: '83+  ✦  NEON NIGHTS  ✦', fx: ['lasers'], confetti: ['#00e5ff', '#ff3bd4', '#ffffff', '#7b5cff'], pyro: ['#00e5ff', '#ff3bd4'], fireworks: 4, particles: 'streak' },
+  totw: { name: 'Black & Gold', colors: ['#f1cf6b', '#fff1c0'], set: 'gloss', led: 'TEAM OF THE WEEK  ✦  IN-FORM  ✦', banners: true, fx: ['dust'], confetti: ['#f1cf6b', '#111111', '#fff1c0', '#c99a2e'], pyro: ['#ffd36b', '#ffffff'], fireworks: 3, particles: 'dust' },
+  icon: { name: 'Hall of Legends', colors: ['#fff1c9', '#d4a537'], set: 'marble', led: 'ICON  ✦  LEGEND  ✦', fx: ['rays', 'feathers'], confetti: ['#ffffff', '#f1d27a', '#d4a537', '#fff8e6'], pyro: ['#fff1c9', '#ffd36b'], fireworks: 5, particles: 'feather' },
+  hero: { name: 'Hero Strike', colors: ['#b48cff', '#5b2dff'], set: 'comic', led: 'HERO  ✦  POW  ✦', fx: ['lightning'], confetti: ['#b48cff', '#5b2dff', '#ffe066', '#ffffff'], pyro: ['#c9a6ff', '#ffe066'], fireworks: 3, particles: 'bolt' },
+  copa: { name: 'Carnaval', colors: ['#00c853', '#ffdf00'], set: 'samba', led: 'COPA DO BRASIL  ✦  É CAMPEÃO  ✦', fx: ['flares'], confetti: ['#00c853', '#ffdf00', '#1c3f94', '#ffffff'], pyro: ['#00e676', '#ffe600'], fireworks: 4, particles: 'confetti' },
+  streak: { name: 'Crimson Fire', colors: ['#ff3b5c', '#ffb347'], set: 'ember', led: 'EXCLUSIVE  ✦  NO DAYS OFF  ✦', fx: ['fire', 'embers'], confetti: ['#ff3b5c', '#ffb347', '#ffd34d', '#2a0010'], pyro: ['#ff5a1f', '#ffb347'], fireworks: 3, particles: 'ember' },
+  ultimate: { name: 'Festival', colors: ['#7b5cff', '#f1cf6b'], set: 'neon', led: 'ULTIMATE  ✦  FESTIVAL  ✦', banners: true, fx: ['lasers', 'co2'], confetti: ['#7b5cff', '#f1cf6b', '#00e0c6', '#ffffff'], pyro: ['#f1cf6b', '#7b5cff'], fireworks: 8, particles: 'spark' },
+  legends: { name: 'Hall of Fame', colors: ['#ffffff', '#d6b66a'], set: 'marble', led: 'ULTIMATE LEGENDS  ✦  HALL OF FAME  ✦', fx: ['rays', 'feathers', 'lasers'], confetti: ['#ffffff', '#d6b66a', '#b48cff', '#f1cf6b'], pyro: ['#fff1c9', '#d6b66a'], fireworks: 7, particles: 'feather' },
+};
+
+const PACK_SCENE = {
+  bronze: 'classic', silver: 'classic', gold: 'classic', starter: 'classic',
+  premium: 'premium', rare: 'premium', jumbo: 'premium', mega: 'premium',
+  '83plus': 'neon', '83x3': 'neon', '86x5': 'neon',
+  totw: 'totw', informx3: 'totw', icon: 'icon', hero: 'hero', copa: 'copa',
+  ultimate: 'ultimate', legends: 'legends', exclusive: 'streak',
+};
+const CARD_SCENE = { icon: 'icon', hero: 'hero', inform: 'totw', streak: 'streak' };
+
+const packScene = (packId) => PACK_SCENE[packId] || 'classic';
+
+// The scene once the pack is open: special cards from ordinary packs bring their own.
+function openScene(scene, best) {
+  const own = best && CARD_SCENE[best.type];
+  return own && ['classic', 'premium', 'neon'].includes(scene) ? own : scene;
+}
+
+__M["src/ui/packscenes.js"] = { SCENES, packScene, openScene };
+})();
+
+/* ---- src/ui/walkoutfx.js ---- */
+;(function(){
+const THREE = window.THREE;
+const { loadImage, crestUrl, flagUrl } = __M["src/data/crests.js"];
+// Scene sets and effects for the pack walkout (walkout.js), one look per pack scene (packscenes.js).
+// Modelled on how the real walkouts have changed over the years:
+//   - FC 25: a long players' tunnel; for 86+ players a triangle of lights glows at its far end
+//     (classic and premium scenes).
+//   - FC 26: banners hanging in the tunnel, cut to one by one (position, nation, club), with silver
+//     side lines for a walkout and gold for a lesser card (premium, TOTW and Festival scenes).
+//   - FC 24: beams of light rising from below (neon scenes).
+//   - promo cards: "more splashes of colour" in the card type's colours. Here: a marble hall with
+//     god rays and drifting gold feathers for Icons, lightning for Heroes, fire and embers for the
+//     Exclusives, flares, bunting and painted walls for the Copa do Brasil, lasers and CO2 jets
+//     for the big packs.
+
+
+
+
+function canvasTex(w, h, draw, repeat = null) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat[0], repeat[1]); }
+  return t;
+}
+
+// ---------- Wall textures ----------
+function marble(g, w, h) {
+  const gr = g.createLinearGradient(0, 0, w, h);
+  gr.addColorStop(0, '#f2ede2'); gr.addColorStop(0.5, '#e6dfcf'); gr.addColorStop(1, '#efe8da');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  g.filter = 'blur(0.8px)';
+  for (let i = 0; i < 34; i++) {
+    const gold = i % 7 === 0;
+    g.strokeStyle = gold ? 'rgba(201,162,74,0.55)' : `rgba(110,100,86,${0.12 + Math.random() * 0.25})`;
+    g.lineWidth = gold ? 1.6 : 0.5 + Math.random() * 1.8;
+    let x = Math.random() * w, y = Math.random() * h;
+    g.beginPath(); g.moveTo(x, y);
+    for (let k = 0; k < 9; k++) { x += (Math.random() - 0.3) * 70; y += (Math.random() - 0.5) * 40; g.lineTo(x, y); }
+    g.stroke();
+  }
+  g.filter = 'none';
+}
+function comic(g, w, h) {
+  const gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(0, '#5b2dd8'); gr.addColorStop(1, '#1d0b5a');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  // Halftone dots, bigger toward the floor, and speed lines.
+  for (let y = 0; y < h; y += 10) for (let x = (y / 10) % 2 ? 5 : 0; x < w; x += 10) {
+    g.fillStyle = 'rgba(255,255,255,0.13)';
+    g.beginPath(); g.arc(x, y, 0.6 + (y / h) * 3.4, 0, 7); g.fill();
+  }
+  g.strokeStyle = 'rgba(255,224,102,0.25)'; g.lineWidth = 3;
+  for (let i = 0; i < 14; i++) { const x = Math.random() * w * 1.4 - w * 0.2; g.beginPath(); g.moveTo(x, 0); g.lineTo(x - 120, h); g.stroke(); }
+}
+function samba(g, w, h) {
+  const cols = ['#00873a', '#ffdf00', '#1c3f94', '#00873a', '#ffffff'];
+  const sw = 46;
+  for (let i = -h / sw - 2; i < w / sw + 2; i++) {
+    g.fillStyle = cols[((i % cols.length) + cols.length) % cols.length];
+    g.beginPath(); g.moveTo(i * sw, h); g.lineTo(i * sw + sw, h); g.lineTo(i * sw + sw + h, 0); g.lineTo(i * sw + h, 0); g.closePath(); g.fill();
+  }
+  g.fillStyle = 'rgba(0,0,0,0.42)'; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(255,255,255,0.7)';
+  for (let i = 0; i < 26; i++) { const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.arc(x, y, 1.6, 0, 7); g.fill(); }
+}
+function emberCracks(g, w, h) {
+  g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+  g.shadowColor = '#ff4a12'; g.shadowBlur = 10;
+  for (let i = 0; i < 18; i++) {
+    g.strokeStyle = Math.random() < 0.3 ? '#ffb347' : '#ff3b1f';
+    g.lineWidth = 1 + Math.random() * 2;
+    let x = Math.random() * w, y = h * (0.3 + Math.random() * 0.7);
+    g.beginPath(); g.moveTo(x, y);
+    for (let k = 0; k < 7; k++) { x += (Math.random() - 0.5) * 50; y -= Math.random() * 30; g.lineTo(x, y); }
+    g.stroke();
+  }
+}
+
+// Restyles the walkout's shared materials for a set. m: { wall, floor, facade, scene, hemi }.
+function setLook(set, m) {
+  const { wall, floor, facade, scene, hemi } = m;
+  if (set === 'marble') {
+    const t = canvasTex(512, 256, marble, [5, 1]);
+    Object.assign(wall, { map: t, roughness: 0.3, metalness: 0, envMapIntensity: 0.4 }); wall.color.set(0x6f695e);
+    Object.assign(floor, { map: canvasTex(512, 256, marble, [1, 6]), roughness: 0.16, metalness: 0.35, envMapIntensity: 0.45 }); floor.color.set(0x6e675a);
+    Object.assign(facade, { map: canvasTex(512, 256, marble, [3, 1]), roughness: 0.45 }); facade.color.set(0x575146);
+    scene.fog.color.set(0x0d0a05); scene.background.set(0x060403); hemi.intensity = 0.18; hemi.color.set(0xffe8c0);
+  } else if (set === 'gloss') {
+    Object.assign(wall, { roughness: 0.14, metalness: 0.85, envMapIntensity: 0.6 }); wall.color.set(0x050506);
+    Object.assign(floor, { roughness: 0.06, metalness: 0.9 }); floor.color.set(0x030303);
+    facade.color.set(0x070707);
+  } else if (set === 'neon') {
+    Object.assign(wall, { roughness: 0.7, metalness: 0.1 }); wall.color.set(0x07070c);
+    Object.assign(floor, { roughness: 0.15, metalness: 0.65 }); floor.color.set(0x050508);
+    scene.fog.color.set(0x05030c); scene.background.set(0x030108);
+  } else if (set === 'comic') {
+    Object.assign(wall, { map: canvasTex(256, 256, comic, [6, 1]), roughness: 0.85, metalness: 0 }); wall.color.set(0x8d84b8);
+    Object.assign(floor, { roughness: 0.3, metalness: 0.4 }); floor.color.set(0x140a2e);
+    scene.fog.color.set(0x0a0418); scene.background.set(0x07020f);
+  } else if (set === 'samba') {
+    Object.assign(wall, { map: canvasTex(512, 256, samba, [4, 1]), roughness: 0.75, metalness: 0 }); wall.color.set(0x9a9a9a);
+    floor.color.set(0x0b140e);
+    scene.fog.color.set(0x020803);
+  } else if (set === 'ember') {
+    Object.assign(wall, { emissiveMap: canvasTex(512, 256, emberCracks, [4, 1]), roughness: 0.8, metalness: 0.1 }); wall.color.set(0x1a0b0b); wall.emissive.set(0xffffff); wall.emissiveIntensity = 1.2;
+    Object.assign(floor, { roughness: 0.22, metalness: 0.55 }); floor.color.set(0x0a0505);
+    scene.fog.color.set(0x0b0303); scene.background.set(0x050102);
+  }
+  for (const x of [wall, floor, facade]) x.needsUpdate = true;
+}
+
+// Sunburst texture for god rays.
+const raysTex = () => canvasTex(512, 512, (g, w, h) => {
+  g.translate(w / 2, h / 2);
+  for (let i = 0; i < 28; i++) {
+    g.rotate((Math.PI * 2) / 28);
+    const gr = g.createLinearGradient(0, 0, w / 2, 0);
+    gr.addColorStop(0, 'rgba(255,255,255,0.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr;
+    g.beginPath(); g.moveTo(0, 0); g.lineTo(w / 2, -9 - (i % 3) * 7); g.lineTo(w / 2, 9 + (i % 3) * 7); g.closePath(); g.fill();
+  }
+  const r = g.createRadialGradient(0, 0, 0, 0, 0, w * 0.18);
+  r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r; g.fillRect(-w / 2, -h / 2, w, h);
+});
+
+// Everything a scene adds to the walkout. o: the walkout's scene, helpers and constants.
+// Returns hooks the walkout calls: intro(t, dt, orbZ), enter(phaseId), burst(), frame(dt, T),
+// end(), plus banners (FC 26-style reveals) when the scene uses them.
+function sceneFx(o) {
+  const { scene, add, SC, E1, E2, WHITE, TW, TH, TZ0, TL, TC, envTex, dot, smokeTex, low, particlePool, sparks, beamMaterial, audio, p, flash, shake, nation, club } = o;
+  const fx = new Set(SC.fx || []);
+  const set = SC.set;
+  const updates = [];
+  const hot = (c, k) => c.clone().multiplyScalar(k);
+  const walkout86 = p.ovr >= 86 || ['icon', 'hero', 'inform', 'streak'].includes(p.type);
+  const lineCol = walkout86 ? '#e8eef6' : '#f1cf6b';
+  const out = { banners: null, introOrb: true };
+
+  // ---------- Set dressing ----------
+  if (set === 'marble') {
+    const gold = new THREE.MeshStandardMaterial({ color: 0xb88a2c, metalness: 1, roughness: 0.32, envMap: envTex, envMapIntensity: 0.7 });
+    for (let z = TZ0 + 2; z < -2; z += 4) for (const sx of [-1, 1]) {
+      add(new THREE.CylinderGeometry(0.1, 0.12, TH, 16), gold, sx * (TW / 2 - 0.12), TH / 2, z);
+      add(new THREE.BoxGeometry(0.34, 0.12, 0.34), gold, sx * (TW / 2 - 0.12), TH - 0.06, z);
+      add(new THREE.BoxGeometry(0.34, 0.1, 0.34), gold, sx * (TW / 2 - 0.12), 0.05, z);
+    }
+    for (const sx of [-1, 1]) add(new THREE.CylinderGeometry(0.16, 0.18, 5.2, 20), gold, sx * (TW / 2 + 0.3), 2.6, -0.85);
+  }
+  if (set === 'gloss') {
+    const trim = new THREE.MeshBasicMaterial({ color: E1.clone().multiplyScalar(1.6) });
+    for (const sx of [-1, 1]) for (const y of [0.32, TH - 0.32]) add(new THREE.BoxGeometry(0.02, 0.035, TL), trim, sx * (TW / 2 - 0.012), y, TC);
+  }
+  if (set === 'neon') {
+    const rings = [];
+    let i = 0;
+    for (let z = TZ0 + 1.5; z < -1.5; z += 3, i++) {
+      const m = new THREE.MeshBasicMaterial({ color: (i % 2 ? E2 : E1).clone().multiplyScalar(2.2) });
+      const w = TW - 0.12, h = TH - 0.08;
+      add(new THREE.BoxGeometry(w, 0.035, 0.035), m, 0, h, z);
+      add(new THREE.BoxGeometry(w, 0.035, 0.035), m, 0, 0.03, z);
+      add(new THREE.BoxGeometry(0.035, h, 0.035), m, -w / 2, h / 2, z);
+      add(new THREE.BoxGeometry(0.035, h, 0.035), m, w / 2, h / 2, z);
+      rings.push({ m, z, base: (i % 2 ? E2 : E1).clone() });
+    }
+    updates.push((dt, T) => { for (const r of rings) r.m.color.copy(r.base).multiplyScalar(1.2 + 1.3 * Math.max(0, Math.sin(T * 4 - r.z * 0.6))); });
+  }
+  if (set === 'samba') {
+    // Bunting across the tunnel in green, yellow, blue and white.
+    const cols = ['#00c853', '#ffdf00', '#1c3f94', '#ffffff'].map((c) => new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(0.85), side: THREE.DoubleSide }));
+    const tri = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.09, 0, 0), new THREE.Vector3(0.09, 0, 0), new THREE.Vector3(0, -0.2, 0)]);
+    tri.computeVertexNormals();
+    for (let z = TZ0 + 2; z < -1; z += 2.4) for (let k = 0; k < 14; k++) {
+      const u = k / 13, x = -TW / 2 + 0.15 + u * (TW - 0.3);
+      add(tri, cols[k % 4], x, TH - 0.1 - Math.sin(u * Math.PI) * 0.35, z);
+    }
+  }
+
+  // ---------- FC 25: the triangle of lights at the far end for 86+ ----------
+  if ((SC.id === 'classic' || SC.id === 'premium') && walkout86) {
+    const tm = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const len = Math.hypot(1.25, 2.4), ang = Math.atan2(1.25, 2.4);
+    add(new THREE.BoxGeometry(0.05, len, 0.02), tm, -0.62, 1.5, TZ0 + 0.06).rotation.z = -ang;
+    add(new THREE.BoxGeometry(0.05, len, 0.02), tm, 0.62, 1.5, TZ0 + 0.06).rotation.z = ang;
+    out.triangle = tm;
+  }
+
+  // ---------- FC 26: hanging banners (position, nation, club) ----------
+  if (SC.banners) {
+    const POS = { pos: [-1.2, -18.5, 0.42], nation: [1.2, -14.2, -0.42], club: [-1.2, -9.9, 0.42] };
+    const draw = (kind) => (g, w, h, img) => {
+      const gr = g.createLinearGradient(0, 0, 0, h);
+      gr.addColorStop(0, '#0b0f1a'); gr.addColorStop(1, '#151b2e');
+      g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      if (kind === 'club' && club) { g.fillStyle = club.kit[0]; g.globalAlpha = 0.55; g.fillRect(0, 0, w, h); g.globalAlpha = 1; }
+      // The tell: silver side lines for a walkout, gold for a lesser card.
+      g.fillStyle = lineCol;
+      g.fillRect(10, 0, 7, h); g.fillRect(w - 17, 0, 7, h);
+      g.fillStyle = '#' + E1.getHexString(); g.globalAlpha = 0.85; g.fillRect(24, 0, 3, h); g.fillRect(w - 27, 0, 3, h); g.globalAlpha = 1;
+      if (kind === 'pos') {
+        g.font = `italic 900 130px ${getComputedStyle(document.documentElement).getPropertyValue('--head') || 'Arial'}`;
+        g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#ffffff';
+        g.shadowColor = '#' + E1.getHexString(); g.shadowBlur = 30;
+        g.fillText(p.pos, w / 2, h * 0.48); g.shadowBlur = 0;
+      } else if (img) {
+        const r = Math.min((w - 70) / img.naturalWidth, (h * 0.55) / img.naturalHeight);
+        const dw = img.naturalWidth * r, dh = img.naturalHeight * r;
+        g.drawImage(img, (w - dw) / 2, h * 0.45 - dh / 2, dw, dh);
+      } else {
+        g.font = `italic 900 70px Arial`; g.textAlign = 'center'; g.fillStyle = '#fff';
+        g.fillText(kind === 'club' ? (p.type === 'icon' ? 'ICON' : p.type === 'hero' ? 'HERO' : '') : '', w / 2, h * 0.5);
+      }
+      // Fringe at the bottom.
+      g.fillStyle = lineCol;
+      for (let x = 0; x < w; x += 12) { g.beginPath(); g.moveTo(x, h - 22); g.lineTo(x + 6, h); g.lineTo(x + 12, h - 22); g.fill(); }
+    };
+    const banners = {};
+    const rodMat = new THREE.MeshStandardMaterial({ color: 0xc9ccd2, metalness: 0.9, roughness: 0.3, envMap: envTex });
+    for (const [kind, [x, z, ry]] of Object.entries(POS)) {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 400;
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+      const url = kind === 'nation' ? nation && flagUrl(nation.iso, 640) : kind === 'club' ? club && crestUrl(club.id) : null;
+      const im = url ? loadImage(url) : null;
+      const paint = () => { const g = c.getContext('2d'); g.clearRect(0, 0, 256, 400); draw(kind)(g, 256, 400, im && im.ok ? im.img : null); t.needsUpdate = true; };
+      paint();
+      if (im && !im.ok) im.ready.then(paint);
+      const geo = new THREE.PlaneGeometry(1.1, 1.72, 8, 12);
+      const base = geo.attributes.position.array.slice();
+      const mat = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: new THREE.Color(0xffffff), emissiveIntensity: 0.12, side: THREE.DoubleSide, roughness: 0.7, envMap: envTex, envMapIntensity: 0.2 });
+      const mesh = add(geo, mat, x, TH - 0.98, z, 0, ry);
+      add(new THREE.CylinderGeometry(0.018, 0.018, 1.3, 8), rodMat, x, TH - 0.1, z, 0, ry).rotation.z = Math.PI / 2;
+      const ph = Math.random() * 6;
+      banners[kind] = { mesh, mat, x, z, ry, focus: 0 };
+      updates.push((dt, T) => {
+        const pa = geo.attributes.position.array;
+        for (let i = 0; i < pa.length; i += 3) { const k = (0.86 - base[i + 1]) / 1.72; pa[i + 2] = k * k * Math.sin(T * 3 + base[i] * 2 + ph) * 0.06; }
+        geo.attributes.position.needsUpdate = true;
+        const b = banners[kind];
+        mat.emissiveIntensity += ((0.08 + b.focus * 0.32) - mat.emissiveIntensity) * Math.min(1, dt * 6);
+      });
+    }
+    // Camera shot for a banner: in front of it, a little to the tunnel's middle.
+    out.bannerShot = (kind, u) => {
+      const b = banners[kind];
+      const nx = Math.sin(b.ry), nz = Math.cos(b.ry);
+      const d = 2.6 - u * 0.5;
+      return [new THREE.Vector3(b.x + nx * d - Math.sign(b.x) * 0.2, TH - 1.05 + 0.1 * u, b.z + nz * d), new THREE.Vector3(b.x, TH - 1.0, b.z)];
+    };
+    out.banners = banners;
+  }
+
+  // ---------- God rays (Icons, Hall of Fame) ----------
+  let rays = null;
+  if (fx.has('rays')) {
+    const tex = raysTex();
+    const mk = (size, x, y, z) => { const m = new THREE.MeshBasicMaterial({ map: tex, color: E2.clone().lerp(E1, 0.5), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }); const mesh = add(new THREE.PlaneGeometry(size, size), m, x, y, z); mesh.renderOrder = 1; return mesh; };
+    rays = { end: mk(5, 0, 1.6, TZ0 + 0.1), mouth: mk(7.5, 0, 1.7, -1.25), sky: mk(26, 0, 9, -9), on: 0 };
+    updates.push((dt, T) => {
+      rays.end.rotation.z = T * 0.15; rays.mouth.rotation.z = -T * 0.1; rays.sky.rotation.z = T * 0.05;
+      rays.mouth.material.opacity += (rays.on * 0.38 - rays.mouth.material.opacity) * Math.min(1, dt * 2);
+      rays.sky.material.opacity += (rays.on * 0.22 - rays.sky.material.opacity) * Math.min(1, dt * 1.5);
+    });
+  }
+
+  // ---------- Drifting particles: gold feathers, gold dust, embers ----------
+  const amb = fx.has('feathers') ? 'feathers' : fx.has('dust') ? 'dust' : fx.has('embers') ? 'embers' : null;
+  if (amb) {
+    const pool = particlePool(low ? 260 : 600, amb === 'feathers' ? 0.13 : amb === 'dust' ? 0.06 : 0.09, dot);
+    scene.add(pool.pts);
+    const rate = amb === 'feathers' ? 40 : amb === 'dust' ? 70 : 90;
+    let acc = 0;
+    updates.push((dt) => {
+      acc += dt * rate;
+      for (; acc >= 1; acc--) {
+        if (amb === 'feathers') pool.emit((Math.random() - 0.5) * 14, 6 + Math.random() * 2, -8 + Math.random() * 12, (Math.random() - 0.5) * 0.3, -0.35, 0, 7, hot(Math.random() < 0.5 ? E2 : WHITE, 1.6), 0.6, -0.12);
+        else if (amb === 'dust') pool.emit((Math.random() - 0.5) * 8, Math.random() * 3.2, -24 + Math.random() * 28, (Math.random() - 0.5) * 0.2, 0.05, (Math.random() - 0.5) * 0.2, 4, hot(E1, 1.8), 0.2, 0.02);
+        else pool.emit((Math.random() - 0.5) * 12, 0.05, -20 + Math.random() * 24, (Math.random() - 0.5) * 0.4, 0.6 + Math.random(), (Math.random() - 0.5) * 0.4, 2.6, hot(Math.random() < 0.6 ? E1 : E2, 2.6), 0.3, 0.8);
+      }
+      pool.update(dt);
+    });
+  }
+
+  // ---------- Lightning (Heroes) ----------
+  const bolts = [];
+  let boltLight = null;
+  const strike = (x0, y0, z0, x1, y1, z1, width = 0.07, loud = 1) => {
+    if (!boltLight) { boltLight = new THREE.PointLight(E1.getHex(), 0, 30, 1.5); scene.add(boltLight); }
+    const pts = [];
+    const n = 16;
+    for (let i = 0; i <= n; i++) {
+      const u = i / n, j = i === 0 || i === n ? 0 : 1;
+      pts.push(new THREE.Vector3(x0 + (x1 - x0) * u + (Math.random() - 0.5) * 0.7 * j, y0 + (y1 - y0) * u, z0 + (z1 - z0) * u + (Math.random() - 0.5) * 0.3 * j));
+    }
+    const pos = [], idx = [];
+    pts.forEach((pt, i) => { pos.push(pt.x - width, pt.y, pt.z, pt.x + width, pt.y, pt.z); if (i) { const k = i * 2; idx.push(k - 2, k - 1, k, k - 1, k + 1, k); } });
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setIndex(idx);
+    const mat = new THREE.MeshBasicMaterial({ color: E1.clone().lerp(WHITE, 0.5).multiplyScalar(5), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+    const mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
+    bolts.push({ mesh, life: 0.28 });
+    boltLight.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    boltLight.intensity = 80 * loud;
+    flash(0.35 * loud);
+    audio.thunder(loud);
+  };
+  if (fx.has('lightning')) {
+    let next = 3;
+    updates.push((dt, T, phase) => {
+      for (let i = bolts.length - 1; i >= 0; i--) {
+        const b = bolts[i];
+        b.life -= dt;
+        b.mesh.visible = b.life > 0 && Math.random() < 0.85;
+        if (b.life <= 0) { scene.remove(b.mesh); b.mesh.geometry.dispose(); b.mesh.material.dispose(); bolts.splice(i, 1); }
+      }
+      if (boltLight) boltLight.intensity *= Math.exp(-dt * 14);
+      // Distant strikes over the stand once the player is out.
+      if (phase === 'celebrate' || phase === 'end') { next -= dt; if (next <= 0) { next = 2 + Math.random() * 2.5; const x = (Math.random() - 0.5) * 26; strike(x, 19, -12, x + (Math.random() - 0.5) * 3, 7, -9, 0.12, 0.35); } }
+    });
+  }
+
+  // ---------- Fire (Exclusives) ----------
+  let flames = null, fireZ = TZ0, jets = [], columns = 0;
+  if (fx.has('fire')) {
+    flames = particlePool(low ? 700 : 1600, 0.42, dot);
+    scene.add(flames.pts);
+    const FC = [new THREE.Color('#ffd27a'), new THREE.Color('#ff7a1f'), new THREE.Color('#ff2a1f')];
+    const flame = (x, z, up, spread) => { const c = FC[(Math.random() * 3) | 0]; flames.emit(x + (Math.random() - 0.5) * spread, 0.1, z + (Math.random() - 0.5) * spread, (Math.random() - 0.5) * 0.6, up * (0.7 + Math.random() * 0.5), (Math.random() - 0.5) * 0.6, 0.35 + Math.random() * 0.3, hot(c, 2.4), 1.2, 3); };
+    updates.push((dt) => {
+      for (const j of jets) { j.t -= dt; if (j.t > 0) for (let i = 0; i < 5; i++) flame(j.x, j.z, 4, 0.15); }
+      jets = jets.filter((j) => j.t > 0);
+      if (columns > 0) { columns -= dt; for (const sx of [-1, 1]) for (let i = 0; i < 12; i++) flame(sx * 3.1, -0.6, 9, 0.35); }
+      flames.update(dt);
+    });
+    out.fireJet = (x, z, t = 0.5) => jets.push({ x, z, t });
+  }
+
+  // ---------- Flares (Copa do Brasil) ----------
+  let flaresOn = 0;
+  const flareSpots = [[-1.9, -3.2], [1.9, -3.2], [-3.6, 0.6], [3.6, 0.6]];
+  const flareSmoke = [];
+  if (fx.has('flares')) {
+    const cols = [E1, E2];
+    for (let i = 0; i < (low ? 16 : 34); i++) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: cols[i % 2].clone().multiplyScalar(0.9), transparent: true, depthWrite: false, opacity: 0 }));
+      s.userData = { life: 0, spot: i % 4 };
+      s.renderOrder = 3;
+      scene.add(s);
+      flareSmoke.push(s);
+    }
+    updates.push((dt) => {
+      if (flaresOn > 0) flaresOn -= dt;
+      const live = flaresOn > 0;
+      flareSpots.forEach(([x, z], k) => {
+        if (!live || (k >= 2 && flaresOn > 50)) return;
+        const c = k % 2 ? E2 : E1;
+        for (let i = 0; i < 4; i++) sparks.emit(x + (Math.random() - 0.5) * 0.1, 1.1, z, (Math.random() - 0.5) * 1.6, 1 + Math.random() * 2.5, (Math.random() - 0.5) * 1.6, 0.4 + Math.random() * 0.4, hot(c, 3), 0.8, -4);
+      });
+      for (const s of flareSmoke) {
+        const d = s.userData;
+        if (d.life <= 0) {
+          if (!live) { s.material.opacity = 0; continue; }
+          const [x, z] = flareSpots[d.spot];
+          s.position.set(x, 1.2, z); s.scale.set(0.6, 0.6, 1); d.life = 2.5 + Math.random() * 1.5; d.max = d.life; d.vx = (Math.random() - 0.5) * 0.6;
+        }
+        d.life -= dt;
+        s.position.y += dt * 0.9; s.position.x += d.vx * dt;
+        const k = d.life / d.max;
+        s.scale.setScalar(0.6 + (1 - k) * 3.2);
+        s.material.opacity = Math.sin(k * Math.PI) * 0.35;
+      }
+    });
+  }
+
+  // ---------- Lasers (big packs, neon) ----------
+  let lasersOn = 0;
+  if (fx.has('lasers')) {
+    const lasers = [];
+    for (let i = 0; i < 10; i++) {
+      const geo = new THREE.CylinderGeometry(0.012, 0.012, 40, 6, 1, true);
+      geo.translate(0, -20, 0);
+      const m = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+      const mesh = add(geo, m, -13 + i * 2.9, 11, -8);
+      lasers.push({ mesh, m, col: (i % 2 ? E2 : E1).clone().multiplyScalar(3), ph: Math.random() * 6, sp: 0.6 + Math.random() * 0.8 });
+    }
+    updates.push((dt, T) => {
+      for (const l of lasers) {
+        l.mesh.rotation.z = Math.sin(T * l.sp + l.ph) * 0.9;
+        l.mesh.rotation.x = -0.75 + Math.sin(T * 0.7 * l.sp + l.ph) * 0.35;
+        l.m.color.copy(l.col).multiplyScalar(lasersOn * (0.7 + 0.3 * Math.sin(T * 9 + l.ph)));
+      }
+    });
+  }
+
+  // ---------- Beams of light rising from the floor (FC 24 style) ----------
+  let floorBeamsOn = 0;
+  if (set === 'neon' || fx.has('floorbeams')) {
+    const fb = [];
+    for (const [x, z, s] of [[-1.2, TZ0 + 1.2, 0.5], [1.2, TZ0 + 1.2, 0.5], [-2.6, -0.4, 1], [2.6, -0.4, 1], [-5.2, -0.6, 1], [5.2, -0.6, 1]]) {
+      const geo = new THREE.CylinderGeometry(0.1, 1.2 * s, 9 * s, 24, 1, true);
+      geo.translate(0, -4.5 * s, 0);
+      const mesh = new THREE.Mesh(geo, beamMaterial('#' + (fb.length % 2 ? E2 : E1).getHexString()));
+      mesh.position.set(x, 0.02, z);
+      mesh.rotation.x = Math.PI;
+      mesh.userData = { far: z < -5, ph: Math.random() * 6 };
+      scene.add(mesh);
+      fb.push(mesh);
+    }
+    updates.push((dt, T) => {
+      for (const b of fb) {
+        const on = b.userData.far ? Math.min(1, floorBeamsOn * 2) * (floorBeamsOn > 0.5 ? 0.4 : 1) : floorBeamsOn > 0.5 ? 1 : 0;
+        b.material.uniforms.opacity.value += (on * 0.7 - b.material.uniforms.opacity.value) * Math.min(1, dt * 4);
+        b.rotation.z = Math.sin(T * 0.9 + b.userData.ph) * 0.25;
+      }
+    });
+  }
+
+  // ---------- CO2 jets (big packs) ----------
+  const co2 = [];
+  let co2T = -1;
+  if (fx.has('co2')) {
+    for (let i = 0; i < (low ? 16 : 36); i++) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: 0xe8eef5, transparent: true, depthWrite: false, opacity: 0 }));
+      s.userData = { life: 0 };
+      s.renderOrder = 4;
+      scene.add(s);
+      co2.push(s);
+    }
+    updates.push((dt) => {
+      if (co2T >= 0) { co2T += dt; if (co2T > 3.2) { co2T = 0; blast(); } }
+      for (const s of co2) {
+        const d = s.userData;
+        if (d.life <= 0) { s.material.opacity = 0; continue; }
+        d.life -= dt;
+        d.vy *= Math.exp(-dt * 1.6);
+        s.position.y += d.vy * dt;
+        const k = d.life / 1.4;
+        s.scale.setScalar(0.5 + (1 - k) * 2.6);
+        s.material.opacity = k * 0.55;
+      }
+    });
+  }
+  const blast = () => {
+    let i = 0;
+    for (const x of [-4.6, 4.6, -7.4, 7.4]) for (let k = 0; k < co2.length / 4; k++, i++) {
+      const s = co2[i];
+      if (!s) break;
+      s.position.set(x + (Math.random() - 0.5) * 0.2, 0.2 + k * 0.05, -0.5);
+      s.userData.life = 1.4 - k * 0.04; s.userData.vy = 10 + Math.random() * 3;
+    }
+    audio.whoosh(0.5, true);
+  };
+
+  // ---------- Hooks ----------
+  out.intro = (t, dt, z) => {
+    if (out.triangle) out.triangle.color.copy(new THREE.Color(lineCol)).multiplyScalar(Math.min(1, Math.max(0, (t - 0.4) / 0.6)) * 3);
+    if (rays) rays.end.material.opacity = Math.min(0.9, t * 0.5);
+    if (fx.has('lightning') && !out.struck1 && t > 0.15) { out.struck1 = true; strike(-0.4, TH, -22, 0.3, 0, -20.5, 0.08, 1); }
+    if (fx.has('lightning') && !out.struck2 && t > 0.95) { out.struck2 = true; strike(0.5, TH, -13, -0.3, 0, -11, 0.07, 0.7); }
+    if (out.fireJet) while (fireZ < Math.min(z, -1)) { for (const sx of [-1, 1]) out.fireJet(sx * 2.0, fireZ, 0.45); fireZ += 2; }
+    if (fx.has('flares') && t > 0.3 && flaresOn <= 0) flaresOn = 99;
+    if (set === 'neon' && floorBeamsOn < 0.5) floorBeamsOn = Math.min(0.5, t * 0.4);
+    if (set === 'neon') lasersOn = Math.min(0.5, t * 0.3);
+  };
+  out.enter = (id) => {
+    if (out.banners) for (const [k, b] of Object.entries(out.banners)) b.focus = (id === 'position' && k === 'pos') || id === k ? 1 : 0;
+    if (fx.has('lightning') && (id === 'nation' || id === 'position' || id === 'club')) setTimeout(() => strike((Math.random() - 0.5) * 2, TH, { nation: -13.5, position: -24, club: -8 }[id], (Math.random() - 0.5) * 1.5, 0, { nation: -12, position: -22, club: -6.5 }[id], 0.06, 0.6), 380);
+    if (id === 'walk' && out.banners) for (const b of Object.values(out.banners)) b.focus = 0.4;
+    // The rays behind the tunnel mouth light up once the player is out in front of them.
+    if ((id === 'celebrate' || id === 'end') && rays) rays.on = 1;
+  };
+  out.burst = () => {
+    if (fx.has('lightning')) { strike(-3, 10, -0.5, -2.8, 0, -0.4, 0.1, 1.2); setTimeout(() => strike(3, 10, -0.5, 2.9, 0, -0.4, 0.1, 1), 160); }
+    if (flames) columns = 2.2;
+    if (fx.has('flares')) flaresOn = 99;
+    if (fx.has('lasers')) lasersOn = 1;
+    floorBeamsOn = 1;
+    if (fx.has('co2')) { co2T = 0; blast(); }
+    shake(0.12);
+  };
+  out.frame = (dt, T, phase) => { for (const u of updates) u(dt, T, phase); };
+  out.end = () => { out.burst(); if (out.triangle) out.triangle.color.setScalar(0); };
+  return out;
+}
+
+__M["src/ui/walkoutfx.js"] = { setLook, sceneFx };
+})();
+
 /* ---- src/ui/walkout.js ---- */
 ;(function(){
 const THREE = window.THREE;
@@ -75527,6 +76463,8 @@ const { kitFor, clubInfo, disposeAthlete } = __M["src/ui/render3d.js"];
 const { CLUB_BY_ID } = __M["src/data/leagues.js"];
 const { NATION_BY_ID } = __M["src/data/nations.js"];
 const { crestUrl, flagUrl } = __M["src/data/crests.js"];
+const { SCENES } = __M["src/ui/packscenes.js"];
+const { setLook, sceneFx } = __M["src/ui/walkoutfx.js"];
 const { audio } = __M["src/core/audio.js"];
 const { el, clamp } = __M["src/core/util.js"];
 const { leagueName } = __M["src/ui/components.js"];
@@ -75535,6 +76473,8 @@ const { leagueName } = __M["src/ui/components.js"];
 // tunnel's end screen) and the club (the spinning crest) are revealed one by one. Finally the
 // player walks out through smoke into the spotlight, pyro fires at the tunnel mouth, and they do
 // their celebration. The card reveal plays over the dimmed scene afterwards.
+
+
 
 
 
@@ -75692,6 +76632,12 @@ function startWalkout(container, p, opts = {}) {
   const low = opts.quality === 'low';
   const [c1hex, c2hex] = tierColors(p);
   const C1 = new THREE.Color(c1hex), C2 = new THREE.Color(c2hex), WHITE = new THREE.Color(1, 1, 1);
+  // The pack's scene (packscenes.js) lights the set in its own colours; the orb, crest ring and rim
+  // lights keep the card's colours.
+  const sceneId = SCENES[opts.scene] ? opts.scene : 'classic';
+  const SC = SCENES[sceneId];
+  const [e1hex, e2hex] = SC.colors || [c1hex, c2hex];
+  const E1 = new THREE.Color(e1hex), E2 = new THREE.Color(e2hex);
   const club = CLUB_BY_ID[p.club];
   const nation = NATION_BY_ID[p.nation];
   const celeb = celebFor(p);
@@ -75704,7 +76650,7 @@ function startWalkout(container, p, opts = {}) {
   let resolveFinished;
   const finished = new Promise((r) => { resolveFinished = r; });
   const skipBtn = el('button', { class: 'btn small ghost wo-skip', onclick: (e) => { e.stopPropagation(); api.skip(); } }, 'Skip ▸▸');
-  const root = el('div', { class: 'wo', style: { '--wo1': c1hex, '--wo2': c2hex } }, canvas, el('div', { class: 'wo-vignette' }), textBox, lower, el('div', { class: 'wo-bar top' }), el('div', { class: 'wo-bar bot' }), flashEl, skipBtn);
+  const root = el('div', { class: `wo th-${sceneId}`, style: { '--wo1': c1hex, '--wo2': c2hex } }, canvas, el('div', { class: 'wo-vignette' }), textBox, lower, el('div', { class: 'wo-bar top' }), el('div', { class: 'wo-bar bot' }), flashEl, skipBtn);
   container.insertBefore(root, opts.before || null);
   requestAnimationFrame(() => root.classList.add('cine'));
   const flash = (strength = 1) => { flashEl.style.setProperty('--fs', String(strength)); flashEl.classList.remove('go'); void flashEl.offsetWidth; flashEl.classList.add('go'); };
@@ -75776,7 +76722,7 @@ function startWalkout(container, p, opts = {}) {
     gr.addColorStop(0, 'rgba(255,255,255,0.55)'); gr.addColorStop(0.45, 'rgba(255,255,255,0.18)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
   });
-  const poolMat = new THREE.MeshBasicMaterial({ map: poolTex, color: C1.clone().lerp(WHITE, 0.4), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  const poolMat = new THREE.MeshBasicMaterial({ map: poolTex, color: E1.clone().lerp(WHITE, 0.4), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
   add(new THREE.PlaneGeometry(4.4, 4.4), poolMat, 0, 0.01, 0.4, -Math.PI / 2);
   // Glowing frame around the tunnel mouth.
   const archMat = new THREE.MeshBasicMaterial({ color: C1.clone().multiplyScalar(0) });
@@ -75785,7 +76731,7 @@ function startWalkout(container, p, opts = {}) {
   add(new THREE.BoxGeometry(TW + 0.15, 0.07, 0.07), archMat, 0, TH + 0.04, -0.98);
 
   // LED ribbons on the tunnel walls and above the mouth.
-  const ledMat = new THREE.MeshBasicMaterial({ map: ledTexture('GOLAZO 26  ✦  WALKOUT  ✦', c1hex, c2hex), color: new THREE.Color(0, 0, 0) });
+  const ledMat = new THREE.MeshBasicMaterial({ map: ledTexture(SC.led, e1hex, e2hex), color: new THREE.Color(0, 0, 0) });
   ledMat.map.repeat.set(2.4, 1);
   add(new THREE.PlaneGeometry(TL - 1, 0.55), ledMat, -TW / 2 + 0.01, 1.35, TC, 0, Math.PI / 2);
   add(new THREE.PlaneGeometry(TL - 1, 0.55), ledMat, TW / 2 - 0.01, 1.35, TC, 0, -Math.PI / 2);
@@ -75803,7 +76749,7 @@ function startWalkout(container, p, opts = {}) {
     const gr = g.createLinearGradient(0, 0, 512, 372);
     gr.addColorStop(0, '#05070c'); gr.addColorStop(1, '#0d1220');
     g.fillStyle = gr; g.fillRect(0, 0, 512, 372);
-    g.strokeStyle = c1hex; g.lineWidth = 3;
+    g.strokeStyle = e1hex; g.lineWidth = 3;
     for (let i = 0; i < 9; i++) { g.globalAlpha = 0.12; g.beginPath(); g.moveTo(-40 + i * 70, 372); g.lineTo(80 + i * 70, 0); g.stroke(); }
     g.globalAlpha = 1;
     if (text) {
@@ -75829,17 +76775,20 @@ function startWalkout(container, p, opts = {}) {
     const rm = new THREE.MeshBasicMaterial({ map: dot, color: 0x000000, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
     const refl = add(new THREE.PlaneGeometry(1.1, 2.6), rm, 0, 0.004, z, -Math.PI / 2);
     refl.renderOrder = 2;
-    strips.push({ z, m, rm, level: 0, target: 0, col: C1.clone() });
+    strips.push({ z, m, rm, level: 0, target: 0, col: E1.clone() });
   }
-  const tunnelLights = [-6, -13, -20].map((z) => { const l = new THREE.PointLight(c1hex, 0, 9, 2); l.position.set(0, TH - 0.35, z); scene.add(l); return l; });
-  scene.add(new THREE.HemisphereLight(0x8a9ac0, 0x0a0b10, 0.12));
+  const tunnelLights = [-6, -13, -20].map((z) => { const l = new THREE.PointLight(e1hex, 0, 9, 2); l.position.set(0, TH - 0.35, z); scene.add(l); return l; });
+  const hemi = new THREE.HemisphereLight(0x8a9ac0, 0x0a0b10, 0.12);
+  scene.add(hemi);
+  // The scene's own tunnel: marble, black gloss, neon, comic halftone, samba paint or embers.
+  setLook(SC.set, { wall: concrete, floor: floorMat, facade, scene, hemi });
 
   // Light beams from the stand roof down onto the stage.
   const beams = [];
   for (const [x, ry] of [[-7, 0.35], [-3.6, 0.15], [3.6, -0.15], [7, -0.35]]) {
     const geo = new THREE.CylinderGeometry(0.12, 1.6, 9, 32, 1, true);
     geo.translate(0, -4.5, 0);
-    const m = new THREE.Mesh(geo, beamMaterial(c1hex));
+    const m = new THREE.Mesh(geo, beamMaterial(beams.length % 2 ? e2hex : e1hex));
     m.position.set(x, 6.6, -0.6);
     m.userData = { ry, phase: Math.random() * 6 };
     scene.add(m);
@@ -75849,7 +76798,7 @@ function startWalkout(container, p, opts = {}) {
   // Smoke rolling along the floor.
   const smokeTex = smokeTexture();
   const smoke = [];
-  const tint = new THREE.Color(0x3c434f).lerp(C1, 0.2);
+  const tint = new THREE.Color(0x3c434f).lerp(E1, SC.colors ? 0.35 : 0.2);
   for (let i = 0; i < (low ? 18 : 40); i++) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, color: tint, transparent: true, depthWrite: false, opacity: 0 }));
     const reset = (first) => {
@@ -75883,12 +76832,13 @@ function startWalkout(container, p, opts = {}) {
   scene.add(stars);
 
   // Sparks, pyro and fireworks.
+  const PYRO = (SC.pyro || []).map((h) => new THREE.Color(h));
   const sparks = particlePool(low ? 900 : 2400, 0.085, dot);
   scene.add(sparks.pts);
   const hot = (c, k) => c.clone().multiplyScalar(k);
   const pyro = { on: 0, rate: 0 };
   const firework = (x, y, z) => {
-    const c = Math.random() < 0.5 ? C1 : Math.random() < 0.5 ? C2 : WHITE;
+    const c = Math.random() < 0.4 ? E1 : Math.random() < 0.5 ? E2 : Math.random() < 0.5 ? C1 : WHITE;
     for (let i = 0; i < (low ? 60 : 140); i++) {
       const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1), sv = 4 + Math.random() * 3;
       sparks.emit(x, y, z, sv * Math.sin(ph) * Math.cos(th), sv * Math.cos(ph), sv * Math.sin(ph) * Math.sin(th), 1.3 + Math.random() * 0.8, hot(c, 3), 1.4, -2.5);
@@ -75898,7 +76848,7 @@ function startWalkout(container, p, opts = {}) {
   // Confetti in the card's colours.
   const nConf = low ? 140 : 360;
   const confetti = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.07, 0.035), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), nConf);
-  const confCols = [C1, C2, WHITE, new THREE.Color('#ffd34d')];
+  const confCols = SC.confetti ? SC.confetti.map((h) => new THREE.Color(h)) : [C1, C2, WHITE, new THREE.Color('#ffd34d')];
   const conf = [];
   const dummy = new THREE.Object3D();
   for (let i = 0; i < nConf; i++) {
@@ -75989,6 +76939,13 @@ function startWalkout(container, p, opts = {}) {
   const orbLight = new THREE.PointLight(c1hex, 0, 10, 2);
   scene.add(orbLight);
 
+  // Scene effects and dressing (walkoutfx.js): banners, god rays, lightning, fire, flares, lasers...
+  const sfx = sceneFx({
+    scene, add, SC: { ...SC, id: sceneId }, E1, E2, WHITE, TW, TH, TZ0, TL, TC, envTex, dot, smokeTex, low, particlePool, sparks, beamMaterial, audio, p, flash,
+    shake: (k) => { shake = Math.max(shake, k); }, nation, club,
+  });
+  const BANNERS = !!sfx.banners;
+
   // ---------- Timeline ----------
   const walkFrom = -8.2, stopZ = 0.35, walkSpeed = 2.15;
   let pz = walkFrom, burst = false, shake = 0;
@@ -75999,11 +76956,12 @@ function startWalkout(container, p, opts = {}) {
   // Rest of World clubs show their country instead of the catch-all league.
   const subClub = club ? (club.league === 'ROW' ? (NATION_BY_ID[club.country] || {}).name || '' : leagueName(club.league)) : p.type === 'icon' ? 'Legend' : 'Hero';
   const POS_NAME = { GK: 'Goalkeeper', CB: 'Centre-Back', LB: 'Left-Back', RB: 'Right-Back', LWB: 'Left Wing-Back', RWB: 'Right Wing-Back', CDM: 'Defensive Midfielder', CM: 'Central Midfielder', CAM: 'Attacking Midfielder', LM: 'Left Midfielder', RM: 'Right Midfielder', LW: 'Left Winger', RW: 'Right Winger', ST: 'Striker', CF: 'Centre-Forward' };
+  const bannerOr = (kind, f) => (u) => (BANNERS ? sfx.bannerShot(kind, ease(u)) : f(u));
   const CAM = {
     flare: (u) => [v3([0, 1.5, 6.4], [0, 1.45, 3.4], easeOut(u)), new THREE.Vector3(0, 1.5, -20)],
-    nation: (u) => [v3([-1.5, 1.2, -7.6], [-0.7, 1.55, -9.0], ease(u)), v3([0.15, 1.75, -12.5], [0.3, 1.85, -12.5], ease(u))],
-    position: (u) => [v3([0.2, 1.25, -6.5], [0, 1.65, -19.5], easeOut(u)), new THREE.Vector3(0, 1.6, -26)],
-    club: (u) => [v3([1.0, 1.3, -3.3], [0.3, 1.6, -4.1], ease(u)), new THREE.Vector3(0, 1.75, -7.2)],
+    nation: bannerOr('nation', (u) => [v3([-1.5, 1.2, -7.6], [-0.7, 1.55, -9.0], ease(u)), v3([0.15, 1.75, -12.5], [0.3, 1.85, -12.5], ease(u))]),
+    position: bannerOr('pos', (u) => [v3([0.2, 1.25, -6.5], [0, 1.65, -19.5], easeOut(u)), new THREE.Vector3(0, 1.6, -26)]),
+    club: bannerOr('club', (u) => [v3([1.0, 1.3, -3.3], [0.3, 1.6, -4.1], ease(u)), new THREE.Vector3(0, 1.75, -7.2)]),
     walk: (u) => [new THREE.Vector3(lerp(1.75, 0.85, u), lerp(0.42, 0.85, u), pz + lerp(7.2, 3.8, u)), new THREE.Vector3(0, lerp(1.35, 1.2, u), pz - 0.6)],
     celebrate: (u) => {
       const low2 = celeb === 'meditate' ? 0.45 : 0;
@@ -76018,21 +76976,22 @@ function startWalkout(container, p, opts = {}) {
       enter() {
         audio.riser(1.6, 0.9);
         orb.visible = true;
-        for (const s of strips) { s.level = s.target = 0; s.col.copy(C1); }
+        for (const s of strips) { s.level = s.target = 0; s.col.copy(E1); }
       },
-      update(t) {
+      update(t, dt) {
         // The orb travels from the end wall to the camera; each strip light flicks on as it passes.
         const u = clamp(t / 1.55, 0, 1);
         const z = lerp(TZ0 + 1, 4, u * u);
         orb.position.set(Math.sin(t * 9) * 0.08, 1.5 + Math.sin(t * 6) * 0.06, z);
         orbLight.position.copy(orb.position);
+        sfx.intro(t, dt, z);
         orbLight.intensity = u < 1 ? 40 : 0;
         if (u < 1) for (let i = 0; i < 4; i++) sparks.emit(orb.position.x, orb.position.y, orb.position.z, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, -2 - Math.random() * 3, 0.5 + Math.random() * 0.5, hot(C1, 2.5), 1.8, -1.5);
         for (const s of strips) if (z > s.z && s.target === 0) { s.target = 1; s.level = 2.2; }
         if (u >= 1 && orb.visible) {
           orb.visible = false;
           flash(1); audio.boom(1); shake = 0.25;
-          ledMat.color.setScalar(1.6); bannerMat.color.setScalar(1.6); archMat.color.copy(C1).multiplyScalar(1.8);
+          ledMat.color.setScalar(1.6); bannerMat.color.setScalar(1.6); archMat.color.copy(E1).multiplyScalar(1.8);
         }
       },
     },
@@ -76040,10 +76999,10 @@ function startWalkout(container, p, opts = {}) {
       id: 'nation', dur: 2.8,
       enter() {
         orb.visible = false; snapLights(); lightsOn(0.35);
-        flag.visible = true; flagSpot.intensity = 1.5;
+        if (!BANNERS) { flag.visible = true; flagSpot.intensity = 1.5; }
         ledMat.color.setScalar(1.2);
         audio.thump(1);
-        setTimeout(() => { if (cur === 1) showText(nationName, 'Nation'); }, 250);
+        setTimeout(() => { if (phaseId() === 'nation') showText(nationName, 'Nation'); }, 250);
       },
       update(t) {
         // Cloth pinned at the pole, waves travelling outward.
@@ -76062,11 +77021,11 @@ function startWalkout(container, p, opts = {}) {
     {
       id: 'position', dur: 2.2,
       enter() {
-        lightsOn(1, C1); snapLights();
+        lightsOn(1, E1); snapLights();
         drawScreen(p.pos);
         screenMat.color.setScalar(1.0);
         audio.whoosh(0.9, true);
-        setTimeout(() => { if (cur === 2) { audio.boom(0.8); showText(p.pos, POS_NAME[p.pos] || 'Position'); } }, 450);
+        setTimeout(() => { if (phaseId() === 'position') { audio.boom(0.8); showText(p.pos, POS_NAME[p.pos] || 'Position'); } }, 450);
       },
       update(t) {
         // Lights strobe as the camera rushes down the tunnel.
@@ -76077,8 +77036,8 @@ function startWalkout(container, p, opts = {}) {
     {
       id: 'club', dur: 2.8,
       enter() {
-        lightsOn(0.55, C1.clone().lerp(WHITE, 0.3)); snapLights();
-        crest.visible = true;
+        lightsOn(0.55, E1.clone().lerp(WHITE, 0.3)); snapLights();
+        crest.visible = !BANNERS;
         if (club) {
           const old = ledMat.map;
           ledMat.map = ledTexture(`${club.name.toUpperCase()}  ✦`, club.kit[0] === '#ffffff' ? club.kit[1] : club.kit[0], '#ffffff');
@@ -76086,7 +77045,7 @@ function startWalkout(container, p, opts = {}) {
           old.dispose();
         }
         audio.whoosh(0.7, false);
-        setTimeout(() => { if (cur === 3) { audio.boom(0.9); flash(0.45); showText(clubName, subClub); } }, 550);
+        setTimeout(() => { if (phaseId() === 'club') { audio.boom(0.9); flash(0.45); showText(clubName, subClub); } }, 550);
       },
       update(t) {
         const u = easeOut(t / 0.9);
@@ -76104,7 +77063,7 @@ function startWalkout(container, p, opts = {}) {
       enter() {
         pz = walkFrom; burst = false;
         a.root.visible = true; blob.visible = true;
-        lightsOn(0.9, C1.clone().lerp(WHITE, 0.55)); snapLights();
+        lightsOn(0.9, E1.clone().lerp(WHITE, 0.55)); snapLights();
         for (const l of rims) l.intensity = RIM;
         for (const s of smoke) s.material.opacity = s.userData.op;
         audio.thump(1.2);
@@ -76116,7 +77075,9 @@ function startWalkout(container, p, opts = {}) {
           pyro.on = 1.8; pyro.rate = low ? 160 : 420;
           flash(0.7); shake = 0.18;
           audio.pyro(1.8, 1); audio.roar(0.9, 4);
-          for (let i = 0; i < 3; i++) setTimeout(() => firework(-9 + Math.random() * 18, 7.5 + Math.random() * 2.5, -4 - Math.random() * 3), 250 + i * 420);
+          audio.sting(sceneId);
+          sfx.burst();
+          for (let i = 0; i < SC.fireworks; i++) setTimeout(() => firework(-9 + Math.random() * 18, 7.5 + Math.random() * 2.5, -4 - Math.random() * 3), 250 + i * 420);
           dropConfetti();
         }
         // Key light swells as the player reaches the stage.
@@ -76135,29 +77096,35 @@ function startWalkout(container, p, opts = {}) {
         lower.append(el('div', { class: 'wo-ovr' }, String(p.ovr), el('small', {}, p.pos)),
           el('div', {}, el('div', { class: 'wo-name' }, p.full || p.name), el('div', { class: 'wo-meta' }, [clubName, nationName].filter(Boolean).join('  ·  '))));
         lower.classList.add('on');
-        setTimeout(() => { if (cur === 5) audio.roar(0.5, 2); }, 900);
+        setTimeout(() => { if (phaseId() === 'celebrate') audio.roar(0.5, 2); }, 900);
       },
     },
   ];
 
+  // FC 26 order with banners: position, nation, club.
+  if (BANNERS) { const n = phases.findIndex((x) => x.id === 'nation'), q = phases.findIndex((x) => x.id === 'position'); [phases[n], phases[q]] = [phases[q], phases[n]]; }
   let cur = -1, pt = 0, T = 0, raf = 0, alive = true, last = performance.now(), ended = false, dimmed = false;
+  const phaseId = () => (ended ? 'end' : phases[cur] ? phases[cur].id : 'end');
   const go = (i) => {
     if (cur === phases.length - 1) celebT = Math.max(pt, 1.2);
     if (cur >= 0 && phases[cur].exit) phases[cur].exit();
     cur = i; pt = 0;
     if (cur >= phases.length) { cur = phases.length; end(); return; }
     phases[cur].enter();
+    sfx.enter(phases[cur].id);
   };
   const end = () => {
     if (ended) return;
     ended = true;
     // Jumped straight here: put the scene in its final state.
     pz = stopZ; a.root.visible = true; blob.visible = true; flag.visible = false; crest.visible = false; orb.visible = false;
-    lightsOn(0.9, C1.clone().lerp(WHITE, 0.55)); snapLights();
+    lightsOn(0.9, E1.clone().lerp(WHITE, 0.55)); snapLights();
     key.intensity = KEY; poolMat.opacity = 0.75; for (const l of rims) l.intensity = RIM;
-    ledMat.color.setScalar(1.2); bannerMat.color.setScalar(1.6); archMat.color.copy(C1).multiplyScalar(1.8);
+    ledMat.color.setScalar(1.2); bannerMat.color.setScalar(1.6); archMat.color.copy(E1).multiplyScalar(1.8);
     for (const s of smoke) s.material.opacity = s.userData.op;
     if (!confettiOn) dropConfetti();
+    if (!burst) { burst = true; sfx.burst(); }
+    sfx.enter('walk'); sfx.enter('end');
     hideText(); skipBtn.remove();
     resolveFinished();
   };
@@ -76222,7 +77189,7 @@ function startWalkout(container, p, opts = {}) {
       pyro.on -= dt;
       const n = Math.round(pyro.rate * dt);
       for (const sx of [-1, 1]) for (let i = 0; i < n; i++) {
-        const c = Math.random() < 0.6 ? new THREE.Color(1, 0.8, 0.45) : C1;
+        const c = SC.pyro ? PYRO[Math.random() < 0.6 ? 0 : 1] : Math.random() < 0.6 ? new THREE.Color(1, 0.8, 0.45) : C1;
         sparks.emit(sx * 3.0 + (Math.random() - 0.5) * 0.15, 0.1, -0.6, (Math.random() - 0.5) * 1.4, 7.5 + Math.random() * 3, (Math.random() - 0.5) * 1.4, 0.7 + Math.random() * 0.7, hot(c, 3.2), 0.4, -9.8);
       }
     }
@@ -76257,6 +77224,7 @@ function startWalkout(container, p, opts = {}) {
     const col = starGeo.attributes.color.array;
     for (let k = 0; k < 30; k++) { const i = (Math.random() * nStar) | 0; const f = Math.random() < 0.15 ? 2.2 : 0.6 + Math.random() * 0.6; col[i * 3] = starBase[i * 3] * f; col[i * 3 + 1] = starBase[i * 3 + 1] * f; col[i * 3 + 2] = starBase[i * 3 + 2] * f; }
     starGeo.attributes.color.needsUpdate = true;
+    sfx.frame(dt, T, phaseId());
     // Camera.
     const phase = phases[Math.min(cur, phases.length - 1)];
     const shot = ended ? CAM.celebrate(1) : CAM[phase.id](clamp(pt / phase.dur, 0, 1));
@@ -76272,6 +77240,7 @@ function startWalkout(container, p, opts = {}) {
 
   const api = {
     finished,
+    scene, sfx, // for tools/scenetest.js
     // Jump to the next shot (click / any key).
     next() { if (!ended) go(cur + 1); },
     // Straight to the end of the cutscene.
@@ -77319,9 +78288,13 @@ const { launchMatch, defaultHumans } = __M["src/ui/matchscreen.js"];
 const U = __M["src/modes/utdata.js"];
 const Q = __M["src/modes/questdata.js"];
 const { startWalkout, canWalkout, tierColors } = __M["src/ui/walkout.js"];
+const { packScene, openScene, SCENES } = __M["src/ui/packscenes.js"];
+const { loadImage, flagUrl, crestUrl } = __M["src/data/crests.js"];
 const __dyn = (p) => __dynImport(p, "src/modes");
 // Ultimate Team UI: onboarding, squad builder, play modes, store with walkouts, club, market,
 // SBCs, objectives and evolutions.
+
+
 
 
 
@@ -77367,6 +78340,26 @@ function packArt(pk, size = '') {
 
 // ---------- Pack opening with walkouts ----------
 
+// The burst when a pack tears open: a flash, a shock ring and particles in the scene's shape
+// (sparks, neon streaks, gold dust, feathers, lightning bolts, carnival confetti or embers).
+const BURST_WORD = { hero: 'POW!', copa: 'OLÉ!', streak: 'NO DAYS OFF' };
+function burstFx(sceneId, c1, c2) {
+  const sc = SCENES[sceneId] || SCENES.classic;
+  const [t1, t2] = sc.colors || [c1, c2];
+  const cols = sc.confetti || [t1, t2, '#ffffff'];
+  const shape = sc.particles || 'spark';
+  const n = shape === 'bolt' ? 18 : shape === 'feather' ? 30 : 44;
+  const parts = Array.from({ length: n }, (_, i) => {
+    const up = shape === 'ember' || shape === 'feather';
+    const a = up ? (Math.random() - 0.5) * 140 : (i / n) * 360 + Math.random() * 12;
+    const dist = (up ? 30 : 22) + Math.random() * (shape === 'dust' ? 18 : 30);
+    return el('i', { class: 'pb-p ' + shape, style: { '--a': `${a}deg`, '--dist': `${dist}vmin`, '--c': cols[i % cols.length], '--d': `${0.7 + Math.random() * 0.7}s`, '--w': `${0.38 + Math.random() * 0.12}s`, '--s': `${shape === 'dust' ? 4 + Math.random() * 4 : 7 + Math.random() * 8}px` } });
+  });
+  return el('div', { class: 'pb-fx th-' + sceneId, style: { '--t1': t1, '--t2': t2 } },
+    el('div', { class: 'pb-flash' }), el('div', { class: 'pb-ring' }), el('div', { class: 'pb-ring two' }), ...parts,
+    BURST_WORD[sceneId] ? el('div', { class: 'pb-word' }, BURST_WORD[sceneId]) : null);
+}
+
 // Good players (84+, Icons, Heroes, In-Forms) get the 3D walkout cutscene (src/ui/walkout.js);
 // with Low graphics or no WebGL they get the flat reveal of nation, position and club instead.
 // opts: pack (store pack id) or packObj (a pack-like { name, n, color, art } for one-off rewards) for
@@ -77377,7 +78370,12 @@ function packOpening(cards, title = 'Pack', opts = {}) {
     const walk = best.ovr >= (opts.walkoutMin || 84) || ['icon', 'hero', 'inform', 'streak'].includes(best.type);
     const cine = walk && (app.settings.graphics || 'high') !== 'low' && canWalkout();
     const [c1, c2] = tierColors(best);
-    const stage = el('div', { class: 'pack-stage', style: { '--flare': c1, '--wo1': c1, '--wo2': c2 } }, el('div', { class: 'tunnel' }), el('div', { class: 'flare' }));
+    // Each pack has its own scene and music (packscenes.js, music.js); a special card can switch it.
+    let scene = opts.scene || packScene(opts.pack || (opts.packObj && opts.packObj.id));
+    const prevMusic = audio.musicId;
+    audio.startMusic(scene);
+    const track = el('div', { class: 'pack-track' }, `♪ ${audio.musicName || SCENES[scene].name}`);
+    const stage = el('div', { class: `pack-stage th-${scene}`, style: { '--flare': c1, '--wo1': c1, '--wo2': c2 } }, el('div', { class: 'tunnel' }), el('div', { class: 'flare' }), track);
     const center = el('div', { style: { zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '18px', position: 'relative' } });
     stage.append(center);
     document.body.appendChild(stage);
@@ -77389,6 +78387,7 @@ function packOpening(cards, title = 'Pack', opts = {}) {
       if (wo) wo.dispose();
       stage.remove();
       document.removeEventListener('keydown', key, true);
+      if (prevMusic) audio.startMusic(prevMusic); else audio.stopMusic();
       resolve(how);
     };
     const flat = [
@@ -77403,12 +78402,29 @@ function packOpening(cards, title = 'Pack', opts = {}) {
       flat[flatI++]();
       timer = setTimeout(runFlat, 1500);
     };
+    // The walkout's flag and crest load while the pack is still sealed.
+    if (walk) { const nat = NATION_BY_ID[best.nation]; if (nat) loadImage(flagUrl(nat.iso, 640)); if (club) loadImage(crestUrl(club.id)); }
+    // The pack shakes and tears open in a burst in its scene's style, then the walkout or the card.
+    let afterBurst = null;
     const open = () => {
       audio.whoosh(1.2);
+      const next = openScene(scene, best);
+      if (next !== scene) { stage.classList.replace(`th-${scene}`, `th-${next}`); scene = next; audio.startMusic(scene); }
+      audio.sting(scene);
+      track.textContent = `♪ ${audio.musicName || SCENES[scene].name}`;
+      phase = 'burst';
+      const sealed = center.querySelector('.pack');
+      if (sealed) sealed.classList.add('tearing');
+      const fx = burstFx(scene, c1, c2);
+      stage.append(fx);
+      afterBurst = () => { afterBurst = null; clearTimeout(timer); fx.remove(); reveal(); };
+      timer = setTimeout(afterBurst, walk ? 900 : 1150);
+    };
+    const reveal = () => {
       center.innerHTML = '';
       if (cine) {
         phase = 'walkout';
-        wo = startWalkout(stage, best, { quality: app.settings.graphics, before: center });
+        wo = startWalkout(stage, best, { quality: app.settings.graphics, before: center, scene });
         wo.finished.then(() => setTimeout(revealCard, 250));
       } else if (walk) { phase = 'flat'; runFlat(); }
       else revealCard();
@@ -77425,7 +78441,12 @@ function packOpening(cards, title = 'Pack', opts = {}) {
         el('div', { class: 'pack-hint' }, 'Click or press any key to continue'),
       );
       audio.boom(1); audio.applause(2);
-      if (walk) { audio.shimmer(1); audio.roar(0.5, 2); }
+      if (walk) {
+        audio.shimmer(1); audio.roar(0.5, 2);
+        // FC 26: the rating counts up to the card's number.
+        const o = center.querySelector('.pack-card .ovr');
+        if (o) { const to = best.ovr, from = Math.max(40, to - 24); const t0 = performance.now(); const tick = () => { const k = Math.min(1, (performance.now() - t0) / 900); o.textContent = String(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)))); if (k < 1 && phase === 'card') requestAnimationFrame(tick); else o.textContent = String(to); }; tick(); }
+      }
     };
     const showAll = () => {
       phase = 'all';
@@ -77446,6 +78467,7 @@ function packOpening(cards, title = 'Pack', opts = {}) {
     };
     const advance = () => {
       if (phase === 'sealed') open();
+      else if (phase === 'burst') { if (afterBurst) afterBurst(); }
       else if (phase === 'walkout') wo.next();
       else if (phase === 'flat') { clearTimeout(timer); revealCard(); }
       else if (phase === 'card') showAll();
