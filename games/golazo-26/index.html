@@ -896,6 +896,10 @@ kbd { display: inline-block; min-width: 20px; padding: 0 5px; border-radius: 4px
 .quests .q-next-row { display: flex; gap: 16px; align-items: center; margin-top: 8px; }
 .quests .q-next-row h3 { margin: 0 0 4px; font-family: var(--head); font-style: italic; text-transform: uppercase; }
 .quests .q-next-row p { margin: 0; font-size: 13px; }
+/* Number pickers (half length): click the value to type. */
+.selector.number .value.editable { cursor: text; text-transform: none; }
+.selector.number .value.editable:hover { text-decoration: underline dotted; text-underline-offset: 4px; }
+.selector .num-input { width: 96px; font-family: var(--head); font-weight: 700; font-size: 20px; text-align: center; color: inherit; background: rgba(0,0,0,0.35); border: 1px solid var(--accent); border-radius: 6px; padding: 1px 6px; outline: none; }
 
 </style>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23d7ff3a'/%3E%3Ctext x='32' y='44' font-family='Arial Black,Arial' font-weight='900' font-size='30' text-anchor='middle' fill='%230b1020'%3EG26%3C/text%3E%3C/svg%3E">
@@ -64658,6 +64662,66 @@ function selector(label, options, index, onChange) {
   return s;
 }
 
+// A number you can step with ◀ ▶ (arrow keys or the gamepad; Shift steps 5) or click (or press
+// Enter on) to type any value. opts: min, max, step (typed values round to it), fmt (display).
+function numberPicker(label, value, opts, onChange) {
+  const { min = 1, max = 90, step = 1, fmt = (n) => String(n) } = opts;
+  let v = value;
+  const val = el('div', { class: 'value editable', title: 'Click to type a number' });
+  const input = el('input', { type: 'text', inputmode: 'decimal', class: 'num-input', 'aria-label': label });
+  const render = () => { val.textContent = fmt(v); };
+  const commit = (n) => {
+    if (!Number.isFinite(n)) return;
+    n = clamp(Math.round(n / step) * step, min, max);
+    if (n === v) return;
+    v = n; render(); onChange(v);
+  };
+  let editing = false;
+  const close = (save) => {
+    if (!editing) return;
+    editing = false;
+    if (save) commit(parseFloat(input.value.replace(',', '.')));
+    input.replaceWith(val);
+    s.focus();
+  };
+  const open = () => {
+    if (editing) return;
+    editing = true;
+    input.value = String(v);
+    val.replaceWith(input);
+    input.focus(); input.select();
+  };
+  const s = el('div', { class: 'selector number', tabindex: '0' },
+    el('button', { tabindex: '-1', onclick: () => commit(Math.max(min, Math.ceil(v) - 1)), 'aria-label': 'Less' }, '◀'),
+    el('div', { style: { flex: 1, textAlign: 'center' } }, el('div', { class: 'label' }, label), val),
+    el('button', { tabindex: '-1', onclick: () => commit(Math.floor(v) + 1), 'aria-label': 'More' }, '▶'),
+  );
+  val.addEventListener('click', open);
+  input.addEventListener('keydown', (e) => {
+    // Keep typing keys (Backspace, arrows, Escape) away from menu navigation.
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); close(true); }
+    if (e.key === 'Escape') { e.preventDefault(); close(false); }
+  });
+  input.addEventListener('blur', () => close(true));
+  s.addEventListener('keydown', (e) => {
+    if (e.target !== s) return;
+    const big = e.shiftKey ? 5 : 1;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); commit(Math.max(min, Math.ceil(v) - big)); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); commit(Math.floor(v) + big); }
+    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); open(); }
+  });
+  render();
+  return s;
+}
+
+// Half lengths: any from 30 seconds to 90 minutes (45 is real time).
+const HALF_MIN = 0.5, HALF_MAX = 90;
+const fmtHalf = (n) => (n < 1 ? '30 sec' : `${n} min`) + (n === 45 ? ' · real time' : '');
+function halfLengthPicker(value, onChange) {
+  return numberPicker('Half Length', value || 4, { min: HALF_MIN, max: HALF_MAX, step: 0.5, fmt: fmtHalf }, onChange);
+}
+
 function toggle(label, value, onChange, sub = '') {
   let v = !!value;
   const t = el('div', { class: 'toggle' + (v ? ' on' : ''), tabindex: '0', role: 'switch' },
@@ -64703,7 +64767,7 @@ function leagueName(id) {
 
 
 
-__M["src/ui/components.js"] = { crest, shieldCrest, nationBadge, avatar, cardClass, cardEl, ovrBadge, starsFor, selector, toggle, slider, statBar, ratingColor, teamTitle, leagueName, clamp };
+__M["src/ui/components.js"] = { crest, shieldCrest, nationBadge, avatar, cardClass, cardEl, ovrBadge, starsFor, selector, numberPicker, HALF_MIN, fmtHalf, halfLengthPicker, toggle, slider, statBar, ratingColor, teamTitle, leagueName, clamp };
 })();
 
 /* ---- src/match/ball.js ---- */
@@ -74749,7 +74813,7 @@ __M["src/ui/matchscreen.js"] = { buildMatchConfig, defaultHumans, playMatch, lau
 ;(function(){
 const { el } = __M["src/core/util.js"];
 const { app } = __M["src/ui/app.js"];
-const { selector, toggle, slider } = __M["src/ui/components.js"];
+const { selector, toggle, slider, halfLengthPicker } = __M["src/ui/components.js"];
 const { DIFFICULTIES } = __M["src/data/meta.js"];
 const { controlsTable } = __M["src/ui/matchscreen.js"];
 const { remove, DEFAULT_SETTINGS } = __M["src/core/storage.js"];
@@ -74768,7 +74832,6 @@ const settingsScreen = {
   render() {
     const s = app.settings;
     const set = (k) => (v) => { s[k] = v; app.saveSettings(); };
-    const lengths = [2, 3, 4, 6, 8, 10];
     const cams = [['broadcast', 'Tele Broadcast'], ['tele', 'Tele Close'], ['coop', 'Co-op']];
     const root = el('div', { class: 'screen' },
       app.topbar('settings'),
@@ -74777,7 +74840,7 @@ const settingsScreen = {
         el('div', { class: 'section-title' }, el('h2', {}, 'Gameplay')),
         el('div', { class: 'settings-grid' },
           selector('Difficulty', DIFFICULTIES, s.difficulty, (i) => set('difficulty')(i)),
-          selector('Half Length', lengths.map((l) => `${l} min`), Math.max(0, lengths.indexOf(s.halfLength)), (i) => set('halfLength')(lengths[i])),
+          halfLengthPicker(s.halfLength, set('halfLength')),
           selector('Gameplay Preset', ['Competitive', 'Authentic'], s.preset === 'authentic' ? 1 : 0, (i) => set('preset')(i ? 'authentic' : 'competitive')),
           selector('Passing Assistance', ['Assisted', 'Semi'], s.passAssist === 'semi' ? 1 : 0, (i) => set('passAssist')(i ? 'semi' : 'assisted')),
           selector('Controls', ['Easy (3 buttons, bigger reach)', 'Classic (full FC layout)'], s.controls === 'classic' ? 1 : 0, (i) => { set('controls')(i ? 'classic' : 'easy'); const box = document.getElementById('ctl-table'); if (box) box.replaceChildren(controlsTable()); }),
@@ -74828,7 +74891,7 @@ __M["src/ui/settings.js"] = { settingsScreen };
 const { el } = __M["src/core/util.js"];
 const { connectedPads } = __M["src/core/input.js"];
 const { app } = __M["src/ui/app.js"];
-const { selector, crest, starsFor, nationBadge } = __M["src/ui/components.js"];
+const { selector, crest, starsFor, nationBadge, halfLengthPicker } = __M["src/ui/components.js"];
 const { LEAGUES } = __M["src/data/leagues.js"];
 const { NATIONS } = __M["src/data/nations.js"];
 const { buildClubTeam, buildNationTeam } = __M["src/data/teams.js"];
@@ -74935,7 +74998,7 @@ const kickoff = {
         el('div', { class: 'section-title' }, el('h2', {}, 'Match Settings')),
         el('div', { class: 'settings-grid' },
           selector('Difficulty', DIFFICULTIES, s.difficulty, (i) => { s.difficulty = i; app.saveSettings(); }),
-          selector('Half Length', ['2 min', '3 min', '4 min', '6 min', '8 min', '10 min'], Math.max(0, [2, 3, 4, 6, 8, 10].indexOf(s.halfLength)), (i) => { s.halfLength = [2, 3, 4, 6, 8, 10][i]; app.saveSettings(); }),
+          halfLengthPicker(s.halfLength, (v) => { s.halfLength = v; app.saveSettings(); }),
           selector('Gameplay Preset', ['Competitive', 'Authentic'], s.preset === 'authentic' ? 1 : 0, (i) => { s.preset = i ? 'authentic' : 'competitive'; app.saveSettings(); }),
           selector('Time of Day', ['Night', 'Day'], s.timeOfDay === 'day' ? 1 : 0, (i) => { s.timeOfDay = i ? 'day' : 'night'; app.saveSettings(); }),
           selector('If Tied', TIEBREAKS, Math.max(0, TIEBREAK_IDS.indexOf(s.tiebreak || 'et')), (i) => { s.tiebreak = TIEBREAK_IDS[i]; app.saveSettings(); }),
