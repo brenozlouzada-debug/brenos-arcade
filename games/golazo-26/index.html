@@ -163,8 +163,8 @@ input[type=text]:focus { outline: none; border-color: var(--accent); }
 
 /* ---------- UT cards ---------- */
 .card { --c1: #f3d778; --c2: #c9a236; --ink: #2c2210; width: 168px; height: 236px; position: relative; flex: 0 0 auto; cursor: pointer; transition: transform 0.15s; font-family: var(--head); color: var(--ink); }
-.card .shape { position: absolute; inset: 0; clip-path: polygon(50% 0, 88% 4%, 100% 12%, 100% 86%, 90% 94%, 50% 100%, 10% 94%, 0 86%, 0 12%, 12% 4%); background: linear-gradient(160deg, var(--c1), var(--c2)); box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4); }
-.card .shape::before { content: ''; position: absolute; inset: 5px; clip-path: inherit; border: 1px solid rgba(255,255,255,0.45); background: repeating-linear-gradient(135deg, rgba(255,255,255,0.0) 0 10px, rgba(255,255,255,0.07) 10px 20px); }
+.card .shape { position: absolute; inset: 0; clip-path: polygon(50% 0, 88% 4%, 100% 12%, 100% 86%, 90% 94%, 50% 100%, 10% 94%, 0 86%, 0 12%, 12% 4%); box-shadow: inset 0 0 0 2px rgba(255,255,255,0.4); }
+.card .shape::before { content: ''; position: absolute; inset: 5px; clip-path: inherit; border: 1px solid rgba(255,255,255,0.45); }
 .card.rare .shape::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.45) 48%, transparent 60%); background-size: 250% 100%; animation: shine 3.5s ease-in-out infinite; }
 @keyframes shine { 0% { background-position: 120% 0; } 60%, 100% { background-position: -80% 0; } }
 .card:hover, .card.focus, .card:focus-visible { transform: translateY(-4px) scale(1.03); outline: none; filter: drop-shadow(0 0 10px rgba(215,255,58,0.6)); }
@@ -185,17 +185,33 @@ input[type=text]:focus { outline: none; border-color: var(--accent); }
 .card .chem { position: absolute; right: 18px; bottom: 26px; font-size: 12px; font-weight: 800; letter-spacing: 1px; }
 .card .ps { position: absolute; bottom: 30px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: 700; opacity: 0.85; letter-spacing: 0.5px; }
 .card .badge { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.9; }
-.card.bronze { --c1: #d79a63; --c2: #7a4a24; --ink: #2b1606; }
-.card.silver { --c1: #e8ecf0; --c2: #9aa3ad; --ink: #1e252c; }
-.card.gold { --c1: #f6e192; --c2: #c99b2e; --ink: #2c2210; }
-.card.inform { --c1: #2a2a2a; --c2: #050505; --ink: #f1cf6b; }
+.card .shape { background: var(--bg, linear-gradient(160deg, var(--c1), var(--c2))); }
+.card .shape::before { background: var(--pat, repeating-linear-gradient(135deg, rgba(255,255,255,0.0) 0 10px, rgba(255,255,255,0.07) 10px 20px)) center / 100% 100% no-repeat; }
+/* Bronze, silver and gold: brushed metal for common cards, a faceted cut for rares. */
+.card.bronze { --c1: #d79a63; --c2: #7a4a24; --ink: #2b1606; --bg: linear-gradient(165deg, #e2a774, #b8763f 55%, #7a4a24); --pat: repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 3px); }
+.card.silver { --c1: #e8ecf0; --c2: #9aa3ad; --ink: #1e252c; --bg: linear-gradient(165deg, #f4f6f9, #c4cbd3 55%, #8c959f); --pat: repeating-linear-gradient(0deg, rgba(255,255,255,0.12) 0 1px, transparent 1px 3px); }
+.card.gold { --c1: #f6e192; --c2: #c99b2e; --ink: #2c2210; --bg: linear-gradient(165deg, #f5e3a0, #dcbd62 55%, #b88e2f); --pat: repeating-linear-gradient(0deg, rgba(255,255,255,0.08) 0 1px, transparent 1px 3px); }
+.card.bronze.rare { --bg: linear-gradient(160deg, #f0b27a, #c4762f 45%, #6d3a12); --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 168 236' preserveAspectRatio='none'%3E%3Cg fill='%23fff'%3E%3Cpath d='M0 0H84L38 92Z' fill-opacity='.16'/%3E%3Cpath d='M84 0H168L124 78Z' fill-opacity='.07'/%3E%3Cpath d='M38 92L84 0L124 78L86 148Z' fill-opacity='.2'/%3E%3Cpath d='M168 0L124 78L168 170Z' fill-opacity='.12'/%3E%3Cpath d='M0 150L38 92L86 148L44 236H0Z' fill-opacity='.06'/%3E%3Cpath d='M124 78L168 170L120 236L86 148Z' fill-opacity='.1'/%3E%3C/g%3E%3Cg fill='%23000'%3E%3Cpath d='M0 0L38 92L0 150Z' fill-opacity='.08'/%3E%3Cpath d='M86 148L120 236H44Z' fill-opacity='.1'/%3E%3Cpath d='M168 170V236H120Z' fill-opacity='.12'/%3E%3C/g%3E%3C/svg%3E"); }
+.card.silver.rare { --bg: linear-gradient(160deg, #ffffff, #c7d0da 45%, #7d8894); --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 168 236' preserveAspectRatio='none'%3E%3Cg fill='%23fff'%3E%3Cpath d='M0 0H84L38 92Z' fill-opacity='.16'/%3E%3Cpath d='M84 0H168L124 78Z' fill-opacity='.07'/%3E%3Cpath d='M38 92L84 0L124 78L86 148Z' fill-opacity='.2'/%3E%3Cpath d='M168 0L124 78L168 170Z' fill-opacity='.12'/%3E%3Cpath d='M0 150L38 92L86 148L44 236H0Z' fill-opacity='.06'/%3E%3Cpath d='M124 78L168 170L120 236L86 148Z' fill-opacity='.1'/%3E%3C/g%3E%3Cg fill='%23000'%3E%3Cpath d='M0 0L38 92L0 150Z' fill-opacity='.08'/%3E%3Cpath d='M86 148L120 236H44Z' fill-opacity='.1'/%3E%3Cpath d='M168 170V236H120Z' fill-opacity='.12'/%3E%3C/g%3E%3C/svg%3E"); }
+.card.gold.rare { --bg: linear-gradient(160deg, #fff1b8, #e3b23c 42%, #9a6c12); --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 168 236' preserveAspectRatio='none'%3E%3Cg fill='%23fff'%3E%3Cpath d='M0 0H84L38 92Z' fill-opacity='.16'/%3E%3Cpath d='M84 0H168L124 78Z' fill-opacity='.07'/%3E%3Cpath d='M38 92L84 0L124 78L86 148Z' fill-opacity='.2'/%3E%3Cpath d='M168 0L124 78L168 170Z' fill-opacity='.12'/%3E%3Cpath d='M0 150L38 92L86 148L44 236H0Z' fill-opacity='.06'/%3E%3Cpath d='M124 78L168 170L120 236L86 148Z' fill-opacity='.1'/%3E%3C/g%3E%3Cg fill='%23000'%3E%3Cpath d='M0 0L38 92L0 150Z' fill-opacity='.08'/%3E%3Cpath d='M86 148L120 236H44Z' fill-opacity='.1'/%3E%3Cpath d='M168 170V236H120Z' fill-opacity='.12'/%3E%3C/g%3E%3C/svg%3E"); }
+/* In-Form (Team of the Week): black with gold shards. */
+.card.inform { --c1: #2a2a2a; --c2: #050505; --ink: #f1cf6b; --bg: radial-gradient(ellipse at 70% 18%, rgba(241,207,107,0.28), transparent 55%), linear-gradient(165deg, #2b2b2b, #0a0a0a 60%, #000); --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 168 236' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23f1cf6b' stroke-width='1.2' stroke-opacity='.55'%3E%3Cpath d='M-10 60L60 -10M20 236L168 88M-10 150L150 -10M70 236L178 128'/%3E%3Cpath d='M120 -10L178 48M0 200L36 236' stroke-opacity='.3'/%3E%3C/g%3E%3Cg fill='%23f1cf6b'%3E%3Cpath d='M110 0H168V40Z' fill-opacity='.18'/%3E%3Cpath d='M0 236V180L56 236Z' fill-opacity='.14'/%3E%3C/g%3E%3C/svg%3E"); }
 .card.inform .shape { box-shadow: inset 0 0 0 2px #f1cf6b; }
-.card.icon { --c1: #fff8e6; --c2: #d6b66a; --ink: #3b2a08; }
-.card.icon .shape { box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px #d6b66a; }
-.card.hero { --c1: #8a5cff; --c2: #1d0e5a; --ink: #fff; }
-.card.evo { --c1: #1de9b6; --c2: #0a4f6b; --ink: #fff; }
+/* Icon: ivory with a gold sunburst and an art-deco double frame. */
+.card.icon { --c1: #fff8e6; --c2: #d6b66a; --ink: #3b2a08; --bg: repeating-conic-gradient(from 0deg at 50% 0%, rgba(214,182,106,0.32) 0deg 3deg, transparent 3deg 9deg), radial-gradient(ellipse at 50% 0%, #fffdf5, #f6e8c2 55%, #d9bb72); --pat: linear-gradient(180deg, transparent 60%, rgba(214,182,106,0.25)); }
+.card.icon .shape { box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px #d6b66a, inset 0 0 0 6px rgba(255,255,255,0.7), 0 0 0 1px #d6b66a; }
+/* Hero: purple comic-book burst with halftone dots. */
+.card.hero { --c1: #8a5cff; --c2: #1d0e5a; --ink: #fff; --bg: repeating-conic-gradient(from 0deg at 64% 30%, rgba(255,255,255,0.13) 0deg 6deg, transparent 6deg 14deg), radial-gradient(circle at 64% 30%, #b28cff, #6a35e8 38%, #2a0f7a 75%, #160846); --pat: radial-gradient(circle, rgba(255,255,255,0.2) 1px, transparent 1.6px) 0 0 / 7px 7px; }
+.card.hero .shape::before { background: var(--pat); }
+.card.hero .shape { box-shadow: inset 0 0 0 2px #e0d0ff; }
+/* Evolutions: teal with a glowing hex grid. */
+.card.evo { --c1: #1de9b6; --c2: #0a4f6b; --ink: #fff; --bg: radial-gradient(ellipse at 50% 25%, rgba(29,233,182,0.45), transparent 60%), linear-gradient(165deg, #12b48f, #0a5d74 55%, #082a44); --pat: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 168 236' preserveAspectRatio='none'%3E%3Cdefs%3E%3Cpattern id='h' width='18' height='31' patternUnits='userSpaceOnUse'%3E%3Cpath d='M9 0L18 5.2V15.6L9 20.8L0 15.6V5.2Z M9 20.8V31' fill='none' stroke='%239ffff0' stroke-opacity='.22' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='168' height='236' fill='url(%23h)'/%3E%3C/svg%3E"); }
+.card.evo .shape { box-shadow: inset 0 0 0 2px #7cffe0, 0 0 14px rgba(29,233,182,0.35); }
 .card.mini { width: 112px; height: 158px; }
 .card.mini .ovr { font-size: 27px; left: 11px; top: 16px; }
+/* Three-digit ratings (100) set a little tighter so they clear the portrait. */
+.card .ovr.x3 { font-size: 33px; left: 12px; letter-spacing: -1px; }
+.card.mini .ovr.x3 { font-size: 22px; left: 8px; }
 .card.mini .pos { font-size: 12px; left: 12px; top: 41px; }
 .card.mini .nat { font-size: 14px; left: 11px; top: 56px; }
 .card.mini .clubc { left: 10px; top: 74px; }
@@ -55709,6 +55725,8 @@ const LOOKS = {
   'Trent Alexander-Arnold': { s: 1, h: 'dkbrown', c: 'curlytop', b: 'light', e: 'brown', f: 'mixed', m: { long: 0.2 }, ht: 180 },
 
   // ---------- LaLiga ----------
+  'Vozinha': { s: 5, h: 'black', c: 'buzz', b: 'stubble', e: 'dkbrown', f: 'mixed', m: { long: 0.3, jaw: 0.2 }, ht: 188 },
+  'Arturo Vidal': { t: 'LR', s: 2, h: 'black', c: 'mohawk', b: 'short', e: 'dkbrown', f: 'latin', m: { jaw: 0.35, neck: 0.4 }, ht: 180 },
   'Kylian Mbappé': { s: 4, h: 'black', c: 'shaved', b: 'light', e: 'dkbrown', f: 'mixed', m: { ears: 0.7, long: 0.25, lips: 0.2, chinFwd: 0.2 }, ht: 178 },
   'Vinícius Jr.': { s: 5, h: 'black', c: 'twists', b: 'light', e: 'dkbrown', f: 'wAfr', m: { lips: 0.25, ears: 0.35, faceW: -0.1 }, ht: 176 },
   'Thibaut Courtois': { s: 0, h: 'dkbrown', c: 'slick', b: 'light', e: 'hazel', f: 'nEur', m: { long: 0.65, noseLen: 0.45, faceW: -0.1 }, ht: 200 },
@@ -55944,6 +55962,7 @@ const LEGEND_LOOKS = {
   'Toni Kroos': { s: 0, h: 'ltbrown', c: 'sidepart', b: 'none', e: 'blue', f: 'nEur', m: { long: 0.3 }, ht: 183 },
   'Mia Hamm': { s: 0, h: 'ltbrown', c: 'ponytail', b: 'none', e: 'brown', f: 'nEur', m: { faceW: -0.25, jaw: -0.4, brow: -0.5 }, ht: 165 },
   'Alex Morgan': { s: 0, h: 'mdbrown', c: 'ponytail', b: 'none', e: 'blue', f: 'nEur', m: { faceW: -0.25, jaw: -0.4, brow: -0.5 }, ht: 170 },
+  'Vozinha': { s: 5, h: 'black', c: 'buzz', b: 'stubble', e: 'dkbrown', f: 'mixed', m: { long: 0.3, jaw: 0.2 }, ht: 188 },
   'Juan Román Riquelme': { s: 1, h: 'black', c: 'sidepart', b: 'light', e: 'brown', f: 'latin', m: { long: 0.4 }, ht: 182 },
   'Diego Forlán': { s: 0, h: 'blond', c: 'long', b: 'none', e: 'blue', f: 'sEur', m: {}, ht: 172 },
   'Antonio Di Natale': { s: 1, h: 'dkbrown', c: 'shaved', b: 'stubble', e: 'brown', f: 'sEur', m: {}, ht: 170 },
@@ -58931,6 +58950,14 @@ Lucas Ocampos|RW|77|ARG|31|1
 Jesús Corona|RW|74|MEX|32|2
 Anthony Martial|ST|76|FRA|29|6
 Germán Berterame|ST|77|MEX|26|1` },
+    // Joined in August 2026 after his World Cup with Cabo Verde (the 0-0 against Spain, then the
+    // round of 32). The rest of the squad is topped up with generated Chilean players.
+    { id: 'CCL', name: 'Colo-Colo', short: 'CCL', stadium: 'Estadio Monumental David Arellano', kit: ['#ffffff', '#111111', 'plain'], away: ['#111111', '#ffffff', 'plain'], p: `
+Vozinha|GK|77|CPV|40|5
+Fernando de Paul|GK|68|CHI|35|1
+Eduardo Villanueva|GK|62|CHI|29|1
+Arturo Vidal|CM|74|CHI|39|2
+Claudio Aquino|CAM|72|ARG|35|1` },
   ],
 };
 
@@ -58982,7 +59009,9 @@ Toni Kroos|CM|90|GER|34|0
 Clarence Seedorf|CM|89|NED|34|5
 Rio Ferdinand|CB|89|ENG|33|5
 Mia Hamm|ST|90|USA|32|0
-Alex Morgan|ST|89|USA|35|0`;
+Alex Morgan|ST|89|USA|35|0
+Vozinha|GK|100|CPV|40|5
+`;
 
 const HEROES_RAW = `
 Juan Román Riquelme|CAM|88|ARG|30|1|SEA
@@ -59031,7 +59060,7 @@ const LEAGUES = [EPL, LALIGA, SERIEA, BUNDESLIGA, LIGUE1, BRASILEIRAO, SERIEB, W
 // Home nation used when generating squad fillers for each club.
 const ROW_COUNTRY = {
   NAS: 'KSA', HIL: 'KSA', ITT: 'KSA', AHL: 'KSA', MIA: 'USA', LAG: 'USA', LAFC: 'USA',
-  SLB: 'POR', FCP: 'POR', SCP: 'POR', AJX: 'NED', PSV: 'NED', FEY: 'NED', GAL: 'TUR', FEN: 'TUR', MTY: 'MEX',
+  SLB: 'POR', FCP: 'POR', SCP: 'POR', AJX: 'NED', PSV: 'NED', FEY: 'NED', GAL: 'TUR', FEN: 'TUR', MTY: 'MEX', CCL: 'CHI',
 };
 
 const FORMATION = {
@@ -59052,7 +59081,7 @@ const SHORTS = {
   BAR: '#1d2c6d', ATM: '#1d2c6d', ATH: '#111111', INT: '#111111', NEW: '#111111', MIL: '#ffffff', JUV: '#ffffff',
   CRY: '#1b458f', BRE: '#111111', BOU: '#111111', SEV: '#ffffff', VAL: '#111111', SCP: '#111111', FCP: '#ffffff',
   PSV: '#ffffff', FEY: '#111111', GAL: '#c8102e', FEN: '#ffffff', OGCN: '#111111', RCL: '#111111',
-  FLA: '#ffffff', FLU: '#ffffff', BOT: '#111111', VAS: '#111111', SPT: '#111111', GFB: '#111111', AMG: '#111111', CEA: '#111111', VIT: '#111111',
+  CCL: '#111111', FLA: '#ffffff', FLU: '#ffffff', BOT: '#111111', VAS: '#111111', SPT: '#111111', GFB: '#111111', AMG: '#111111', CEA: '#111111', VIT: '#111111',
 };
 
 const CLUB_BY_ID = {};
@@ -59285,7 +59314,7 @@ const NUMBERS = {
 };
 
 function priceFor(ovr, type = 'base') {
-  const table = [[0, 150], [60, 200], [64, 300], [68, 400], [72, 550], [75, 700], [78, 900], [80, 1400], [82, 2400], [83, 3500], [84, 5000], [85, 7000], [86, 10000], [87, 14000], [88, 20000], [89, 30000], [90, 45000], [91, 65000], [93, 120000], [95, 250000]];
+  const table = [[0, 150], [60, 200], [64, 300], [68, 400], [72, 550], [75, 700], [78, 900], [80, 1400], [82, 2400], [83, 3500], [84, 5000], [85, 7000], [86, 10000], [87, 14000], [88, 20000], [89, 30000], [90, 45000], [91, 65000], [93, 120000], [95, 250000], [97, 350000], [100, 500000]];
   let p = 150;
   for (const [o, v] of table) if (ovr >= o) p = v;
   const mult = { base: 1, inform: 1.8, hero: 2.5, icon: 3.5, evo: 1 }[type] || 1;
@@ -59521,6 +59550,9 @@ const SHIRT = {
 };
 
 // Hand-tuned face stats for superstars (PAC SHO PAS DRI DEF PHY or GK DIV HAN KIC REF SPD POS).
+// Icons with hand-set face stats (Vozinha's Icon is the game's only 100: everything at the maximum).
+const ICON_STATS = { Vozinha: [99, 99, 99, 99, 99, 99] };
+
 const STAR_STATS = {
   'Kylian Mbappé': [97, 91, 81, 92, 36, 78], 'Erling Haaland': [89, 93, 66, 80, 45, 88], 'Mohamed Salah': [88, 87, 84, 88, 45, 76],
   'Vinícius Jr.': [95, 84, 81, 91, 29, 69], 'Lamine Yamal': [88, 79, 85, 91, 35, 61], 'Harry Kane': [68, 93, 84, 82, 49, 82],
@@ -59617,7 +59649,7 @@ function db() {
   }
   const icons = parseBlock(ICONS_RAW).map((r, i) => {
     const rng = new RNG('icon:' + r.name);
-    const p = makePlayer({ id: `ICON-${i}`, nation: r.nation, pos: r.pos, ovr: r.ovr, age: r.age, club: 'ICON', league: 'ICON', rng, type: 'icon', name: realName(r.name, r.nation), foot: r.foot, skin: r.skin });
+    const p = makePlayer({ id: `ICON-${i}`, nation: r.nation, pos: r.pos, ovr: r.ovr, age: r.age, club: 'ICON', league: 'ICON', rng, type: 'icon', name: realName(r.name, r.nation), foot: r.foot, skin: r.skin, statsOverride: statsFromArray(r.pos, ICON_STATS[r.name]) });
     p.num = 10; p.rare = true;
     applyLook(p.look, LEGEND_LOOKS[r.name]);
     return p;
@@ -60017,7 +60049,7 @@ const MAKER = {
   MIA: 'adidas', LAG: 'adidas', LAFC: 'adidas', NAS: 'Nike', HIL: 'PUMA', SLB: 'adidas', FCP: 'New Balance', SCP: 'Nike',
   AJX: 'adidas', PSV: 'PUMA', FEY: 'Castore', GAL: 'PUMA', FEN: 'PUMA',
   FLA: 'adidas', PAL: 'PUMA', COR: 'Nike', SAO: 'New Balance', SAN: 'Umbro', FLU: 'PUMA', BOT: 'Reebok', GFB: 'Umbro',
-  SCI: 'adidas', AMG: 'adidas', CRU: 'adidas', VAS: 'Kappa',
+  SCI: 'adidas', AMG: 'adidas', CRU: 'adidas', VAS: 'Kappa', CCL: 'adidas',
   // National teams
   ENG: 'Nike', FRA: 'Nike', BRA: 'Nike', NED: 'Nike', POR: 'PUMA', USA: 'Nike', CRO: 'Nike', KOR: 'Nike',
   ARG: 'adidas', ESP: 'adidas', GER: 'adidas', ITA: 'adidas', BEL: 'adidas', MEX: 'adidas', COL: 'adidas', JPN: 'adidas',
@@ -64001,7 +64033,7 @@ function cardEl(p, opts = {}) {
   const card = el('div', { class: `card ${cls}${p.rare ? ' rare' : ''}${opts.mini ? ' mini' : ''}${opts.selected ? ' selected' : ''}`, tabindex: opts.focusable === false ? null : '0', onclick: opts.onClick, title: `${p.first || ''} ${p.last || p.name}` },
     el('div', { class: 'shape' }),
     el('div', { class: 'badge' }, { icon: 'ICON', hero: 'HERO', inform: 'IN-FORM', evo: 'EVOLVED' }[p.type] || (p.rare ? 'RARE' : '')),
-    el('div', { class: 'ovr' }, String(p.ovr)),
+    el('div', { class: 'ovr' + (p.ovr >= 100 ? ' x3' : '') }, String(p.ovr)),
     el('div', { class: 'pos' }, opts.slotPos || p.pos),
     el('div', { class: 'nat' }, nationBadge(p.nation, opts.mini ? 14 : 20)),
     el('div', { class: 'clubc' }, club ? crest(club, 'xs') : el('span', { style: { fontSize: '11px', fontWeight: 800 } }, p.type === 'icon' ? '★' : p.type === 'hero' ? '◆' : '')),
