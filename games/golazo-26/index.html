@@ -60110,9 +60110,11 @@ function makePitch(rush = false) {
 }
 
 const BALL_R = 0.11;
+// How far ahead of a carrier's body the ball sits at his next touch (m): past the toes of his front foot.
+const carryLead = (speed) => 0.42 + 0.24 * Math.min(1, speed / 2);
 const G = 9.81;
 
-__M["src/match/pitch.js"] = { makePitch, BALL_R, G };
+__M["src/match/pitch.js"] = { makePitch, BALL_R, carryLead, G };
 })();
 
 /* ---- src/match/skills.js ---- */
@@ -64618,6 +64620,7 @@ __M["src/match/render/athlete.js"] = { shirtTexture, faceTexture, cardMat, Athle
 ;(function(){
 const THREE = window.THREE;
 const { clamp } = __M["src/core/util.js"];
+const { carryLead } = __M["src/match/pitch.js"];
 // Locomotion: feet that plant on the pitch. Each foot is on the ground (fixed in the world, rolling
 // from heel to toe) or swinging to where it will land next, on a stride timed from the player's
 // speed. A two-bone IK then bends the leg to reach the foot, so nothing slides and running in any
@@ -64627,17 +64630,23 @@ const { clamp } = __M["src/core/util.js"];
 
 
 
+
 const _inv = new THREE.Matrix4(), _p = new THREE.Vector3(), _q = new THREE.Vector3();
 const TAU = Math.PI * 2;
 const fract = (x) => x - Math.floor(x);
 const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
-// Steps per second at a speed (m/s): from a walk at about 1.8 to a sprint at over 4.
-function cadence(v) { return 1.7 + 0.27 * v + 0.002 * v * v; }
+// Steps per second at a speed (m/s): from a walk at about 1.8 to a sprint at over 4. With the ball at
+// his feet he takes shorter, quicker steps, closer to a normal stride the faster he goes.
+function cadence(v, ball = false) {
+  const c = 1.7 + 0.27 * v + 0.002 * v * v;
+  return ball ? c * (1.05 + 0.2 * (1 - sstep(4.5, 8.5, v))) : c;
+}
 // Share of each leg's cycle spent on the ground: over half at a walk, about a fifth at a sprint.
 function duty(v) { return clamp(0.72 - 0.095 * v, 0.22, 0.62); }
 
 const BALL_OF_FOOT = 0.13; // ankle to the ball of the foot
+const TOE = 0.27; // ankle to the back of a ball at the toe of the boot, to its middle
 const HEEL = 0.08; // ankle to the back of the heel
 const ANKLE_H = 0.095; // ankle above the sole
 
@@ -64664,7 +64673,7 @@ function placeFeet(ik, s, sc, width) {
 
 function beginSwing(f, ik, sc, lift, rem, forced) {
   f.swing = true; f.u = 0; f.sx = f.wx ?? f.x; f.sz = f.wz ?? f.z; f.sy = f.wy || ik.restY * sc; f.p0 = f.pitch || 0;
-  f.lift = lift; f.rem = rem; f.forced = forced; f.armed = false;
+  f.lift = lift; f.rem = rem; f.forced = forced; f.armed = false; f.rel = false;
 }
 
 // Where a foot's ankle is now, in the coordinates of the player's position (from last frame's pose).
@@ -64734,11 +64743,13 @@ function legIK(a, s, dt, want, opts = {}) {
   } else if (ik.moving && sp < 0.22) ik.moving = false;
 
   if (ik.moving && dt > 0) {
-    const beta = duty(sp), Tc = 2 / (cadence(sp) * (1 + 0.45 * lat));
+    const beta = duty(sp), Tc = 2 / (cadence(sp, s.hasBall) * (1 + 0.45 * lat));
     const travel = sp * beta * Tc * (1 - 0.2 * lat);
-    const ahead = Math.min(0.44, travel * 0.45) * sc;
+    // How far ahead of the body a foot lands. With the ball, never as far as the ball.
+    const ahead = Math.min(0.44, travel * 0.45, s.hasBall ? Math.max(0.1, carryLead(sp) - TOE) : 9) * sc;
     const w = (width * (1 - 0.5 * sstep(1.5, 6, sp)) + lat * 0.05) * sc;
-    const lift = (0.05 + 0.05 * sp) * sc;
+    const fwd01 = clamp((dx * fx + dz * fz) * 1.5, 0, 1); // running forward rather than sideways or back
+    const lift = (0.03 + 0.02 * sp + 0.032 * sp * fwd01) * sc * (s.hasBall ? 0.88 : 1);
     const heel = 0.35 + 0.65 * sstep(1.5, 7, sp);
     const fw = dx * fx + dz * fz; // heel-to-toe going forward, toe-to-heel going backward, flat sideways
     const touch = opts.touch || null;
@@ -64755,6 +64766,13 @@ function legIK(a, s, dt, want, opts = {}) {
         if (!f.swing && Math.hypot(f.x - s.x, f.z - s.z) > (pinned ? 0.62 : ik.l1 + ik.l2) * sc * 1.08) beginSwing(f, ik, sc, lift * 0.7, 0.16, true);
       }
       if (f.swing) {
+        // Begun by something else (a kick let it go, or he's only just set off): from where it is now.
+        if (!f.rel) {
+          f.rel = true; f.u = 0;
+          f.rx = (f.wx ?? f.x) - s.x; f.rz = (f.wz ?? f.z) - s.z; f.sy = f.wy || restY; f.p0 = f.pitch || 0;
+          f.T = f.forced ? Math.max(f.rem, 0.11) : Math.max((1 - lp) * Tc, 0.11);
+          f.k0 = f.forced ? 0 : 0.55;
+        }
         let rem = f.forced ? (f.rem -= dt) : (lp >= beta ? (1 - lp) * Tc : 0);
         // (A change of speed can shift the stride under a swinging foot: it still takes its time.)
         rem = Math.max(rem, (1 - f.u) * 0.11);
@@ -64766,7 +64784,7 @@ function legIK(a, s, dt, want, opts = {}) {
           const near = 1 - Math.abs(rem - touch.rem) / 0.12;
           if (near > 0) {
             const k = 0.85 * sstep(0, 1, near);
-            const bx = touch.x - dx * 0.2 + fz * f.side * 0.03 - (s.x + vx * rem), bz = touch.z - dz * 0.2 - fx * f.side * 0.03 - (s.z + vz * rem);
+            const bx = touch.x - dx * TOE + fz * f.side * 0.03 - (s.x + vx * rem), bz = touch.z - dz * TOE - fx * f.side * 0.03 - (s.z + vz * rem);
             // Only when the ball is about where that foot was coming down anyway.
             if (Math.hypot(bx - ox, bz - oz) < 0.7) { ox += (bx - ox) * k; oz += (bz - oz) * k; }
           }
@@ -64774,13 +64792,20 @@ function legIK(a, s, dt, want, opts = {}) {
         if (f.ox === undefined || f.u < 0.02) { f.ox = ox; f.oz = oz; }
         const ease = 1 - Math.exp(-22 * dt);
         f.ox += (ox - f.ox) * ease; f.oz += (oz - f.oz) * ease;
-        const tx = s.x + vx * rem + f.ox, tz = s.z + vz * rem + f.oz;
-        const e = f.u * f.u * (3 - 2 * f.u);
-        f.wx = f.sx + (tx - f.sx) * e; f.wz = f.sz + (tz - f.sz) * e;
-        f.wy = f.sy + (restY - f.sy) * e + f.lift * Math.sin(Math.PI * Math.pow(f.u, 0.75));
-        // Toes pointed as it leaves, drawn up to land on the heel.
-        f.pitch = f.p0 + (-0.22 * fw - f.p0) * sstep(0.1, 0.9, f.u);
-        if (f.u >= 1) { f.swing = false; f.x = tx; f.z = tz; f.q = 0; f.pitch = -0.22 * fw; f.armed = lp < beta && !f.forced; f.forced = false; }
+        // The path in the body's frame: the foot leaves going backwards at about the speed the ground
+        // goes by, folds up behind him, comes through under the hip with the knee leading, and is
+        // already drawing back as it lands. (Cubic Hermite, u from 0 to 1.)
+        const u = f.u, u2 = u * u, u3 = u2 * u;
+        const h00 = 2 * u3 - 3 * u2 + 1, h01 = 1 - h00, h10 = u3 - 2 * u2 + u, h11 = u3 - u2;
+        const back = -(h10 * f.k0 + h11 * (s.hasBall ? 0.3 : 0.6)) * f.T;
+        const rx = h00 * f.rx + h01 * f.ox + vx * back, rz = h00 * f.rz + h01 * f.oz + vz * back;
+        f.wx = s.x + rx; f.wz = s.z + rz;
+        const e = u2 * (3 - 2 * u);
+        f.wy = f.sy + (restY - f.sy) * e + f.lift * Math.sin(Math.PI * Math.pow(u, 0.75));
+        // Toes pointed as it leaves, hanging from the folded leg, then drawn up to land on the heel.
+        const fold = 0.55 * fwd01 * sstep(2, 7, sp) * Math.sin(Math.PI * Math.min(1, u / 0.72));
+        f.pitch = f.p0 + (-0.22 * fw - f.p0) * sstep(0.1, 0.9, u) + fold;
+        if (f.u >= 1) { f.swing = false; f.x = s.x + f.ox; f.z = s.z + f.oz; f.q = 0; f.pitch = -0.22 * fw; f.armed = lp < beta && !f.forced; f.forced = false; }
       }
       if (!f.swing) {
         // On the ground: heel strike, flat, then the heel rises and he rolls onto the ball of the foot.
@@ -64797,6 +64822,8 @@ function legIK(a, s, dt, want, opts = {}) {
     let stepping = false;
     for (const f of ik.feet) if (f.swing) {
       stepping = true;
+      // He stopped with this foot in the air: it comes down from where it is.
+      if (f.rel) beginSwing(f, ik, sc, Math.min(0.05, f.lift), 0.16, true);
       f.rem -= dt;
       f.u = f.rem <= dt ? 1 : Math.min(1, f.u + ((1 - f.u) * dt) / Math.max(dt, f.rem));
       const t = rest(f), e = f.u * f.u * (3 - 2 * f.u);
@@ -64860,7 +64887,9 @@ function legIK(a, s, dt, want, opts = {}) {
     hr.set(hr.x + (hipX - hr.x) * w, hr.y + (hipY - hr.y) * w, hr.z + (hipZ - hr.z) * w);
     kr.set(kr.x + (kneeAng - kr.x) * w, kr.y * (1 - w), kr.z * (1 - w));
     // The sole lies on the turf (plus the roll of the step).
-    const ankX = (f.pitch || 0) - (hipX + kneeAng + bodyX), ankZ = -(hipZ + bodyZ);
+    let ankX = (f.pitch || 0) - (hipX + kneeAng + bodyX);
+    const ankZ = -(hipZ + bodyZ);
+    if (f.swing) ankX = clamp(ankX, -0.42, 1.05); // in the air, only as far as an ankle goes
     // The model's feet toe out a little: fine standing, straightened up to run.
     const ankY = f.side * (f.yaw - 0.24 * sstep(1, 4, sp));
     ar.set(ar.x + (ankX - ar.x) * w, ar.y + (ankY - ar.y) * w, ar.z + (ankZ - ar.z) * w);
@@ -65206,8 +65235,10 @@ __M["src/match/render/skillPoses.js"] = { K, GK_FEET, skillFeet, scriptFeet, ski
 const { clamp, angleDiff } = __M["src/core/util.js"];
 const { skillPose, skillFeet, scriptFeet, GK_FEET, K } = __M["src/match/render/skillPoses.js"];
 const { cadence, duty, legIK, footWorld } = __M["src/match/render/gait.js"];
+const { carryLead } = __M["src/match/pitch.js"];
 // Procedural animation for Athlete rigs. Computes a target pose from the simulation snapshot,
 // then eases every joint toward it so state changes never snap.
+
 
 
 
@@ -65243,7 +65274,7 @@ function poseAthlete(a, s, dt, live = true) {
   // Locomotion phase (stored on the snapshot for replays): a full turn is two steps. Side-steps
   // are quicker and shorter.
   const latK = sp > 0.3 ? Math.abs(vxs * Math.sin(f) - vzs * Math.cos(f)) / sp : 0;
-  const omega = sp > 0.15 ? Math.PI * cadence(sp) * (1 + 0.45 * latK) : 0;
+  const omega = sp > 0.15 ? Math.PI * cadence(sp, s.hasBall) * (1 + 0.45 * latK) : 0;
   // With the ball at his feet the stride is nudged so that a foot comes down as each touch falls due.
   let ikTouch = null;
   if (s.dribIn > 0 && sp > 0.4 && s.ballX !== undefined) {
@@ -65253,8 +65284,9 @@ function poseAthlete(a, s, dt, live = true) {
     const steps = Math.round((s.dribIn - nextLand) / (Tc / 2));
     const err = s.dribIn - (nextLand + Math.max(0, steps) * (Tc / 2));
     a.touchRate = 1 - clamp(err / Math.max(0.15, s.dribIn), -0.22, 0.22);
-    // Where the ball will be by then.
-    ikTouch = { rem: s.dribIn, x: s.ballX + vxs * s.dribIn, z: s.ballZ + vzs * s.dribIn };
+    // Where the ball will be by then: back in front of his foot.
+    const L = carryLead(sp) / sp;
+    ikTouch = { rem: s.dribIn, x: s.x + vxs * (s.dribIn + L), z: s.z + vzs * (s.dribIn + L) };
   } else a.touchRate = 1;
   if (live) a.phase += dt * omega * a.touchRate;
   else if (s.phase !== undefined) a.phase = s.phase;
@@ -65332,23 +65364,29 @@ function poseAthlete(a, s, dt, live = true) {
     T.pelvis[2] = 0.035 * cosL * tw;
     // Leans into his acceleration and back against his braking.
     const lean = clamp((a.accF || 0) * 0.014, -0.16, 0.16);
-    T.spine[0] = 0.07 + 0.2 * sf + (back ? -0.15 : 0) + lean * 0.6;
+    T.spine[0] = 0.07 + 0.2 * sf + (back ? -0.15 : 0) + lean * 0.6 + (s.hasBall ? 0.06 : 0);
     T.chest[0] = lean * 0.2;
     T.head[0] = -0.1 - 0.15 * sf - lean * 0.5 + (s.hasBall ? 0.2 : 0);
     if (useIK) {
-      T.body[0] = 0.07 * sf + lean * 0.5;
+      T.body[0] = 0.1 * sf + lean * 0.5;
       // A runner sits lower than a man standing, and bobs: down through each stance, up in the
       // flight. A walker goes the other way, vaulting over a straight leg.
       const run01 = clamp((sp - 1.8) / 1.4, 0, 1);
       const bob = (0.018 * (1 - run01) - 0.03 * run01) * Math.cos(2 * p);
-      T.bodyPos[1] = -(0.035 + 0.06 * clamp((sp - 0.3) / 3.2, 0, 1)) + bob - Math.max(0, -(a.accF || 0)) * 0.004;
+      // He runs taller at a sprint than a jog, and lower with the ball.
+      T.bodyPos[1] = -(0.02 + 0.07 * clamp((sp - 1.5) / 2.5, 0, 1) - 0.025 * clamp((sp - 5) / 3.5, 0, 1) + (s.hasBall ? 0.012 : 0)) + bob - Math.max(0, -(a.accF || 0)) * 0.004;
     } else T.bodyPos[1] = 0.035 * sf * Math.abs(Math.sin(p)) - 0.01;
-    // Arms drive opposite to the legs from the shoulder, elbows bending as they come through.
-    const Aa = (0.32 + 0.68 * sf) * amp;
-    T.shL[0] = Aa * sinL - 0.1 * sf; T.shR[0] = -Aa * sinL - 0.1 * sf;
-    T.shL[2] = 0.12 + 0.05 * sf; T.shR[2] = -0.12 - 0.05 * sf;
-    T.elL[0] = -0.45 - 0.85 * sf - 0.35 * Math.max(0, -sinL) * (0.4 + sf);
-    T.elR[0] = -0.45 - 0.85 * sf - 0.35 * Math.max(0, sinL) * (0.4 + sf);
+    // Arms drive opposite to the legs from the shoulder, swinging further back than forward. The
+    // elbows stay bent, closing as the hand comes through and opening a little behind him. With the
+    // ball they swing less and sit out wider, for balance.
+    const Aa = (0.3 + 0.55 * sf) * amp * (s.hasBall ? 0.85 : 1);
+    const armBack = -0.04 + 0.26 * sf;
+    T.shL[0] = Aa * sinL + armBack; T.shR[0] = -Aa * sinL + armBack;
+    const armOut = 0.12 + 0.05 * sf + (s.hasBall ? 0.1 : 0);
+    T.shL[2] = armOut; T.shR[2] = -armOut;
+    const elbow = 0.35 + 0.9 * clamp((sp - 0.5) / 4, 0, 1), close = 0.2 + 0.45 * sf, open = 0.15 * sf;
+    T.elL[0] = -elbow - close * Math.max(0, -sinL) + open * Math.max(0, sinL);
+    T.elR[0] = -elbow - close * Math.max(0, sinL) + open * Math.max(0, -sinL);
     // Lean into turns.
     T.body[2] = clamp(a.turnRate * sp * 0.022, -0.32, 0.32);
   };
@@ -70547,7 +70585,7 @@ __M["src/match/drills.js"] = { DRILLS, medalFor, Drill };
 /* ---- src/match/match.js ---- */
 ;(function(){
 const { clamp, len2, angleDiff } = __M["src/core/util.js"];
-const { makePitch, BALL_R, G } = __M["src/match/pitch.js"];
+const { makePitch, BALL_R, G, carryLead } = __M["src/match/pitch.js"];
 const { Ball, MU, KL } = __M["src/match/ball.js"];
 const { MatchPlayer } = __M["src/match/player.js"];
 const { TeamAI, interceptFor } = __M["src/match/ai.js"];
@@ -70571,6 +70609,10 @@ const { updateDive: import_updateDive } = __M["src/match/ai.js"];
 
 
 
+
+// A ball nudged along at a carrier's feet dies quicker than a pass rolling on the same grass, so a
+// touch shows: it runs on a little and he catches it up.
+const TOUCH_MU = 4.5;
 
 const PRESETS = {
   competitive: { passSpeed: 1.08, passErr: 0.95, shotErr: 1.0, accel: 1.08, turn: 1.12, stamina: 0.75, press: 1.0, name: 'Competitive' },
@@ -71947,10 +71989,11 @@ class Match {
         return;
       }
     }
-    // Where the ball belongs: just ahead of his stronger foot (behind him when shielding it).
+    // Where the ball belongs: past the toes of his front foot, on his stronger side (behind him when
+    // shielding it).
     const moving = p.speed > 1;
     let dx = moving ? p.vel.x / p.speed : fx, dz = moving ? p.vel.z / p.speed : fz;
-    let reachOut = 0.42;
+    let reachOut = carryLead(p.speed);
     if (p.shielding) {
       const o = this.nearestOpponent(p);
       if (o) { const ol = len2(p.pos.x - o.pos.x, p.pos.z - o.pos.z) || 1; dx = (p.pos.x - o.pos.x) / ol; dz = (p.pos.z - o.pos.z) / ol; reachOut = 0.5; }
@@ -71966,7 +72009,7 @@ class Match {
     }
     // Rolling between touches (dropping first, if he took it in the air).
     const vh = len2(b.vel.x, b.vel.z);
-    if (vh > 0) { const nv = Math.max(0, vh - (MU + KL * vh) * dt); b.vel.x *= nv / vh; b.vel.z *= nv / vh; }
+    if (vh > 0) { const nv = Math.max(0, vh - (TOUCH_MU + KL * vh) * dt); b.vel.x *= nv / vh; b.vel.z *= nv / vh; }
     b.pos.x += b.vel.x * dt; b.pos.z += b.vel.z * dt;
     if (b.pos.y > BALL_R || b.vel.y > 0) {
       b.vel.y -= G * dt; b.pos.y += b.vel.y * dt;
@@ -71974,28 +72017,55 @@ class Match {
     } else { b.pos.y = BALL_R; b.vel.y = 0; }
     const dr = p.drib || (p.drib = { t: 0, next: 0, x: 0, z: 0 });
     dr.t += dt;
+    // How fast his run is bending (rad/s, smoothed).
+    const heading = Math.atan2(dz, dx);
+    const bend = moving && dr.ang !== undefined ? clamp(angleDiff(dr.ang, heading) / dt, -6, 6) : 0;
+    dr.ang = heading;
+    dr.w = (dr.w || 0) + (bend - (dr.w || 0)) * Math.min(1, dt * 8);
     const idealX = p.pos.x + footX, idealZ = p.pos.z + footZ;
-    const toBody = len2(b.pos.x - p.pos.x, b.pos.z - p.pos.z);
-    // A foot can get to it, and it isn't still dropping to him.
-    const inReach = toBody < 0.95 && b.pos.y < 0.5 && p.canAct();
+    // A foot can get to it: it isn't still dropping to him.
+    const inReach = b.pos.y < 0.5 && p.canAct();
     // He touches it again when his feet have caught up with it (or the planned touch falls due with
-    // it close enough), or when it's drifting off his line because he's changed direction.
+    // it close enough), the moment it falls back on his front foot or drifts off his line, and when
+    // he's braking and it's running away from him.
     const lead = (b.pos.x - p.pos.x) * dx + (b.pos.z - p.pos.z) * dz;
-    const look = 0.35, bv = len2(b.vel.x, b.vel.z), decel = MU + KL * bv, roll = Math.min(look, bv / decel);
+    const look = 0.35, bv = len2(b.vel.x, b.vel.z), decel = TOUCH_MU + KL * bv, roll = Math.min(look, bv / decel);
     const rollK = bv > 0.01 ? (bv * roll - 0.5 * decel * roll * roll) / bv : 0;
     const across = Math.abs((b.pos.x + b.vel.x * rollK - idealX - p.vel.x * look) * -dz + (b.pos.z + b.vel.z * rollK - idealZ - p.vel.z * look) * dx);
-    if (inReach && ((dr.t >= dr.next && lead < 0.75) || (dr.t > 0.18 && lead < 0.38) || (dr.t > 0.14 && across > 0.6))) {
-      // A touch: rolled so that it comes back to his foot at the next one, assuming he runs on.
-      // The faster he goes the further he knocks it; good control means more, smaller touches.
-      let gap = (0.32 + 0.1 * p.speed) * (1.12 - (p.a.ctl / 99) * 0.25);
+    const runningOff = dr.t > 0.1 && bv > p.speed + 2 && lead < reachOut + 0.7;
+    // How hard he's braking (smoothed).
+    dr.brake = (dr.brake || 0) + (((dr.sp ?? p.speed) - p.speed) / dt - (dr.brake || 0)) * Math.min(1, dt * 12);
+    dr.sp = p.speed;
+    if (inReach && ((dr.t >= dr.next && lead < reachOut + 0.3) || (dr.t > 0.12 && lead < reachOut - 0.04) || (dr.t > 0.12 && across > 0.3) || runningOff)) {
+      // A touch: rolled so that it comes back in front of his foot at the next one, assuming he runs
+      // on the way he's going. The faster he goes the further he knocks it, and good control or a
+      // bend in his run means smaller ones.
+      let gap = (0.36 + 0.05 * p.speed) * (1.12 - (p.a.ctl / 99) * 0.25);
       if (p.has('Technical')) gap *= 0.85;
       if (p.shielding) gap = Math.min(gap, 0.4);
-      gap = Math.max(0.3, gap * (1 - A.pressureOn(this, p) * 0.3));
-      const sx = idealX + p.vel.x * gap + dr.x - b.pos.x, sz = idealZ + p.vel.z * gap + dr.z - b.pos.z;
+      gap = Math.max(0.24, (gap * (1 - A.pressureOn(this, p) * 0.3)) / (1 + Math.abs(dr.w)));
+      const tw = dr.w * gap * 0.5, tc = Math.cos(tw), ts = Math.sin(tw);
+      let gx = (p.vel.x * tc - p.vel.z * ts) * gap, gz = (p.vel.x * ts + p.vel.z * tc) * gap;
+      const oc = Math.cos(2 * tw), os = Math.sin(2 * tw);
+      let ox = footX * oc - footZ * os, oz = footX * os + footZ * oc;
+      // Right behind him (he's turned, or taken it on his back foot): out past his legs, not through
+      // them, and in front of him from there at the next touch.
+      const beside = (b.pos.x - p.pos.x) * -dz + (b.pos.z - p.pos.z) * dx;
+      if (lead < 0.1 && Math.abs(beside) < 0.3 && !p.shielding) {
+        const side = beside >= 0 ? 1 : -1;
+        gap = 0.2; gx = p.vel.x * gap; gz = p.vel.z * gap;
+        ox = -dz * side * 0.42 + dx * 0.3; oz = dx * side * 0.42 + dz * 0.3;
+      }
+      // Pulling up: he kills it under his foot, to stop in front of him where he'll stop.
+      if (dr.brake > 6 && lead > 0.1 && !p.shielding) {
+        const stop = p.speed / 15, far = p.speed * stop * 0.5 + carryLead(0);
+        gap = Math.max(0.2, stop + 0.1); gx = dx * far; gz = dz * far; ox = -dz * 0.08 * sideSign; oz = dx * 0.08 * sideSign;
+      }
+      const sx = p.pos.x + gx + ox + dr.x - b.pos.x, sz = p.pos.z + gz + oz + dr.z - b.pos.z;
       const sl = len2(sx, sz);
       dr.x = 0; dr.z = 0;
       if (sl > 0.04) {
-        const v0 = Math.min((sl + 0.5 * MU * gap * gap) / (gap - 0.5 * KL * gap * gap), p.speed * 1.6 + 6);
+        const v0 = Math.min((sl + 0.5 * TOUCH_MU * gap * gap) / (gap - 0.5 * KL * gap * gap), p.speed * 1.6 + 6);
         b.vel.x = (sx / sl) * v0; b.vel.z = (sz / sl) * v0;
       } else { b.vel.x = p.vel.x; b.vel.z = p.vel.z; }
       dr.t = 0; dr.next = gap;
@@ -72003,6 +72073,11 @@ class Match {
       b.spin.y = 0; b.spin.t = 0;
     }
     p.dribNextAt = this.time + Math.max(0, dr.next - dr.t);
+    // Standing with it just out of reach: he draws it back under his sole.
+    if (inReach && p.speed < 1 && bv < 1 && lead > reachOut + 0.2 && lead < 2.2) {
+      const pull = Math.min(1, dt * 1.2 / Math.max(lead, 0.01));
+      b.pos.x += (idealX - b.pos.x) * pull; b.pos.z += (idealZ - b.pos.z) * pull;
+    }
     // It never gets right away from him: a ball out of reach is reeled in by his run (he adjusts
     // his stride and his next touch), so stopping or turning doesn't simply lose it.
     const err = len2(b.pos.x - idealX, b.pos.z - idealZ);
