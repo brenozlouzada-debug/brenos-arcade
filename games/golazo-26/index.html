@@ -60576,6 +60576,7 @@ const keysDown = new Set();
 let listenersReady = false;
 let mouseRightPresses = 0; // right-click = skill move
 let skillKeyQueue = null; // hotkey for a specific skill move
+let keyPresses = 0; // fresh key presses, so a pad in use can hand back to the keyboard
 const gameKeys = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab']);
 const inputState = { captureGameKeys: false, lastDevice: 'kb' };
 
@@ -60585,6 +60586,7 @@ function ensureListeners() {
   window.addEventListener('keydown', (e) => {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
     keysDown.add(e.code);
+    if (!e.repeat) keyPresses++;
     inputState.lastDevice = 'kb';
     if (inputState.captureGameKeys && !e.repeat && SKILL_KEYS[e.code]) skillKeyQueue = SKILL_KEYS[e.code];
     if (inputState.captureGameKeys && gameKeys.has(e.code)) e.preventDefault();
@@ -60604,12 +60606,21 @@ function connectedPads() {
   return [...pads].filter(Boolean);
 }
 
+// A pad being used right now: a button down or a stick pushed well over.
+function activePad() {
+  return connectedPads().find((p) => p.buttons.some((b) => b.pressed) || (p.mapping === 'standard' && p.axes.slice(0, 4).some((a) => Math.abs(a) > 0.5))) || null;
+}
+
 const BTN_NAMES = Object.keys(CLASSIC_KB);
 
 class Controller {
-  constructor(source = 'kb', scheme = 'easy') {
+  // auto: follow whichever device is being used. Browsers hide a pad until one of its buttons is
+  // pressed on the page, so what's connected when a match is set up says little.
+  constructor(source = 'kb', scheme = 'easy', auto = false) {
     ensureListeners();
     this.source = source; // 'kb' or 'pad:N'
+    this.auto = auto;
+    this._keys = keyPresses;
     this.scheme = KB_MAPS[scheme] ? scheme : 'easy';
     this.padIndex = source.startsWith('pad:') ? Number(source.split(':')[1]) : -1;
     this.state = {};
@@ -60631,7 +60642,21 @@ class Controller {
     return !!b && (b.pressed || b.value > 0.5);
   }
 
+  _use(index) {
+    this.padIndex = index;
+    this.source = index < 0 ? 'kb' : `pad:${index}`;
+    this.rstick = { x: 0, y: 0 };
+    this._rWasNeutral = true;
+  }
+
   update(dt) {
+    if (this.auto) {
+      if (this.padIndex < 0) {
+        const p = activePad();
+        if (p) this._use(p.index);
+      } else if (keyPresses !== this._keys || !connectedPads().some((p) => p.index === this.padIndex)) this._use(-1);
+      this._keys = keyPresses;
+    }
     let pad = null;
     if (this.padIndex >= 0) {
       const pads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -60787,6 +60812,9 @@ function initNav() {
   }, true);
   document.addEventListener('pointerdown', () => audio.init(), { once: true });
 
+  window.addEventListener('gamepadconnected', () => app.toast('🎮 Controller connected'));
+  window.addEventListener('gamepaddisconnected', () => app.toast('🎮 Controller disconnected'));
+
   // Gamepad menu navigation.
   let prev = {};
   let repeatT = 0;
@@ -60813,7 +60841,7 @@ function initNav() {
         } else moveFocus(d);
       }
     }
-    if (cur.a && !prev.a) { const ae = document.activeElement; if (ae && ae !== document.body) ae.click(); }
+    if (cur.a && !prev.a) { const ae = document.activeElement; if (ae && ae !== document.body) ae.click(); else moveFocus('down'); }
     if (cur.b && !prev.b) {
       const m = document.querySelector('.modal');
       if (m && m.close) m.close();
@@ -78266,7 +78294,9 @@ const TIPS = [
 
 function buildMatchConfig(o) {
   const s = app.settings;
-  const humans = (o.humans || [{ side: 0, source: 'kb' }]).map((h) => ({ side: h.side, ctrl: new Controller(h.source, s.controls || 'easy'), lockId: h.lockId }));
+  const list = o.humans || [{ side: 0, source: 'kb' }];
+  // A lone player can pick up the keyboard or a pad at any moment; two players keep their own.
+  const humans = list.map((h) => ({ side: h.side, ctrl: new Controller(h.source, s.controls || 'easy', list.length === 1), lockId: h.lockId }));
   return {
     home: o.home, away: o.away,
     kits: resolveKits(o.home, o.away),
@@ -78816,6 +78846,9 @@ const kickoff = {
       return box;
     };
 
+    // (A pad only shows up once a button is pressed on it, which can be after this screen is drawn.)
+    const onPad = () => { if (body.isConnected) rerender(); else window.removeEventListener('gamepadconnected', onPad); };
+    window.addEventListener('gamepadconnected', onPad);
     const rerender = () => {
       body.innerHTML = '';
       const pads = connectedPads();

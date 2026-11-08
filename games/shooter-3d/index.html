@@ -12211,26 +12211,137 @@
 })();
 </script>
 <script>
-/* gamepad-support — PlayStation / Xbox controller for the 3D Shooter.
- * The game only reads the keyboard and mouse, so the pad is turned into the same events:
- * left stick = W A S D, right stick = mouse look, R2 = left click, L2 = right click, and so on.
- * In the menu the pad moves a highlight between the buttons and X / A presses it. */
+/* gamepad-support — controller play and the Settings page for the 3D Shooter.
+ * The game only reads the keyboard and mouse, so everything here is turned into those same events:
+ * the pad becomes W A S D, mouse look and clicks, and rebound keys become the keys the game expects.
+ * With default settings real keyboard and mouse input is left completely alone. */
 (function () {
   var menu = document.getElementById("menu");
-  if (!menu || !navigator.getGamepads) return;
+  if (!menu) return;
+
+  // ---- settings: saved in this browser ----
+  var KB_ACTIONS = [
+    ["forward", "Move forward", "KeyW"], ["back", "Move back", "KeyS"], ["left", "Move left", "KeyA"], ["right", "Move right", "KeyD"],
+    ["jump", "Jump", "Space"], ["sprint", "Sprint", "ShiftLeft"], ["fire", "Fire", "Mouse0"], ["aim", "Aim", "Mouse2"],
+    ["reload", "Reload", "KeyR"], ["chest", "Open chest", "KeyE"], ["grenade", "Grenade", "KeyG"],
+    ["prev", "Previous gun", "KeyZ"], ["next", "Next gun", "KeyX"], ["scope", "Sniper scope", "KeyC"], ["torch", "Torch", "KeyF"],
+    ["build", "Build mode", "KeyQ"], ["wall", "Build wall", "Digit1"], ["floor", "Build floor", "Digit2"], ["ramp", "Build ramp", "Digit3"]
+  ];
+  var PAD_ACTIONS = [
+    ["fire", "Fire", 7], ["aim", "Aim", 6], ["jump", "Jump", 0], ["sprint", "Sprint", 10],
+    ["reload", "Reload", 2], ["chest", "Open chest", 3], ["grenade", "Grenade", 1],
+    ["prev", "Previous gun", 4], ["next", "Next gun", 5], ["scope", "Sniper scope", 12], ["torch", "Torch", 13],
+    ["build", "Build mode", 11], ["pieceL", "Previous build piece", 14], ["pieceR", "Next build piece", 15], ["pause", "Pause", 9]
+  ];
+  var PAD_NAMES = ["✕", "○", "□", "△", "L1", "R1", "L2", "R2", "Share", "Options", "L3", "R3", "D-pad ↑", "D-pad ↓", "D-pad ←", "D-pad →", "PS", "Touchpad"];
+  var STORE = "shooter.controls";
+  var SENS = { min: 0.1, max: 3, step: 0.05 };
+  var cfg;
+
+  function defaults() {
+    var c = { mouse: 1, pad: 1, invert: false, swap: false, kb: {}, btn: {} };
+    KB_ACTIONS.forEach(function (a) { c.kb[a[0]] = a[2]; });
+    PAD_ACTIONS.forEach(function (a) { c.btn[a[0]] = a[2]; });
+    return c;
+  }
+  function clampSens(v, d) { v = Number(v); return isFinite(v) ? Math.min(SENS.max, Math.max(SENS.min, v)) : d; }
+  function load() {
+    cfg = defaults();
+    var s = null;
+    try { s = JSON.parse(localStorage.getItem(STORE) || "null"); } catch (_) {}
+    if (!s || typeof s !== "object") return;
+    cfg.mouse = clampSens(s.mouse, 1); cfg.pad = clampSens(s.pad, 1);
+    cfg.invert = !!s.invert; cfg.swap = !!s.swap;
+    KB_ACTIONS.forEach(function (a) { if (s.kb && typeof s.kb[a[0]] === "string") cfg.kb[a[0]] = s.kb[a[0]]; });
+    PAD_ACTIONS.forEach(function (a) { var b = s.btn && s.btn[a[0]]; if (b === (b | 0) && b >= 0 && b < PAD_NAMES.length) cfg.btn[a[0]] = b; });
+  }
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(cfg)); } catch (_) {} }
+  load();
+
+  function keyName(id) {
+    var m = /^Mouse(\d)$/.exec(id);
+    if (m) return ["Left click", "Middle click", "Right click", "Mouse 4", "Mouse 5"][+m[1]] || "Mouse " + (+m[1] + 1);
+    if (/^Key.$/.test(id)) return id.slice(3);
+    if (/^Digit.$/.test(id)) return id.slice(5);
+    var names = { Space: "Space", ShiftLeft: "Left Shift", ShiftRight: "Right Shift", ControlLeft: "Left Ctrl", ControlRight: "Right Ctrl", AltLeft: "Left Alt", AltRight: "Right Alt", MetaLeft: "Left Cmd", MetaRight: "Right Cmd", ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→", CapsLock: "Caps Lock" };
+    return names[id] || id;
+  }
+
+  // ---- real keyboard and mouse: translate rebound inputs into the ones the game reads ----
+  var map = {}, gameInputs = {}, custom = false, downNow = {};
+  KB_ACTIONS.forEach(function (a) { gameInputs[a[2]] = a[2]; });
+  function rebuild() {
+    map = {}; custom = false;
+    KB_ACTIONS.forEach(function (a) { map[cfg.kb[a[0]]] = a[2]; if (cfg.kb[a[0]] !== a[2]) custom = true; });
+  }
+  function emit(game, down, repeat) {
+    var m = /^Mouse(\d)$/.exec(game);
+    if (m) { if (!repeat) mouse(down ? "mousedown" : "mouseup", +m[1]); return; }
+    window.dispatchEvent(new KeyboardEvent(down ? "keydown" : "keyup", { code: game, key: game, repeat: !!repeat, bubbles: true, cancelable: true }));
+  }
+  function translate(e, id, down) {
+    if (!e.isTrusted || !custom) return;
+    if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (down) {
+      if (!document.pointerLockElement) return;
+      var g = map[id];
+      if (g === undefined && !gameInputs[id]) return;
+      e.stopImmediatePropagation(); e.preventDefault();
+      if (g === undefined) return;       // a default key that isn't bound to anything any more
+      if (downNow[id]) { if (e.repeat) emit(g, true, true); return; }
+      downNow[id] = g; emit(g, true, false);
+    } else if (downNow[id]) {
+      e.stopImmediatePropagation();
+      emit(downNow[id], false, false); delete downNow[id];
+    } else if (gameInputs[id] && document.pointerLockElement) e.stopImmediatePropagation();
+  }
+  window.addEventListener("keydown", function (e) { if (!listening(e)) translate(e, e.code, true); }, true);
+  window.addEventListener("keyup", function (e) { translate(e, e.code, false); }, true);
+  window.addEventListener("mousedown", function (e) { if (!listening(e)) translate(e, "Mouse" + e.button, true); }, true);
+  window.addEventListener("mouseup", function (e) { translate(e, "Mouse" + e.button, false); }, true);
+
+  var moveInit = new MouseEvent("mousemove", { movementX: 3 }).movementX === 3;
+  function look(mx, my) {
+    var ev = new MouseEvent("mousemove", { movementX: mx, movementY: my, bubbles: true });
+    if (!moveInit) { Object.defineProperty(ev, "movementX", { value: mx }); Object.defineProperty(ev, "movementY", { value: my }); }
+    window.dispatchEvent(ev);
+  }
+  window.addEventListener("mousemove", function (e) {
+    if (!e.isTrusted || !document.pointerLockElement || (cfg.mouse === 1 && !cfg.invert)) return;
+    e.stopImmediatePropagation();
+    look(e.movementX * cfg.mouse, e.movementY * cfg.mouse * (cfg.invert ? -1 : 1));
+  }, true);
+
+  // ---- pad and menu helpers ----
   var held = {}, prev = [], sprintOn = false, bt = 0, focusEl = null, lastT = performance.now(), seen = false;
   var fire = false, aimBtn = false;
 
   var css = document.createElement("style");
   css.textContent = "#menu .padfocus{outline:3px solid #ffcf4a!important;outline-offset:2px;box-shadow:0 0 18px #ffcf4a88!important}" +
-    "#gp-tip{display:none}#gp-note{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:70;padding:8px 16px;background:#000c;border:1px solid #ffcf4a;border-radius:6px;font:700 16px var(--ui);color:#fff;display:none}";
+    "#gp-tip{display:none}#gp-note{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:70;padding:8px 16px;background:#000c;border:1px solid #ffcf4a;border-radius:6px;font:700 16px var(--ui);color:#fff;display:none}" +
+    "#setpanel{display:none;width:min(820px,calc(100% - 24px));text-align:left;max-height:calc(100vh - 150px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding-right:8px}" +
+    "#menu.set #setpanel{display:block}" +
+    "#menu.set #modes,#menu.set .help,#menu.set>.tip,#menu.set #sub,#menu.set #mapsel,#menu.set #optsel,#menu.set #profile{display:none!important}" +
+    "#setpanel h2{margin:0 0 6px;letter-spacing:.1em}#setpanel h3{margin:14px 0 4px;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;font-size:14px}" +
+    "#setpanel button{font:700 15px var(--ui);letter-spacing:.05em;padding:6px 12px;border-radius:4px;background:#243148;color:#fff;border:1px solid #6b86b5;cursor:pointer}" +
+    "#setpanel button:hover{border-color:var(--accent)}#setpanel button.on{background:#2c6a45;border-color:#5de08a}" +
+    "#setpanel button.listening{background:#ffcf4a33;border-color:var(--accent);color:var(--accent)}" +
+    ".setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0;font-size:16px;font-weight:600;border-bottom:1px solid #fff2}" +
+    ".setrow .bind{min-width:118px}.setsl{display:flex;align-items:center;gap:8px}.setsl input{width:min(190px,30vw);accent-color:#ffcf4a}.setsl b{min-width:46px;text-align:right;font-variant-numeric:tabular-nums}" +
+    ".setcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:0 28px}.setbtm{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}" +
+    "body.touch #m-settings{display:none}";
   document.head.appendChild(css);
 
   var tip = document.createElement("p");
   tip.className = "tip"; tip.id = "gp-tip";
-  tip.innerHTML = "<b>Controller:</b> left stick move &middot; right stick look &middot; R2 fire &middot; L2 aim &middot; ✕ jump &middot; □ reload &middot; △ open chest &middot; ○ grenade &middot; L1 / R1 switch gun &middot; L3 sprint &middot; R3 build &middot; D-pad ↑ scope, ↓ torch, ← → build piece &middot; Options pause. In menus: stick or D-pad to choose, ✕ to press, ○ to go back.";
   var bld = document.getElementById("bld");
   menu.insertBefore(tip, bld || null);
+  function renderTip() {
+    var n = function (a) { return PAD_NAMES[cfg.btn[a]]; };
+    tip.innerHTML = "<b>Controller:</b> " + (cfg.swap ? "right" : "left") + " stick move &middot; " + (cfg.swap ? "left" : "right") + " stick look &middot; " +
+      PAD_ACTIONS.map(function (a) { return n(a[0]) + " " + a[1].toLowerCase(); }).join(" &middot; ") +
+      ". In menus: stick or D-pad to choose, ✕ to press, ○ to go back.";
+  }
 
   var note = document.createElement("div"); note.id = "gp-note"; document.body.appendChild(note);
   var noteT = 0;
@@ -12275,16 +12386,133 @@
 
   function releaseAll() {
     Object.keys(held).forEach(function (c) { if (held[c]) key(c, false); });
+    Object.keys(downNow).forEach(function (id) { emit(downNow[id], false, false); delete downNow[id]; });
     if (fire) { mouse("mouseup", 0); fire = false; }
     if (aimBtn) { mouse("mouseup", 2); aimBtn = false; }
     sprintOn = false;
   }
   document.addEventListener("pointerlockchange", function () { if (!document.pointerLockElement) releaseAll(); });
 
+  // ---- the Settings page ----
+  var panel = document.createElement("div");
+  panel.id = "setpanel";
+  function sliderRow(id, label) {
+    return '<div class="setrow"><span>' + label + '</span><span class="setsl"><button type="button" data-sl="' + id + '" data-d="-1">&minus;</button>' +
+      '<input id="set-' + id + '" type="range" min="' + SENS.min + '" max="' + SENS.max + '" step="' + SENS.step + '"><button type="button" data-sl="' + id + '" data-d="1">+</button><b id="set-' + id + '-v"></b></span></div>';
+  }
+  function bindRows(kind, list) {
+    return list.map(function (a) {
+      return '<div class="setrow"><span>' + a[1] + '</span><button type="button" class="bind" data-kind="' + kind + '" data-act="' + a[0] + '"></button></div>';
+    }).join("");
+  }
+  panel.innerHTML = "<h2>Settings</h2><h3>Sensitivity</h3>" + sliderRow("mouse", "Mouse sensitivity") + sliderRow("pad", "Controller sensitivity") +
+    '<div class="setrow"><span>Invert looking up and down</span><button type="button" id="set-invert"></button></div>' +
+    '<div class="setrow"><span>Swap controller sticks</span><button type="button" id="set-swap"></button></div>' +
+    '<div class="setcols"><div><h3>Keyboard and mouse</h3>' + bindRows("kb", KB_ACTIONS) + '</div><div><h3>Controller</h3>' + bindRows("pad", PAD_ACTIONS) + "</div></div>" +
+    '<p class="ostat" id="set-msg"></p><div class="setbtm"><button type="button" id="set-back">Back</button><button type="button" id="set-reset">Reset to defaults</button></div>';
+  menu.insertBefore(panel, menu.querySelector(".help"));
+
+  var HINT = "Press a button above, then press the new key or controller button. If it's already used, the two swap.";
+  var msg = panel.querySelector("#set-msg");
+  var listen = null, resetSure = false, swallowClick = false;
+  function refresh() {
+    ["mouse", "pad"].forEach(function (id) {
+      panel.querySelector("#set-" + id).value = cfg[id];
+      panel.querySelector("#set-" + id + "-v").textContent = Math.round(cfg[id] * 100) + "%";
+    });
+    [["invert", cfg.invert], ["swap", cfg.swap]].forEach(function (t) {
+      var b = panel.querySelector("#set-" + t[0]); b.textContent = t[1] ? "On" : "Off"; b.classList.toggle("on", t[1]);
+    });
+    Array.prototype.forEach.call(panel.querySelectorAll(".bind"), function (b) {
+      b.classList.remove("listening");
+      b.textContent = b.dataset.kind === "kb" ? keyName(cfg.kb[b.dataset.act]) : PAD_NAMES[cfg.btn[b.dataset.act]];
+    });
+    rebuild(); renderTip();
+    var chestKey = keyName(cfg.kb.chest);
+    promptKey = chestKey === "E" ? null : chestKey;
+  }
+  var promptKey = null;
+  function stopListening(text) {
+    listen = null; msg.textContent = text || HINT; refresh();
+  }
+  function assign(table, action, value) {
+    var old = table[action];
+    Object.keys(table).forEach(function (a) { if (a !== action && table[a] === value) table[a] = old; });
+    table[action] = value;
+    save(); stopListening();
+  }
+  // while waiting for a new input, swallow it so it doesn't also act on the page or the game
+  function listening(e) {
+    if (!listen || !e.isTrusted) return false;
+    e.stopImmediatePropagation(); e.preventDefault();
+    if (e.type === "keydown") {
+      if (e.repeat) return true;
+      if (e.code === "Escape") stopListening();
+      else if (listen.kind === "kb") assign(cfg.kb, listen.act, e.code);
+      return true;
+    }
+    swallowClick = true;
+    // a left click only counts on the button being set; anywhere else it cancels
+    if (listen.kind !== "kb" || (e.button === 0 && e.target !== listen.el)) stopListening();
+    else assign(cfg.kb, listen.act, "Mouse" + e.button);
+    return true;
+  }
+  ["click", "contextmenu"].forEach(function (t) {
+    window.addEventListener(t, function (e) {
+      if (!swallowClick) return;
+      if (t === "click") swallowClick = false;
+      e.stopImmediatePropagation(); e.preventDefault();
+    }, true);
+  });
+  window.addEventListener("mouseup", function () { setTimeout(function () { swallowClick = false; }, 0); });
+
+  panel.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("button") : null;
+    if (!b) return;
+    if (b.id !== "set-reset" && resetSure) { resetSure = false; panel.querySelector("#set-reset").textContent = "Reset to defaults"; }
+    if (b.classList.contains("bind")) {
+      if (listen) stopListening();
+      listen = { kind: b.dataset.kind, act: b.dataset.act, el: b };
+      b.textContent = "Press…"; b.classList.add("listening"); b.blur();
+      msg.textContent = (b.dataset.kind === "kb" ? "Press a key or mouse button" : "Press a button on the controller") + ". Esc cancels.";
+    } else if (b.dataset.sl) {
+      var id = b.dataset.sl;
+      cfg[id] = clampSens(Math.round((cfg[id] + Number(b.dataset.d) * SENS.step) * 100) / 100, 1);
+      save(); refresh();
+    } else if (b.id === "set-invert" || b.id === "set-swap") {
+      var k = b.id.slice(4); cfg[k] = !cfg[k]; save(); refresh();
+    } else if (b.id === "set-reset") {
+      if (!resetSure) { resetSure = true; b.textContent = "Press again to reset"; return; }
+      resetSure = false; b.textContent = "Reset to defaults";
+      cfg = defaults(); save(); stopListening("Everything is back to the defaults.");
+    } else if (b.id === "set-back") {
+      if (listen) stopListening();
+      menu.classList.remove("set");
+    }
+  });
+  ["mouse", "pad"].forEach(function (id) {
+    panel.querySelector("#set-" + id).addEventListener("input", function (e) { cfg[id] = clampSens(e.target.value, 1); save(); refresh(); });
+  });
+
+  var open = document.createElement("button");
+  open.id = "m-settings"; open.type = "button";
+  open.innerHTML = "Settings<small>Sensitivity and buttons</small>";
+  open.addEventListener("click", function () {
+    menu.classList.add("set"); msg.textContent = HINT; refresh();
+    if (seen) focus(menuButtons()[0]);
+    panel.scrollTop = 0;
+  });
+  var modes = document.getElementById("modes");
+  if (modes) modes.appendChild(open);
+  refresh();
+
+  // ---- every frame ----
   var stickNav = 0;
   function frame(now) {
     requestAnimationFrame(frame);
+    if (promptKey) { var pk = document.querySelector("#prompt kbd"); if (pk && pk.textContent === "E") pk.textContent = promptKey; }
     var dt = Math.min(64, now - lastT); lastT = now;
+    if (!navigator.getGamepads) return;
     var pads = navigator.getGamepads(), pad = null;
     for (var i = 0; i < pads.length; i++) if (pads[i] && pads[i].connected) { pad = pads[i]; break; }
     if (!pad) { if (seen) { tip.style.display = "none"; seen = false; releaseAll(); } prev = []; return; }
@@ -12292,7 +12520,13 @@
     var B = function (n) { var b = pad.buttons[n]; return !!b && (b.pressed || b.value > 0.5); };
     var P = function (n) { return B(n) && !prev[n]; };
     var ax = function (n) { return pad.axes[n] || 0; };
+    var remember = function () { for (var n = 0; n < pad.buttons.length; n++) prev[n] = B(n); };
     var locked = !!document.pointerLockElement;
+
+    if (listen && listen.kind === "pad") {
+      for (var q = 0; q < pad.buttons.length; q++) if (q !== 16 && P(q)) { assign(cfg.btn, listen.act, q); break; }
+      remember(); return;
+    }
 
     if (!locked) {
       // menu: stick or D-pad moves the highlight, X / A presses, O / B goes back
@@ -12302,52 +12536,53 @@
         if (now - stickNav > 220) { stickNav = now; if (Math.abs(lx) > Math.abs(ly)) dx = lx > 0 ? 1 : -1; else dy = ly > 0 ? 1 : -1; }
       } else stickNav = 0;
       if (dx || dy) step(dx, dy);
-      if (!focusEl && (P(0) || B(0))) step(0, 0);
       if (P(0)) {
         var list = menuButtons();
         if (!focusEl || list.indexOf(focusEl) < 0) step(0, 0);
         else focusEl.click();
       }
       if (P(1)) {
-        var back = ["arm-back", "shop-back", "lb-back", "o-back"].map(function (id) { return document.getElementById(id); })
+        var back = ["arm-back", "shop-back", "lb-back", "o-back", "set-back"].map(function (id) { return document.getElementById(id); })
           .filter(function (b) { return b && b.offsetParent !== null; })[0];
         if (back) { back.click(); focus(null); }
       }
       // vertical scroll for long panels with the right stick
       var ry0 = ax(3);
       if (Math.abs(ry0) > 0.3) {
-        var sc = document.getElementById("shoppanel"), g = document.getElementById("armgrid"), l = document.getElementById("lblist");
-        [sc, g, l, menu].forEach(function (el) { if (el && el.offsetParent !== null) el.scrollTop += ry0 * dt * 0.6; });
+        [document.getElementById("shoppanel"), document.getElementById("armgrid"), document.getElementById("lblist"), panel, menu].forEach(function (el) { if (el && el.offsetParent !== null) el.scrollTop += ry0 * dt * 0.6; });
       }
     } else {
       if (focusEl) { focusEl.classList.remove("padfocus"); focusEl = null; }
-      var x = ax(0), y = ax(1), m = Math.hypot(x, y);
+      var mv = cfg.swap ? 2 : 0, lk = cfg.swap ? 0 : 2;
+      var x = ax(mv), y = ax(mv + 1), m = Math.hypot(x, y);
+      var hit = function (a) { return P(cfg.btn[a]); };
       key("KeyA", m > 0.3 && x < -0.35); key("KeyD", m > 0.3 && x > 0.35);
       key("KeyW", m > 0.3 && y < -0.35); key("KeyS", m > 0.3 && y > 0.35);
-      if (P(10)) sprintOn = !sprintOn;
+      if (hit("sprint")) sprintOn = !sprintOn;
       if (m < 0.2) sprintOn = false;
       key("ShiftLeft", sprintOn && m > 0.35);
-      key("Space", B(0));
-      if (P(2)) tap("KeyR");
-      if (P(3)) tap("KeyE");
-      if (P(1)) tap("KeyG");
-      if (P(4)) tap("KeyZ");
-      if (P(5)) tap("KeyX");
-      if (P(11)) tap("KeyQ");
-      if (P(12)) tap("KeyC");
-      if (P(13)) tap("KeyF");
-      if (P(14)) { bt = (bt + 2) % 3; tap("Digit" + (bt + 1)); }
-      if (P(15)) { bt = (bt + 1) % 3; tap("Digit" + (bt + 1)); }
-      var f = B(7) || (pad.buttons[7] && pad.buttons[7].value > 0.3), a = B(6) || (pad.buttons[6] && pad.buttons[6].value > 0.3);
+      key("Space", B(cfg.btn.jump));
+      if (hit("reload")) tap("KeyR");
+      if (hit("chest")) tap("KeyE");
+      if (hit("grenade")) tap("KeyG");
+      if (hit("prev")) tap("KeyZ");
+      if (hit("next")) tap("KeyX");
+      if (hit("build")) tap("KeyQ");
+      if (hit("scope")) tap("KeyC");
+      if (hit("torch")) tap("KeyF");
+      if (hit("pieceL")) { bt = (bt + 2) % 3; tap("Digit" + (bt + 1)); }
+      if (hit("pieceR")) { bt = (bt + 1) % 3; tap("Digit" + (bt + 1)); }
+      var soft = function (a) { var b = pad.buttons[cfg.btn[a]]; return B(cfg.btn[a]) || (!!b && b.value > 0.3); };
+      var f = soft("fire"), a = soft("aim");
       if (f && !fire) { mouse("mousedown", 0); fire = true; } else if (!f && fire) { mouse("mouseup", 0); fire = false; }
       if (a && !aimBtn) { mouse("mousedown", 2); aimBtn = true; } else if (!a && aimBtn) { mouse("mouseup", 2); aimBtn = false; }
-      // right stick looks around; the curve keeps small nudges fine and big pushes quick
-      var rx = ax(2), ry = ax(3), dz = 0.14, curve = function (v) { var s = Math.abs(v); if (s < dz) return 0; s = (s - dz) / (1 - dz); return (v < 0 ? -1 : 1) * s * s; };
-      var mx = curve(rx) * dt * 1.4, my = curve(ry) * dt * 1.0;
-      if (mx || my) window.dispatchEvent(new MouseEvent("mousemove", { movementX: mx, movementY: my, bubbles: true }));
-      if (P(9)) { try { document.exitPointerLock(); } catch (_) {} }
+      // the look stick: the curve keeps small nudges fine and big pushes quick
+      var rx = ax(lk), ry = ax(lk + 1), dz = 0.14, curve = function (v) { var s = Math.abs(v); if (s < dz) return 0; s = (s - dz) / (1 - dz); return (v < 0 ? -1 : 1) * s * s; };
+      var mx = curve(rx) * dt * 1.4 * cfg.pad, my = curve(ry) * dt * 1.0 * cfg.pad * (cfg.invert ? -1 : 1);
+      if (mx || my) look(mx, my);
+      if (hit("pause")) { try { document.exitPointerLock(); } catch (_) {} }
     }
-    for (var n = 0; n < pad.buttons.length; n++) prev[n] = B(n);
+    remember();
   }
   requestAnimationFrame(frame);
 })();
