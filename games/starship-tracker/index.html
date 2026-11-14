@@ -377,6 +377,8 @@ svg .e.on { fill: var(--orange); stroke: #ffd2a8; filter: drop-shadow(0 0 0.35px
       <button data-speed="1" class="on">1x</button>
       <button data-speed="5">5x</button>
       <button data-speed="20">20x</button>
+      <button data-speed="100">100x</button>
+      <button data-speed="1000">1000x</button>
     </div>
     <button class="iconbtn" id="prevEvt" title="Previous event"><svg viewBox="0 0 14 14"><path d="M2 2h2v10H2zM13 2v10L5 7z"/></svg></button>
     <button class="iconbtn" id="nextEvt" title="Next event"><svg viewBox="0 0 14 14"><path d="M10 2h2v10h-2zM1 2v10l8-5z"/></svg></button>
@@ -63869,6 +63871,9 @@ const NEAR_C = S * NEAR_L * 1000;     // keeps liftoff/landing consistent with t
 const XL = 4, XEXP = 1.2;             // same idea for downrange near the pad
 const SHIP_OFF_DEFAULT = 70.8;        // m, ship base above booster base when stacked
 const T_START = -30, T_END_DEFAULT = 3900, DT = 0.5;
+const RE = 6371, MU = 398600.4418, OMEGA_E = 7.2921159e-5, ORBIT_ALT = 275;
+const ORBIT_P = 2 * Math.PI * Math.sqrt((RE + ORBIT_ALT) ** 3 / MU);   // ≈ 5390 s
+const ORBIT_V = Math.sqrt(MU / (RE + ORBIT_ALT));                     // ≈ 7.74 km/s inertial
 const LL2 = 'https://ll.thespacedevs.com/2.3.0';
 const CACHE_KEY = 'sft-ll2-cache-v1', CACHE_TTL = 20 * 60 * 1000;
 const PADS = {
@@ -63961,14 +63966,14 @@ const FALLBACK = [
     sum: 'First orbital Starship mission: 26 Starlink V3 satellites deployed into a ~275 km LEO. B21 soft-splashed in the Gulf; Ship 41 splashed down in the Pacific west of Chile after ~9 h 50 min.',
     x: 'https://x.com/i/broadcasts/1qxvvenMPMQxB',
     feeds: [['9gDxG-pm1Zo', 'NASASpaceflight', 15884], ['FyQU5NdpfXQ', 'Spaceflight Now', 9260], ['LeKY53pwArw', 'Everyday Astronaut', 2405], ['Dun8yJ6qvmA', 'The Space Devs', null]],
-    tl: [[0, 'Liftoff'], [58, 'Max-Q'], [140, 'MECO'], [142, 'Stage 2 Separation'], [147, 'Booster Boostback Burn Startup'], [187, 'Booster Boostback Burn Shutdown'], [395, 'Stage 1 Landing Burn'], [421, 'Stage 1 Landing'], [491, 'SECO-1'], [1528, 'Orbital Insertion Burn Start'], [1547, 'Orbital Insertion Burn End'], [2058, 'Payload Deployment Sequence Start'], [3890, 'Payload Deployment Sequence End'], [31938, 'Deorbit Burn Start'], [34132, 'Atmospheric Entry'], [35413, 'Landing Flip'], [35430, 'Starship Landing']] },
+    tl: [[0, 'Liftoff'], [58, 'Max-Q'], [140, 'MECO'], [142, 'Stage 2 Separation'], [147, 'Booster Boostback Burn Startup'], [187, 'Booster Boostback Burn Shutdown'], [395, 'Stage 1 Landing Burn'], [421, 'Stage 1 Landing'], [491, 'SECO-1'], [1528, 'Orbital Insertion Burn Start'], [1547, 'Orbital Insertion Burn End'], [2058, 'Payload Deployment Sequence Start'], [3890, 'Payload Deployment Sequence End'], [31938, 'Deorbit Burn Start'], [31949, 'Deorbit Burn End'], [34132, 'Atmospheric Entry'], [35250, 'Starship Transonic'], [35287, 'Starship Subsonic'], [35411, 'Starship Landing Burn'], [35413, 'Landing Flip'], [35430, 'Starship Landing']] },
   { n: 15, name: 'Starship | Starlink Group 31-2 (Starship Flight 15)', net: '2026-11-13T22:47:36Z', status: 'Success', pad: 'Orbital Launch Pad 2', booster: 'B22', ship: 'S42', orbit: 'LEO',
     bl: 'The Super Heavy Booster 22 did not attempt a return back to the launch site at Starbase and splashed down in the Gulf of Mexico instead, due to an abort triggered before landing burn.',
     sl: 'Ship 42 has returned to its launch site at Starbase.',
     sum: 'Second Starlink V3 deployment and the first ship return to launch site: Ship 42 was caught at Starbase after ~22.5 h in orbit. B22 diverted to the Gulf after an abort before its landing burn.',
     x: 'https://x.com/i/broadcasts/2brajgZlOKRMka',
     feeds: [['9XM0lpVlvo0', 'NASASpaceflight', 20766], ['QlR1agMLyMk', 'Spaceflight Now', 3719], ['QJFdKoKNn2M', 'Everyday Astronaut', 2420], ['dl4O6RqbvOs', 'SPACE AFFAIRS', 3258]],
-    tl: [[0, 'Liftoff'], [58, 'Max-Q'], [139, 'MECO'], [141, 'Stage 2 Separation'], [146, 'Booster Boostback Burn Startup'], [182, 'Booster Boostback Burn Shutdown'], [370, 'Stage 1 Landing Burn'], [395, 'Stage 1 Landing'], [489, 'SECO-1'], [1570, 'Orbital Insertion Burn Start'], [1590, 'Orbital Insertion Burn End'], [2101, 'Payload Deployment Sequence Start'], [4660, 'Payload Deployment Sequence End'], [77757, 'Deorbit Burn Start'], [79846, 'Atmospheric Entry'], [81138, 'Landing Flip'], [81146, 'Starship Landing'], [81154, 'Starship Catch']] },
+    tl: [[0, 'Liftoff'], [58, 'Max-Q'], [139, 'MECO'], [141, 'Stage 2 Separation'], [146, 'Booster Boostback Burn Startup'], [182, 'Booster Boostback Burn Shutdown'], [370, 'Stage 1 Landing Burn'], [395, 'Stage 1 Landing'], [489, 'SECO-1'], [1570, 'Orbital Insertion Burn Start'], [1590, 'Orbital Insertion Burn End'], [2101, 'Payload Deployment Sequence Start'], [4660, 'Payload Deployment Sequence End'], [5266, 'Starship Return Check'], [26135, 'Starship Return Check'], [74515, 'Starship Return Check'], [77757, 'Deorbit Burn Start'], [77767, 'Deorbit Burn End'], [79846, 'Atmospheric Entry'], [80974, 'Starship Transonic'], [81013, 'Starship Subsonic'], [81136, 'Starship Landing Burn'], [81138, 'Landing Flip'], [81146, 'Starship Landing'], [81154, 'Starship Catch']] },
 ];
 
 /* =========================================================================
@@ -64012,10 +64017,17 @@ function deriveFlight(rec) {
   k.oibEnd = first(/Orbital Insertion Burn End/i) ?? (k.oib != null ? k.oib + 20 : null);
   const earlyEntry = tl.some((e) => /Atmospheric Entry/.test(e[1]) && e[0] < 5000);
   const orbital = k.oib != null || (!earlyEntry && (!rec.n ? !/^Sub/i.test(rec.orbit || '') : /^(LEO|SSO|MEO|GTO|GEO|PO)$/i.test(rec.orbit || '')));
-  k.entry = first(/Atmospheric Entry/i) ?? (orbital ? 1e6 : NOMINAL.entry);
-  k.flip = first(/Landing Flip/i, k.entry) ?? k.entry + 1040;
-  k.sLand = first(/^Starship (Landing|Splashdown|Catch)$/i, k.flip - 30) ?? k.flip + 15;
   if (orbital && k.oib == null) { k.oib = k.seco + 1040; k.oibEnd = k.oib + 20; }
+  k.entry = first(/Atmospheric Entry/i) ?? (orbital ? null : NOMINAL.entry);
+  const shipLands = k.entry != null;          // false: orbital mission whose return is not in the timeline
+  if (shipLands) {
+    k.flip = first(/Landing Flip/i, k.entry) ?? k.entry + 1040;
+    k.sLand = first(/^Starship Catch$/i, k.flip - 30) ?? first(/^Starship (Landing|Splashdown)$/i, k.flip - 30) ?? k.flip + 15;
+    if (orbital) {
+      k.deorbit = first(/Deorbit Burn Start/i) ?? k.entry - 2100;
+      k.deorbitEnd = first(/Deorbit Burn End/i) ?? k.deorbit + 12;
+    }
+  } else { k.entry = k.flip = k.sLand = 1e9; }
   // sanity: keep the ordering the trajectory warp relies on
   if (!(k.bbStart > k.sep)) k.bbStart = k.sep + 6;
   if (!(k.bbEnd > k.bbStart + 10)) k.bbEnd = k.bbStart + 45;
@@ -64028,13 +64040,22 @@ function deriveFlight(rec) {
   if (/\blost\b|disintegrat|destroy|explod|anomal/i.test(bl)) bOut = 'lost';
   else if (/did not attempt|splash|gulf|ocean|offshore/i.test(bl)) bOut = 'gulf';
   else if (/caught|catch|tower|returned to (the|its) launch site/i.test(bl)) bOut = 'catch';
-  let sOut = orbital ? 'orbit' : 'splash';
+  const shipCaught = /returned to its launch site|caught|catch/i.test(sl) || tl.some((e) => /^Starship Catch$/i.test(e[1]));
+  let sOut = !shipLands ? 'orbit' : shipCaught ? 'catch' : 'splash';
   if (/\blost\b|failed|destroy|broke up|anomal/i.test(sl)) sOut = 'lost';
   const bLoss = bOut === 'lost' ? (/landing burn/i.test(bl) ? k.bBurn : k.bbEnd + 15) : null;
   const sLoss = sOut === 'lost' ? (rec.sLoss ?? (/ascent/i.test(sl) ? k.seco - 30 : k.entry + 90)) : null;
-  const end = orbital || sOut === 'lost' ? T_END_DEFAULT : clamp(Math.ceil((k.sLand + 40) / 10) * 10, T_END_DEFAULT, 4200);
+  // the replay window runs until both vehicles are done: landed, caught, lost — or two orbits for open-ended missions
+  const boosterDone = (bLoss ?? k.bLand) + 60;
+  const shipDone = sLoss != null ? sLoss + 120 : !shipLands ? k.oibEnd + 2 * ORBIT_P : k.sLand + 60;
+  const end = Math.ceil(Math.max(600, boosterDone, shipDone) / 10) * 10;
   const padInfo = PADS[rec.pad] || (isFinite(rec.lat) ? [rec.lat, rec.lon, (rec.pad || 'LAUNCH PAD').toUpperCase()] : PADS['Orbital Launch Pad 1']);
   const lat = isFinite(rec.lat) ? rec.lat : padInfo[0], lon = isFinite(rec.lon) ? rec.lon : padInfo[1];
+  // where an orbital ship must come down: the launch tower for a catch, the described ocean otherwise
+  const landTarget = !orbital || !shipLands || sOut === 'lost' ? null
+    : sOut === 'catch' ? { lat, lon, label: `${padInfo[2]} · SHIP CATCH`, exact: true }
+    : /pacific/i.test(sl) ? { lat: -24.5, lon: -88, label: 'PACIFIC OCEAN · W OF CHILE (APPROX.)', exact: false }
+    : null;
   const netMs = Date.parse(rec.net);
   const upcoming = !/Success|Failure|Partial/i.test(rec.status || '') && netMs > Date.now() - 6 * 3600e3;
 
@@ -64050,7 +64071,8 @@ function deriveFlight(rec) {
     if (/^Starship Catch$/i.test(l)) l = 'Ship Tower Catch';
     if (/^SEB-?2$/i.test(l)) l = 'Raptor Relight (SEB-2)';
     if (/^SECO-1$/i.test(l)) l = 'SECO';
-    if (seen.has(l)) continue;
+    if (/^Starship Return Check$/i.test(l)) l = 'Return-to-Launch-Site Check';
+    if (seen.has(l) && !/Check/.test(l)) continue;
     seen.add(l);
     const w = who(l0);
     events.push({ t, label: l, who: w, planned: (w === 'ship' && sLoss != null && t > sLoss) || (w === 'booster' && bLoss != null && t > bLoss) });
@@ -64074,7 +64096,8 @@ function deriveFlight(rec) {
     key: rec.n ? `n${rec.n}` : `id-${rec.id || rec.name}`,
     n: rec.n || null, rec, name: rec.name, short: shortName(rec), net: rec.net, netMs, status: rec.status || 'TBD', upcoming,
     booster: rec.booster || 'TBD', ship: rec.ship || 'TBD', pad: rec.pad, padLabel: padInfo[2], lat, lon,
-    az: lon > -90 && lon < -60 ? 90 : 97, k, orbital, bOut, sOut, bLoss, sLoss, end, events, feeds,
+    az: lon > -90 && lon < -60 ? 90 : 97, k, orbital, shipLands, landTarget, bOut, sOut, bLoss, sLoss, end, events, feeds,
+    padN: llToVec(lat, lon, 1),
     oceanName: /pacific/i.test(sl) ? 'PACIFIC OCEAN' : 'INDIAN OCEAN',
     shipBoom: /explod/i.test(sl), shipRTLS: /returned to its launch site|caught|catch/i.test(sl),
     shipEndT: shipEndT ? shipEndT[0] : null,
@@ -64127,15 +64150,16 @@ const BOOSTER_CATCH = track(B_T, [52, 68, 76, 86, 92, 97, 96, 85, 55, 32, 17, 7,
 const BOOSTER_GULF = track(B_T, [52, 68, 76, 86, 92, 97, 96, 85, 55, 32, 17, 7, 2, 0.5, 0.12, 0, 0], [36, 62, 77, 89, 93, 89, 82, 66, 48, 36, 26, 18, 13, 10.5, 9.3, 9, 9]);
 const CATCH_HANG_M = 50;
 
-function makeWarp(pairs) {
-  const p = [[0, 0]];
+// piecewise-linear time map through (real, model) anchors, slope 1 outside them
+function makeWarp(pairs, fromOrigin = true) {
+  const p = fromOrigin ? [[0, 0]] : [];
   for (const [t, m] of pairs) {
-    if (t == null || !isFinite(t)) continue;
-    const [lt, lm] = p[p.length - 1];
-    if (t > lt + 0.5 && m > lm) p.push([t, m]);
+    if (t == null || m == null || !isFinite(t)) continue;
+    const prev = p[p.length - 1];
+    if (!prev || (t > prev[0] + 0.5 && m > prev[1])) p.push([t, m]);
   }
   return (t) => {
-    if (t <= 0) return t;
+    if (t <= p[0][0]) return p[0][1] + (t - p[0][0]);
     for (let i = 1; i < p.length; i++) {
       if (t <= p[i][0]) { const [t0, m0] = p[i - 1], [t1, m1] = p[i]; return m0 + ((t - t0) * (m1 - m0)) / (t1 - t0); }
     }
@@ -64143,35 +64167,110 @@ function makeWarp(pairs) {
     return ml + (t - tl);
   };
 }
+const wrapPi = (a) => a - 2 * Math.PI * Math.floor((a + Math.PI) / (2 * Math.PI));
+function bearing(lat1, lon1, lat2, lon2) { // radians clockwise from north
+  const p1 = lat1 * DEG, p2 = lat2 * DEG, dl = (lon2 - lon1) * DEG;
+  return Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl));
+}
 
+/* Ship positions are stored as unit vectors (true lat/lon) so an orbital ship can circle the
+   rotating Earth; the booster stays on the launch great circle and is stored as downrange km. */
 class Profile {
   constructor(F) {
     this.F = F;
     const k = F.k;
-    const n = Math.ceil((F.end + 4 - T_START) / DT) + 1;
-    this.n = n;
+    const dt = (this.dt = F.end > 8000 ? 2 : DT);
+    const n = (this.n = Math.ceil((F.end + 4 - T_START) / dt) + 1);
     const A = () => new Float32Array(n);
-    this.sx = A(); this.sh = A(); this.bx = A(); this.bh = A(); this.sProp = A(); this.bProp = A();
+    this.sn = new Float32Array(n * 3); this.sh = A(); this.sv = A(); this.sdr = A();
+    this.bx = A(); this.bh = A(); this.sProp = A(); this.bProp = A();
     this.sEng = new Uint8Array(n); this.bEng = new Uint8Array(n);
-    const shipTrack = F.orbital ? SHIP_ORB : SHIP_SUB;
     const bTrack = F.bOut === 'catch' ? BOOSTER_CATCH : BOOSTER_GULF;
     const wS = makeWarp(F.orbital ? [[k.sep, 165], [k.seco, 515], [k.oib, 1550]] : [[k.sep, 165], [k.seco, 515], [k.entry, 2820], [k.flip, 3852], [k.sLand, 3870]]);
     const wB = makeWarp([[k.sep, 165], [k.bbEnd, 222], [k.bBurn, 404], [k.bLand, 422]]);
-    this.wS = wS; this.wB = wB;
+    const wE = makeWarp([[k.entry, 2820], [k.flip, 3852], [k.sLand, 3870]], false);
+    const tj = F.orbital ? k.oibEnd : Infinity;   // orbit model takes over after insertion
+    const v = new V3();
     let cumB = 0, cumS = 0;
     for (let i = 0; i < n; i++) {
-      const t = T_START + i * DT;
-      const ts = wS(t), tb = wB(t);
-      const st = ts <= 165 ? ASCENT : shipTrack, bt = tb <= 165 ? ASCENT : bTrack;
-      this.sh[i] = st.h.at(ts); this.sx[i] = st.x.at(ts);
+      const t = T_START + i * dt;
+      const tb = wB(t), bt = tb <= 165 ? ASCENT : bTrack;
       this.bh[i] = bt.h.at(tb); this.bx[i] = bt.x.at(tb);
+      if (t < tj) {
+        const ts = wS(t), st = ts <= 165 ? ASCENT : F.orbital ? SHIP_ORB : SHIP_SUB;
+        this.sh[i] = st.h.at(ts);
+        trueN(F, st.x.at(ts), v); this.sn[i * 3] = v.x; this.sn[i * 3 + 1] = v.y; this.sn[i * 3 + 2] = v.z;
+      }
       const be = this.boosterEngines(t), se = this.shipEngines(t);
       this.bEng[i] = be; this.sEng[i] = se;
-      cumB += be * DT; cumS += se * DT;
+      cumB += be * dt; cumS += se * dt;
       this.bProp[i] = cumB; this.sProp[i] = cumS;
     }
+    if (F.orbital) this.buildOrbit(tj, wS, wE);
     const kb = cumB > 0 ? 0.975 / cumB : 0, ks = cumS > 0 ? 0.93 / cumS : 0;
     for (let i = 0; i < n; i++) { this.bProp[i] = 1 - this.bProp[i] * kb; this.sProp[i] = 1 - this.sProp[i] * ks; }
+
+    // ground distance flown and speed from the stored geometry
+    const sn = this.sn, ang = (a, b) => 2 * Math.asin(Math.min(1, Math.hypot(sn[a * 3] - sn[b * 3], sn[a * 3 + 1] - sn[b * 3 + 1], sn[a * 3 + 2] - sn[b * 3 + 2]) / 2));
+    for (let i = 1; i < n; i++) this.sdr[i] = this.sdr[i - 1] + ang(i - 1, i) * RE;
+    for (let i = 0; i < n; i++) {
+      const a = Math.max(i - 1, 0), b = Math.min(i + 1, n - 1), span = (b - a) * dt;
+      this.sv[i] = Math.hypot(ang(a, b) * RE, this.sh[b] - this.sh[a]) / span;
+    }
+    if (F.orbital) { // report inertial orbital speed while in orbit, easing into the reentry model
+      const vEntry = F.shipLands ? this.get(this.sv, k.entry) : ORBIT_V;
+      for (let i = 0; i < n; i++) {
+        const t = T_START + i * dt;
+        if (t < tj || (F.shipLands && t >= k.entry)) continue;
+        this.sv[i] = F.shipLands && t >= k.deorbit ? lerp(ORBIT_V, vEntry, (t - k.deorbit) / (k.entry - k.deorbit)) : ORBIT_V;
+      }
+    }
+  }
+  buildOrbit(tj, wS, wE) {
+    const F = this.F, k = F.k, dt = this.dt, n = this.n, lands = F.shipLands;
+    // orbital elements from the position and heading where the ascent track ends
+    const xj = SHIP_ORB.x.at(wS(tj));
+    const p1 = destPoint(F.lat, F.lon, F.az, xj, [0, 0]), p2 = destPoint(F.lat, F.lon, F.az, xj + 1, [0, 0]);
+    const phi = p1[0] * DEG, beta = bearing(p1[0], p1[1], p2[0], p2[1]);
+    const inc = Math.acos(clamp(Math.cos(phi) * Math.sin(beta), -1, 1));
+    const lamOf = (u) => Math.atan2(Math.cos(inc) * Math.sin(u), Math.cos(u));
+    const u0 = Math.atan2(Math.sin(phi), Math.cos(phi) * Math.cos(beta));
+    const om0 = p1[1] * DEG - lamOf(u0);
+    const subV = (t) => Math.abs(SHIP_SUB.x.at(wE(t + 0.5)) - SHIP_SUB.x.at(wE(t - 0.5))); // reentry ground speed, km/s
+    const i0 = Math.ceil((tj - T_START) / dt), m = n - i0;
+    const uNat = new Float64Array(m);
+    let u = u0 + ((T_START + i0 * dt - tj) * 2 * Math.PI) / ORBIT_P;
+    for (let j = 0; j < m; j++) {
+      uNat[j] = u;
+      const tm = T_START + (i0 + j + 0.5) * dt;
+      u += (!lands || tm < k.entry ? (2 * Math.PI) / ORBIT_P : subV(tm) / RE) * dt;
+    }
+    // steer phase and node so the track comes down on the recorded landing site (tower or ocean)
+    let dU = 0, dOm = 0;
+    const T = F.landTarget;
+    if (T && lands) {
+      const uL = uNat[clamp(Math.round((k.sLand - T_START) / dt) - i0, 0, m - 1)];
+      const a = Math.asin(clamp(Math.sin(T.lat * DEG) / Math.sin(inc), -1, 1));
+      dU = [a, Math.PI - a].map((c) => wrapPi(c - uL)).sort((x, y) => Math.abs(x) - Math.abs(y))[0];
+      dOm = wrapPi(T.lon * DEG - (om0 + lamOf(uL + dU) - OMEGA_E * (k.entry - tj)));
+    }
+    const w0 = tj + 1800, w1 = lands ? Math.max(w0 + 600, k.deorbit) : w0 + 1;
+    const v = new V3();
+    for (let j = 0; j < m; j++) {
+      const i = i0 + j, t = T_START + i * dt, w = sstep(w0, w1, t);
+      const uu = uNat[j] + dU * w;
+      const lat = Math.asin(clamp(Math.sin(inc) * Math.sin(uu), -1, 1));
+      // Earth's rotation only matters for the inertial orbit; the reentry model is already ground-relative
+      const lon = om0 + dOm * w + lamOf(uu) - OMEGA_E * (Math.min(t, lands ? k.entry : t) - tj);
+      llToVec(lat / DEG, lon / DEG, 1, v); this.sn[i * 3] = v.x; this.sn[i * 3 + 1] = v.y; this.sn[i * 3 + 2] = v.z;
+      let h = ORBIT_ALT;
+      if (lands && t >= k.deorbit) {
+        if (t < k.entry) h = 120 + (ORBIT_ALT - 120) * (1 - Math.pow((t - k.deorbit) / (k.entry - k.deorbit), 1.8));
+        else { h = SHIP_SUB.h.at(wE(t)); if (F.sOut === 'catch' && t > k.flip) h = Math.max(h, CATCH_HANG_M / 1000); }
+      }
+      this.sh[i] = h;
+    }
+    this.orbit = { tj, inc: inc / DEG };
   }
   boosterEngines(t) {
     const k = this.F.k, F = this.F;
@@ -64192,19 +64291,30 @@ class Profile {
     if (t < k.seco) return 6;
     if (k.relight != null && t >= k.relight && t < k.relight + 8) return 1;
     if (k.oib != null && t >= k.oib && t < k.oibEnd) return 1;
-    if (!F.orbital && t >= k.flip - 2 && t < k.sLand) return 3;
+    if (k.deorbit != null && t >= k.deorbit && t < k.deorbitEnd) return 1;
+    if (F.shipLands && t >= k.flip - 2 && t < k.sLand) return 3;
     return 0;
   }
-  f(t) { return (clamp(t, T_START, this.F.end + 3) - T_START) / DT; }
+  f(t) { return (clamp(t, T_START, this.F.end + 3) - T_START) / this.dt; }
   get(arr, t) { const f = this.f(t), i = Math.floor(f), a = arr[i], b = arr[Math.min(i + 1, this.n - 1)]; return a + (b - a) * (f - i); }
   getI(arr, t) { return arr[Math.round(this.f(t))]; }
-  x(kind, t) { return this.get(kind === 'ship' ? this.sx : this.bx, t); }
+  shipN(t, out) {
+    const f = this.f(t), i = Math.floor(f), j = Math.min(i + 1, this.n - 1), s = f - i, a = this.sn;
+    return out.set(a[i * 3] + (a[j * 3] - a[i * 3]) * s, a[i * 3 + 1] + (a[j * 3 + 1] - a[i * 3 + 1]) * s, a[i * 3 + 2] + (a[j * 3 + 2] - a[i * 3 + 2]) * s).normalize();
+  }
+  nOf(kind, t, out) { return kind === 'ship' ? this.shipN(t, out) : trueN(this.F, this.get(this.bx, t), out); }
+  bxAt(t) { return this.get(this.bx, t); }
   h(kind, t) { return this.get(kind === 'ship' ? this.sh : this.bh, t); }
+  v(kind, t) { // km/s
+    if (kind === 'ship') return this.get(this.sv, t);
+    return Math.hypot(this.bxAt(t + 0.5) - this.bxAt(t - 0.5), this.h('booster', t + 0.5) - this.h('booster', t - 0.5));
+  }
+  dr(kind, t) { return kind === 'ship' ? this.get(this.sdr, t) : Math.abs(this.bxAt(t)); }
   eng(kind, t) { return this.getI(kind === 'ship' ? this.sEng : this.bEng, t); }
   prop(kind, t) { return this.get(kind === 'ship' ? this.sProp : this.bProp, t); }
   heat(t) {
     const k = this.F.k;
-    if (this.F.orbital) return 0;
+    if (!this.F.shipLands) return 0;
     return sstep(k.entry, k.entry + 230, t) * (1 - sstep(k.entry + 480, k.entry + 760, t));
   }
 }
@@ -64216,8 +64326,9 @@ function llToVec(lat, lon, r, out = new V3()) {
   const p = lat * DEG, l = lon * DEG;
   return out.set(r * Math.cos(p) * Math.cos(l), r * Math.sin(p), -r * Math.cos(p) * Math.sin(l));
 }
+const nToLL = (nv) => [Math.asin(clamp(nv.y, -1, 1)) / DEG, Math.atan2(-nv.z, nv.x) / DEG];
 function destPoint(lat, lon, az, d, out) {
-  const del = d / 6371, th = az * DEG, p1 = lat * DEG, l1 = lon * DEG;
+  const del = d / RE, th = az * DEG, p1 = lat * DEG, l1 = lon * DEG;
   const sp2 = Math.sin(p1) * Math.cos(del) + Math.cos(p1) * Math.sin(del) * Math.cos(th);
   const p2 = Math.asin(clamp(sp2, -1, 1));
   const l2 = l1 + Math.atan2(Math.sin(th) * Math.sin(del) * Math.cos(p1), Math.cos(del) - Math.sin(p1) * sp2);
@@ -64225,9 +64336,20 @@ function destPoint(lat, lon, az, d, out) {
   return out;
 }
 const visAlt = (h) => Math.max(h, 0) * ALT_EXAG * KM + NEAR_C * (1 - Math.exp(-Math.max(h, 0) / NEAR_L));
-const visX = (x) => x + (XEXP / KM) * (1 - Math.exp(-Math.abs(x) / XL)) * Math.sign(x);
-const _ll = [0, 0];
-function worldAt(F, x, h, out) { destPoint(F.lat, F.lon, F.az, visX(x), _ll); return llToVec(_ll[0], _ll[1], EARTH_R + visAlt(h), out); }
+const _ll = [0, 0], _perp = new V3();
+function trueN(F, x, out) { destPoint(F.lat, F.lon, F.az, x, _ll); return llToVec(_ll[0], _ll[1], 1, out); }
+// near the pad, push positions outward so short distances read at the same scale as the vehicles and tower
+function visN(F, nv, out) {
+  const c = clamp(nv.dot(F.padN), -1, 1), d = Math.acos(c) * RE;
+  if (d < 1e-6 || d > 400) return out.copy(nv);
+  const dv = d + (XEXP / KM) * (1 - Math.exp(-d / XL)) * (1 - sstep(40, 400, d));
+  _perp.copy(nv).addScaledVector(F.padN, -c).normalize();
+  const a = dv / RE;
+  return out.copy(F.padN).multiplyScalar(Math.cos(a)).addScaledVector(_perp, Math.sin(a));
+}
+function worldN(F, nv, h, out) { return visN(F, nv, out).multiplyScalar(EARTH_R + visAlt(h)); }
+const _wn = new V3();
+function worldOf(kind, t, out) { const P = state.P; return worldN(state.F, P.nOf(kind, t, _wn), P.h(kind, t), out); }
 function sunDirAt(ms, out) {
   const d = new Date(ms), y0 = Date.UTC(d.getUTCFullYear(), 0, 0), N = (ms - y0) / 864e5;
   const decl = -23.44 * Math.cos((2 * Math.PI / 365) * (N + 10));
@@ -64735,10 +64857,10 @@ function makePath(F, P, kind, endT, color) {
   for (let t = 0; t <= endT; t += t < 700 ? 1 : 5) times.push(t);
   if (times[times.length - 1] !== endT) times.push(endT);
   const pts = [], ground = [], v = new V3();
+  const nv = new V3();
   for (const t of times) {
-    const x = P.x(kind, t), h = P.h(kind, t);
-    worldAt(F, x, h, v); pts.push(v.x, v.y, v.z);
-    destPoint(F.lat, F.lon, F.az, visX(x), _ll); llToVec(_ll[0], _ll[1], EARTH_R * 1.0022, v); ground.push(v.clone());
+    worldOf(kind, t, v); pts.push(v.x, v.y, v.z);
+    visN(F, P.nOf(kind, t, nv), v).multiplyScalar(EARTH_R * 1.0022); ground.push(v.clone());
   }
   const geo = new LineGeometry(); geo.setPositions(pts);
   const mat = new LineMaterial({ color, linewidth: kind === 'ship' ? 2.4 : 2, transparent: true, opacity: 0.95, depthWrite: false });
@@ -64793,21 +64915,32 @@ function placeLabel(lb, w, h) {
 /* =========================================================================
    STATE
    ========================================================================= */
-const state = { flights: [], F: null, P: null, t: T_START, playing: false, speed: 1, live: false, view: 'globe', apiOk: null, feedIdx: 0, customFeed: null, videoLoadedFor: null };
+const state = { flights: [], F: null, P: null, t: T_START, playing: false, speed: 1, live: false, view: 'globe', apiOk: null, feedIdx: 0, customFeed: null, videoLoadedFor: null, catchCamDone: new Set() };
 const zones = { ship: null, booster: null };
 const shipFrame = { pos: new V3(), up: new V3(), fwd: new V3(), vel: new V3(), side: new V3(), speed: 0 };
 const boosterFrame = { pos: new V3(), up: new V3(), fwd: new V3(), vel: new V3(), side: new V3(), speed: 0 };
-const _a = new V3(), _b = new V3(), _m4 = new THREE.Matrix4(), _x = new V3(), _z = new V3();
+const _a = new V3(), _b = new V3(), _m4 = new THREE.Matrix4(), _x = new V3(), _z = new V3(), _wn2 = new V3(), _tn = new V3();
 
 function vehicleFrame(kind, t, fr) {
   const { F, P } = state;
-  const x = P.x(kind, t), h = P.h(kind, t);
-  worldAt(F, x, h, fr.pos);
+  worldOf(kind, t, fr.pos);
   fr.up.copy(fr.pos).normalize();
-  worldAt(F, x + 0.5, h, _a); worldAt(F, x - 0.5, h, _b);
-  fr.fwd.subVectors(_a, _b); fr.fwd.addScaledVector(fr.up, -fr.fwd.dot(fr.up)).normalize();
+  if (kind === 'booster') { // along the launch azimuth: the boostback attitude is defined relative to it
+    const x = P.bxAt(t), h = P.h(kind, t);
+    worldN(F, trueN(F, x + 0.5, _wn2), h, _a); worldN(F, trueN(F, x - 0.5, _wn2), h, _b);
+    fr.fwd.subVectors(_a, _b);
+  } else { // direction of travel; orbits curve and the final descent is nearly vertical, so look back further if needed
+    fr.fwd.set(0, 0, 0);
+    for (const back of [40, 240, 1500]) {
+      worldOf('ship', t + 1, _a); worldOf('ship', t - back, _b);
+      fr.fwd.subVectors(_a, _b).addScaledVector(fr.up, -fr.fwd.dot(fr.up));
+      if (fr.fwd.lengthSq() > 1e-8) break;
+    }
+    if (fr.fwd.lengthSq() <= 1e-8) { worldN(F, trueN(F, 0.5, _wn2), 0, _a); worldN(F, trueN(F, -0.5, _wn2), 0, _b); fr.fwd.subVectors(_a, _b); }
+  }
+  fr.fwd.addScaledVector(fr.up, -fr.fwd.dot(fr.up)).normalize();
   fr.side.crossVectors(fr.fwd, fr.up).normalize();
-  worldAt(F, P.x(kind, t + 0.5), P.h(kind, t + 0.5), _a); worldAt(F, P.x(kind, t - 0.5), P.h(kind, t - 0.5), _b);
+  worldOf(kind, t + 0.5, _a); worldOf(kind, t - 0.5, _b);
   fr.vel.subVectors(_a, _b); fr.speed = fr.vel.length();
   if (fr.speed < 1e-7) fr.vel.copy(fr.up); else fr.vel.divideScalar(fr.speed);
 }
@@ -64837,7 +64970,7 @@ function shipAttitude(t, fr, out, stackQ) {
   if (t < k.sep) return out.copy(stackQ);
   _n.copy(fr.up).negate();
   basisQuat(fr.vel, _n, fr.fwd, out);
-  if (!F.orbital) {
+  if (F.shipLands) {
     _u.copy(fr.up).addScaledVector(fr.vel, -fr.up.dot(fr.vel));
     if (_u.lengthSq() < 1e-6) _u.copy(fr.fwd); _u.normalize();
     _y.copy(fr.vel).multiplyScalar(Math.cos(60 * DEG)).addScaledVector(_u, Math.sin(60 * DEG)).normalize();
@@ -64845,7 +64978,7 @@ function shipAttitude(t, fr, out, stackQ) {
     out.slerp(basisQuat(fr.fwd, _n, fr.side, qT1), sstep(k.flip - 300, k.flip - 200, t));
     out.slerp(basisQuat(fr.up, fr.fwd, fr.side, qT1), sstep(k.flip, k.flip + 6, t));
     _y.copy(fr.fwd).negate();
-    out.slerp(basisQuat(_y, fr.up, fr.side, qT1), sstep(k.sLand + 4, k.sLand + 10, t));
+    if (F.sOut === 'splash') out.slerp(basisQuat(_y, fr.up, fr.side, qT1), sstep(k.sLand + 4, k.sLand + 10, t));
   }
   qT2.copy(stackQ).slerp(out, sstep(k.sep, k.sep + 4, t));
   return out.copy(qT2);
@@ -64902,7 +65035,7 @@ function updateVehicles(t, time) {
   flash(flashes.booster, F.bLoss ?? 1e9, 3, 0.9, boosterFrame.pos);
   flash(flashes.ship, F.sLoss ?? (F.shipBoom ? k.sLand + 12 : 1e9), 3, 1.0, cs.position);
   flash(flashes.splashB, F.bOut === 'gulf' ? k.bLand : 1e9, 4, 0.9, boosterFrame.pos);
-  flash(flashes.splashS, !F.orbital && F.sOut === 'splash' ? k.sLand : 1e9, 4, 0.9, shipFrame.pos);
+  flash(flashes.splashS, F.shipLands && F.sOut === 'splash' ? k.sLand : 1e9, 4, 0.9, shipFrame.pos);
 
   // liftoff smoke
   smoke.forEach((sp, i) => {
@@ -64914,12 +65047,16 @@ function updateVehicles(t, time) {
     const s = 0.25 + 1.3 * Math.sqrt(p); sp.scale.set(s, s, 1); sp.material.opacity = 0.75 * (1 - p) * sstep(0, 0.05, p);
   });
 
-  // tower: chopsticks follow the booster on catch flights, QD arm swings back before liftoff
-  const catching = F.bOut === 'catch';
-  const baseH = (boosterFrame.pos.length() - EARTH_R) / S;
-  const armY = catching ? clamp(baseH + 62.9, 104, 112) : 112;
-  arms.carriage.position.y = catching && t > k.bLand - 12 ? armY : 112;
-  const open = catching ? lerp(0.55, 0.0, sstep(k.bLand - 22, k.bLand - 4, t)) : 0.55;
+  // tower: the chopsticks close on whichever vehicle was really caught (booster pins under the grid fins,
+  // ship pins below the forward flaps) and ride down with it; QD arm swings back before liftoff
+  let armY = 112, open = 0.55;
+  for (const c of catchList(F)) {
+    if (t < c.t - 25) continue;
+    const car = c.who === 'ship' ? cs : cb;
+    open = lerp(0.55, 0.0, sstep(c.t - 22, c.t - 4, t));
+    if (t > c.t - 12) armY = clamp((car.position.length() - EARTH_R) / S + c.hook, 60, 112);
+  }
+  arms.carriage.position.y = armY;
   arms.left.rotation.y = -open; arms.right.rotation.y = open;
   arms.qd.rotation.y = lerp(0, -1.1, sstep(-8, -2, t));
   const blink = Math.floor(time * 1.2) % 2 === 0;
@@ -64933,6 +65070,12 @@ function updateVehicles(t, time) {
   labels.booster.small.textContent = t >= k.sep - 1 ? ` ${bh.toFixed(0)} KM` : ' STACK';
 }
 
+function catchList(F) {
+  const list = [];
+  if (F.bOut === 'catch') list.push({ who: 'booster', t: F.k.bLand, hook: 62.9 });
+  if (F.sOut === 'catch') list.push({ who: 'ship', t: F.k.sLand, hook: 38 });
+  return list.sort((a, b) => a.t - b.t);
+}
 const siteFrame = { pos: new V3(), up: new V3(), east: new V3(), north: new V3() };
 function placeSite(F) {
   llToVec(F.lat, F.lon, EARTH_R, siteFrame.pos);
@@ -65067,6 +65210,7 @@ function boosterOutcomeText(F) {
 function shipOutcomeText(F) {
   if (F.upcoming) return [F.orbital ? 'PLAN · ORBIT' : 'PLAN · SPLASHDOWN', 'cyan'];
   if (F.sOut === 'lost') return ['LOST', 'red'];
+  if (F.sOut === 'orbit') return ['IN ORBIT', 'green'];
   if (F.orbital) return [F.shipRTLS ? `ORBIT → STARBASE CATCH ${F.shipEndT ? fmtShort(F.shipEndT).replace('+', 'T+') : ''}` : `ORBIT → ${F.oceanName.split(' ')[0]} SPLASHDOWN ${F.shipEndT ? fmtShort(F.shipEndT).replace('+', 'T+') : ''}`, 'green'];
   return [`${F.oceanName} SPLASHDOWN`, 'green'];
 }
@@ -65100,7 +65244,7 @@ function renderMission() {
   $('#events').innerHTML = evs.map((e, i) => `<li data-i="${i}" data-t="${e.t}" class="${e.who}${e.planned ? ' planned' : ''}"><span class="et">${fmtShort(e.t).replace(/^/, 'T')}</span><span class="lbl">${esc(e.label)}</span></li>`).join('');
   state.evList = evs; state.evEls = [...document.querySelectorAll('#events li')]; state.evNow = -2;
   const ticks = $('#ticks'), span = F.end - T_START;
-  const major = /Liftoff|Max-Q|Separation|Boostback Burn Startup|Booster Catch|Booster Splashdown|SECO|Atmospheric Entry|Ship Splashdown|Ship Landing|Loss|Relight|Orbital Insertion/;
+  const major = /Liftoff|Max-Q|Separation|Boostback Burn Startup|Booster Catch|Booster Splashdown|SECO|Atmospheric Entry|Ship Splashdown|Tower Catch|Loss|Relight|Orbital Insertion Burn Start|Deorbit Burn Start/;
   ticks.innerHTML = evs.filter((e) => major.test(e.label)).map((e) => `<div class="tick ${e.who}" style="left:${(((e.t - T_START) / span) * 100).toFixed(3)}%" title="${esc(fmtShort(e.t))} ${esc(e.label)}"></div>`).join('');
   const sc = $('#scrubber'); sc.min = T_START; sc.max = F.end;
   $('#tlEnd').textContent = fmtT(F.end);
@@ -65115,13 +65259,14 @@ function buildFlightScene() {
   paths.booster = makePath(F, P, 'booster', bEnd, 0x3fd7ff);
   zones.ship = zones.booster = null;
   labels.zoneS.show = labels.zoneB.show = false;
-  if (!F.orbital && F.sOut === 'splash') {
-    const p = worldAt(F, P.x('ship', F.end), 0, new V3());
+  if (F.shipLands && F.sOut === 'splash') {
+    const p = worldN(F, P.shipN(F.k.sLand + 5, new V3()), 0, new V3());
     zones.ship = makeZone(p, 2.2, 0xffc23d); labels.zoneS.pos.copy(p); labels.zoneS.show = true;
-    labels.zoneS.txt.firstChild.textContent = `${F.oceanName} · SPLASHDOWN ZONE`;
+    labels.zoneS.txt.firstChild.textContent = F.landTarget?.label || `${F.oceanName} · SPLASHDOWN ZONE`;
   }
+  if (F.sOut === 'catch' && F.bOut !== 'catch') zones.ship = makeZone(siteFrame.pos.clone(), 0.2, 0x35f0a0);
   if (F.bOut === 'gulf' || F.bOut === 'lost') {
-    const p = worldAt(F, F.bOut === 'gulf' ? P.x('booster', F.k.bLand + 5) : 9, 0, new V3());
+    const p = worldN(F, trueN(F, F.bOut === 'gulf' ? P.bxAt(F.k.bLand + 5) : 9, new V3()), 0, new V3());
     zones.booster = makeZone(p, 0.32, 0x3fd7ff); labels.zoneB.pos.copy(p); labels.zoneB.show = true;
     labels.zoneB.txt.firstChild.textContent = 'BOOSTER LZ · GULF';
   } else {
@@ -65131,7 +65276,7 @@ function buildFlightScene() {
 
 function selectFlight(key, keepTime = false) {
   const F = state.flights.find((f) => f.key === key) || state.flights[0];
-  state.F = F; state.P = new Profile(F);
+  state.F = F; state.P = new Profile(F); state.catchCamDone.clear();
   placeSite(F);
   buildFlightScene();
   renderBadges(); renderMission(); setFeeds();
@@ -65147,7 +65292,7 @@ function renderFlightSelect() {
   const sel = $('#flightSelect');
   const up = state.flights.filter((f) => f.upcoming).sort((a, b) => a.netMs - b.netMs);
   const past = state.flights.filter((f) => !f.upcoming).sort((a, b) => b.netMs - a.netMs);
-  const opt = (f) => `<option value="${f.key}">${esc(f.short)} · ${fmtDate(f.netMs).slice(0, 10)} · ${esc(f.booster)}/${esc(f.ship)}${f.bOut === 'catch' && !f.upcoming ? ' · CATCH' : ''}</option>`;
+  const opt = (f) => `<option value="${f.key}">${esc(f.short)} · ${fmtDate(f.netMs).slice(0, 10)} · ${esc(f.booster)}/${esc(f.ship)}${!f.upcoming && f.bOut === 'catch' ? ' · BOOSTER CATCH' : ''}${!f.upcoming && f.sOut === 'catch' ? ' · SHIP CATCH' : ''}</option>`;
   sel.innerHTML = (up.length ? `<optgroup label="UPCOMING / LIVE">${up.map(opt).join('')}</optgroup>` : '') + `<optgroup label="FLIGHT HISTORY">${past.map(opt).join('')}</optgroup>`;
   if (state.F) sel.value = state.F.key;
 }
@@ -65195,20 +65340,21 @@ function vehicleStatus(kind, t) {
   if (k.relight != null && t >= k.relight && t < k.relight + 8) return ['RAPTOR RELIGHT', 'burn'];
   if (k.oib != null && t >= k.oib && t < k.oibEnd) return ['ORBIT INSERTION BURN', 'burn'];
   if (k.depStart != null && t >= k.depStart && t < k.depEnd) return ['PAYLOAD DEPLOY', ''];
-  if (F.orbital) return [k.oibEnd != null && t >= k.oibEnd ? 'ORBIT · 275 KM' : 'COAST', ''];
-  if (t < k.entry - 60) return ['COAST · SUBORBITAL', ''];
+  if (k.deorbit != null && t >= k.deorbit && t < k.deorbitEnd) return ['DEORBIT BURN', 'burn'];
+  if (F.orbital && t < k.oibEnd) return ['COAST', ''];
+  if (F.orbital && t < (k.deorbit ?? Infinity)) return [`ORBIT ${Math.floor((t - k.oibEnd) / ORBIT_P) + 1} · ${ORBIT_ALT} KM`, ''];
+  if (t < k.entry - 60) return [F.orbital ? 'DEORBIT COAST' : 'COAST · SUBORBITAL', ''];
   if (P.heat(t) > 0.15) return ['REENTRY · PLASMA', 'warn'];
   if (t < k.flip - 200) return ['REENTRY', ''];
   if (t < k.flip) return ['BELLY-FLOP · SUBSONIC', ''];
   if (t < k.sLand) return ['FLIP & LANDING BURN', 'burn'];
+  if (F.sOut === 'catch') return ['CAUGHT BY TOWER', 'ok'];
   return F.shipBoom && t > k.sLand + 12 ? ['SPLASHDOWN · VEHICLE LOST', 'warn'] : ['SPLASHDOWN', 'ok'];
 }
 function telemetry(kind, t) {
-  const P = state.P, F = state.F;
-  const x = P.x(kind, t), h = P.h(kind, t);
-  const dx = (P.x(kind, t + 0.5) - P.x(kind, t - 0.5)), dh = (P.h(kind, t + 0.5) - P.h(kind, t - 0.5));
-  destPoint(F.lat, F.lon, F.az, x, _ll);
-  return { x, h, v: Math.hypot(dx, dh) * 3600, vs: dh * 1000, lat: _ll[0], lon: _ll[1] };
+  const P = state.P;
+  const [lat, lon] = nToLL(P.nOf(kind, t, _tn));
+  return { x: P.dr(kind, t), h: P.h(kind, t), v: P.v(kind, t) * 3600, vs: (P.h(kind, t + 0.5) - P.h(kind, t - 0.5)) * 1000, lat, lon };
 }
 function updateCard(kind, t) {
   const u = ui[kind], P = state.P, F = state.F;
@@ -65409,7 +65555,12 @@ const jumpEvent = (dir) => {
 };
 $('#nextEvt').addEventListener('click', () => jumpEvent(1));
 $('#prevEvt').addEventListener('click', () => jumpEvent(-1));
-$('#events').addEventListener('click', (e) => { const li = e.target.closest('li'); if (li) { setTime(+li.dataset.t - 3); state.live = false; updateLiveBtn(); } });
+$('#events').addEventListener('click', (e) => {
+  const li = e.target.closest('li'); if (!li) return;
+  const isCatch = /Catch/.test(li.textContent);
+  setTime(+li.dataset.t - (isCatch ? 40 : 3)); state.live = false; updateLiveBtn();
+  if (isCatch) { state.catchCamDone.clear(); setCamMode('pad'); }
+});
 $('#liveBtn').addEventListener('click', () => { state.live = !state.live; if (state.live) { setSpeed(1); setPlaying(true); } updateLiveBtn(); });
 $('#feedSelect').addEventListener('change', (e) => { state.feedIdx = +e.target.value; loadFeed(); });
 $('#syncBtn').addEventListener('click', () => loadFeed(true));
@@ -65426,7 +65577,7 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Space') { e.preventDefault(); $('#playBtn').click(); }
   else if (e.key === 'ArrowRight') { setTime(state.t + (e.shiftKey ? 60 : 10)); state.live = false; }
   else if (e.key === 'ArrowLeft') { setTime(state.t - (e.shiftKey ? 60 : 10)); state.live = false; }
-  else if (e.key === '1' || e.key === '2' || e.key === '3') setSpeed([1, 5, 20][+e.key - 1]);
+  else if (/^[1-5]$/.test(e.key)) setSpeed([1, 5, 20, 100, 1000][+e.key - 1]);
   else if (e.key.toLowerCase() === 'g') setView('globe');
   else if (e.key.toLowerCase() === 'v') setView('video');
   else if (e.key.toLowerCase() === 's') setView('split');
@@ -65459,6 +65610,16 @@ function frame() {
     if (state.t >= F.end) setPlaying(false);
   }
   const t = state.t;
+  // catch cam: cut to the tower and drop to real time shortly before a vehicle the tower really caught comes home
+  for (const c of catchList(F)) {
+    if (t < c.t - 60) state.catchCamDone.delete(c.who);
+    else if ((state.playing || state.live) && t < c.t + 20 && !state.catchCamDone.has(c.who)) {
+      state.catchCamDone.add(c.who);
+      if (!state.live && state.speed > 1) setSpeed(1);
+      if (cam.mode !== 'pad') setCamMode('pad');
+      toast(`CATCH CAM · ${c.who === 'ship' ? 'Ship ' + F.ship : 'Booster ' + F.booster} returning to the tower — catch at ${fmtT(c.t)}`, 'info', 5000);
+    }
+  }
   updateVehicles(t, time);
   for (const kind of ['ship', 'booster']) {
     const p = paths[kind]; if (!p) continue;
