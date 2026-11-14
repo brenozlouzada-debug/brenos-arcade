@@ -11,7 +11,7 @@ SETUP (once)
      won't stick.
   3. Open the folder and double-click index.html.
 
-That's it. No internet, no server, no install. All 41 games play instantly.
+That's it. No internet, no server, no install. All 42 games play instantly.
 
   Tip: once index.html is open in Chrome, press Ctrl+D to bookmark it so you
   don't have to dig through Files every time.
@@ -25,10 +25,13 @@ IF A GAME NEEDS THE KEYBOARD OR MOUSE LOCK
 
 WHAT WORKS OFFLINE
 
-  All 41 games, fully. Every library is built into the files themselves.
+  All 42 games, fully. Every library is built into the files themselves.
 
   Golazo 26 pulls club crests and national flags from the internet. Offline it
   shows plain shield badges instead; the game itself plays the same.
+
+  Starship Fleet Tracker gets the latest launches and launch videos from the
+  internet. Offline it replays the flights built into it, 3D globe and all.
 
   Four games (Blocky CAD, Find the Balls, Mechazilla, Rival Fighters) use a
   Google webfont for their headings. Offline they fall back to a

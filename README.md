@@ -31,6 +31,7 @@ A local arcade hub for games built with Claude Code. Open `index.html` (or run `
 | Amoung Us | Social Deduction | Tiny fan-made Among Us-like — tasks, sabotage, kills, emergency meetings and voting |
 | SFS — Spaceflight Simulator | Simulation | Build a rocket part by part and fly it — real orbital physics, staging, throttle, map view, challenges |
 | Mechazilla — Booster Catch | Physics | Guide a falling booster into a catch tower's arms — main engine and rotation thrusters, only the ground ends a run |
+| Starship Fleet Tracker | Simulator | Every Starship & Super Heavy flight on a 3D globe — stack, hot staging, ship and booster telemetry, timeline replay. Live launch data and launch videos load from the internet; offline it replays the built-in flights |
 | ROOM | Sandbox | Tiny first-person three.js playground — punch, kick, find a gun and web-shooter, swing, use the computer, all in one room |
 | PAPER SKY | Sandbox | Draw anything on a sketchpad and it folds into a paper plane that really flies — walk a first-person meadow and fill the sky |
 | Nine — First-Person Baseball | Sports | Field 3 outs, then bat 3 outs, for 9 innings, entirely first-person — pitch, swing timing, fielding, base running |
@@ -52,7 +53,8 @@ Every game lives at `games/<slug>/index.html` as a single self-contained file (U
 also has an `assets/` folder beside it, see below). No build step, no server, no network: every library (three.js, cannon-es, React, JSZip) is inlined, so each file runs
 on its own by double-clicking it. The only things still loaded from the internet are a webfont in four
 games (they fall back to system fonts offline) and Golazo 26's club crests and national flags (it
-draws generated shields instead when offline).
+draws generated shields instead when offline), plus Starship Fleet Tracker's live launch data and
+launch videos (offline it replays the flights built into it).
 
 ## Running
 
