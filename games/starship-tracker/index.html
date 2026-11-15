@@ -95,6 +95,19 @@ option { background: #05080c; color: var(--txt); }
 .panel h3 em { font-style: normal; color: var(--cyan); font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; }
 .telem { top: 14px; left: 14px; width: 300px; max-height: calc(100% - 28px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--dim2) transparent; }
 .side { top: 62px; right: 14px; width: 286px; max-height: calc(100% - 76px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--dim2) transparent; }
+.rcol { position: absolute; top: 62px; right: 14px; bottom: 40px; width: 286px; display: flex; flex-direction: column; gap: 10px; z-index: 2; pointer-events: none; }
+.rcol > .panel { position: relative; pointer-events: auto; flex: none; }
+.rcol > .side { top: auto; right: auto; width: auto; max-height: none; flex: 0 1 auto; min-height: 60px; }
+.maps h3 { cursor: pointer; user-select: none; }
+.msec + .msec h3 { border-top: 1px solid var(--line); }
+.maps h3 em { display: flex; gap: 5px; align-items: center; white-space: nowrap; overflow: hidden; }
+.maps h3 button { background: transparent; border: 1px solid var(--line2); color: var(--cyan); width: 17px; height: 17px; padding: 0; line-height: 1; font-size: 12px; font-family: var(--mono); }
+.maps h3 button:hover { border-color: var(--cyan); }
+.maps canvas { display: block; width: 100%; }
+#altCanvas { height: 150px; }
+#mapCanvas { height: 176px; touch-action: none; }
+.msec.collapsed canvas { display: none; }
+.view-split .maps { display: none; }
 .campresets { position: absolute; top: 14px; right: 14px; z-index: 3; display: flex; border: 1px solid var(--line2); background: var(--panel); backdrop-filter: blur(6px); }
 .campresets button { background: transparent; border: 0; border-right: 1px solid var(--line); color: var(--dim); font-size: 10px; letter-spacing: 0.12em; padding: 9px 10px; white-space: nowrap; }
 .campresets button:last-child { border-right: 0; }
@@ -272,7 +285,7 @@ svg .e.on { fill: var(--orange); stroke: #ffd2a8; filter: drop-shadow(0 0 0.35px
   .vc-head b { font-size: 12px; letter-spacing: .12em; }
   .vc-grid { grid-template-columns: 1fr; gap: 3px; }
   .vc-grid span { font-size: 14px; }
-  .hud-foot, .legend { display: none; }
+  .hud-foot, .legend, .rcol { display: none; }
   .campresets { top: 10px; right: 10px; left: 10px; justify-content: stretch; }
   .campresets button { flex: 1; padding: 8px 2px; font-size: 9px; letter-spacing: .04em; }
   .hud-top { top: 52px; }
@@ -331,12 +344,18 @@ svg .e.on { fill: var(--orange); stroke: #ffd2a8; filter: drop-shadow(0 0 0.35px
         <button data-cam="booster">TRACK BOOSTER</button>
         <button data-cam="pad">STARBASE PAD</button>
       </div>
+      <div class="rcol">
+      <aside class="panel maps" id="mapsPanel">
+        <section class="msec"><h3 data-sec="alt" title="Click to collapse">ALTITUDE <em id="altCmp">—</em></h3><canvas id="altCanvas"></canvas></section>
+        <section class="msec"><h3 data-sec="map" title="Click to collapse">TOP-DOWN <em><button id="mapOut" title="Zoom out">−</button><span id="mapZoom"></span><button id="mapIn" title="Zoom in">+</button></em></h3><canvas id="mapCanvas" title="Scroll to zoom"></canvas></section>
+      </aside>
       <aside class="panel side" id="sidePanel">
         <h3>MISSION <em id="missionSrc">FALLBACK</em></h3>
         <div class="mission" id="missionCard"></div>
         <h3>EVENT TIMELINE <em id="evtCount"></em></h3>
         <ol id="events"></ol>
       </aside>
+      </div>
       <div class="hud-foot">
         <div>MODEL · <b id="modelStatus">LOADING starship.glb…</b></div>
         <div>SCALE · VEHICLES ×255 · ALTITUDE ×5</div>
@@ -67348,6 +67367,273 @@ document.addEventListener('visibilitychange', () => { if (!sound.ctx) return; if
 soundUI();
 
 /* =========================================================================
+   2D VIEWS — an altitude profile (how high, against things people know) and a top-down Earth
+   (orthographic, centred under the vehicle) with the ground tracks and a Starship symbol
+   ========================================================================= */
+const ALT_REFS = [[0.093, 'STATUE OF LIBERTY'], [0.146, 'LAUNCH TOWER'], [0.828, 'BURJ KHALIFA'], [8.85, 'MT EVEREST'], [11, 'AIRLINERS'], [39, 'HIGHEST SKYDIVE'], [100, 'KÁRMÁN LINE · SPACE'], [420, 'SPACE STATION']];
+const MAP_ZOOMS = [7000, 4000, 2000, 1000, 450, 180, 70, 25, 8]; // visible radius, km
+const maps = { F: null, prof: null, track: null, zoom: 1, last: 0, tex: null, texTried: false, head: { ship: 0, booster: 0 }, collapsed: {} };
+try { Object.assign(maps.collapsed, JSON.parse(localStorage.getItem('sft.maps') || '{}')); } catch {}
+const ecef = (lat, lon, o = [0, 0, 0]) => { const p = lat * DEG, l = lon * DEG, c = Math.cos(p); o[0] = c * Math.cos(l); o[1] = c * Math.sin(l); o[2] = Math.sin(p); return o; };
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const fmtAlt = (h) => (h < 1 ? `${Math.round(h * 1000)} M` : `${h < 10 ? h.toFixed(1) : Math.round(h)} KM`);
+function altCompare(h) { // something everyone can picture
+  if (h < 0.02) return 'ON THE GROUND';
+  if (h < 0.828) return `${(h / 0.146).toFixed(1)}× THE LAUNCH TOWER`;
+  if (h < 8.85) return `${(h / 0.828).toFixed(1)}× BURJ KHALIFA`;
+  if (h < 100) return `${(h / 8.85).toFixed(1)}× MT EVEREST`;
+  return `IN SPACE · ${(h / 8.85).toFixed(0)}× EVEREST`;
+}
+
+function mapsBuild() {
+  const F = state.F, P = state.P, k = F.k, hop = F.kind === 'hop';
+  maps.F = F;
+  const sEnd = F.sLoss ?? F.end, bEnd = hop ? -1 : F.bLoss ?? Math.min(k.bLand + 2, F.end);
+  // altitude profile: the time axis is split into phases, each given a fixed share of the width
+  const seg = [];
+  if (hop) seg.push([T_START, F.end, 1, 'HOP']);
+  else {
+    const asc = Math.min(Math.max(k.bLand, k.seco < 1e8 ? k.seco : 0) + 60, sEnd);
+    const ent = F.shipLands && k.entry < sEnd ? Math.max(asc, k.entry - 120) : sEnd;
+    seg.push([T_START, asc, ent < sEnd ? 0.42 : 0.7, 'LAUNCH']);
+    if (ent > asc) seg.push([asc, ent, ent < sEnd ? 0.18 : 0.3, 'COAST']);
+    if (ent < sEnd) seg.push([ent, F.end, 0.4, 'REENTRY · LANDING']);
+  }
+  const tot = seg.reduce((a, s) => a + s[2], 0); let acc = 0;
+  for (const s of seg) { s.push(acc / tot); acc += s[2]; s[2] /= tot; }
+  const ship = [], boost = []; let hmax = 0.15;
+  for (const [t0, t1, w] of seg) {
+    const n = Math.max(20, Math.round(260 * w));
+    for (let i = 0; i <= n; i++) {
+      const t = t0 + ((t1 - t0) * i) / n;
+      if (t <= sEnd) { const h = P.h('ship', t); ship.push([t, h]); hmax = Math.max(hmax, h); }
+      if (!hop && t >= k.sep && t <= bEnd) { const h = P.h('booster', t); boost.push([t, h]); hmax = Math.max(hmax, h); }
+    }
+  }
+  const nice = [0.2, 0.5, 1, 2, 5, 10, 15, 20, 50, 100, 150, 200, 250, 300, 400, 500, 800];
+  maps.prof = { seg, ship, boost, hmax: nice.find((v) => v >= hmax * 1.12) ?? hmax * 1.12 };
+  // ground tracks (true positions)
+  const tr = (kind, t0, t1) => {
+    const pts = [];
+    for (let t = t0; t <= t1; t += t < 1500 ? (hop ? 1 : 4) : 30) { const tm = telemetry(kind, t); pts.push([t, tm.lat, tm.lon, ecef(tm.lat, tm.lon)]); }
+    return pts;
+  };
+  maps.track = { ship: tr('ship', 0, sEnd), booster: hop ? [] : tr('booster', 0, bEnd), pad: ecef(F.lat, F.lon) };
+  if (!hop && F.shipLands && (F.sLoss == null || F.sLoss > k.sLand)) { const tm = telemetry('ship', k.sLand); maps.track.sLz = ecef(tm.lat, tm.lon); }
+  if (!hop && F.bOut !== 'lost' && F.bLoss == null) { const tm = telemetry('booster', k.bLand); maps.track.bLz = ecef(tm.lat, tm.lon); }
+  if (maps.Fkind !== F.kind) maps.zoom = hop ? 4 : 1;
+  maps.Fkind = F.kind;
+  $('#mapZoom').textContent = `${MAP_ZOOMS[maps.zoom].toLocaleString('en-US')} KM`;
+}
+
+function sizeCanvas(cv) {
+  const r = window.devicePixelRatio || 1, w = Math.round(cv.clientWidth * r), h = Math.round(cv.clientHeight * r);
+  if (w && h && (cv.width !== w || cv.height !== h)) { cv.width = w; cv.height = h; }
+  return r;
+}
+const xOfT = (seg, t, x0, w) => { for (const [a, b, sw, , s0] of seg) if (t <= b) return x0 + w * (s0 + sw * clamp((t - a) / (b - a), 0, 1)); return x0 + w; };
+
+function drawProfile(t) {
+  const cv = $('#altCanvas'), g = cv.getContext('2d'), r = sizeCanvas(cv), W = cv.width / r, H = cv.height / r, pr = maps.prof, F = state.F, P = state.P;
+  if (!W) return;
+  g.setTransform(r, 0, 0, r, 0, 0); g.clearRect(0, 0, W, H);
+  const L = 38, R = 6, T = 8, B = 15, pw = W - L - R, ph = H - T - B;
+  const bulge = 7, gy = (x) => H - B + bulge * ((x - L - pw / 2) / (pw / 2)) ** 2; // Earth's surface curving away
+  const yOf = (h, x) => gy(x) - Math.sqrt(Math.max(h, 0) / pr.hmax) * ph;
+  const xs = (tt) => xOfT(pr.seg, tt, L, pw), yRef = (h) => H - B - Math.sqrt(h / pr.hmax) * ph;
+  // the atmosphere, thinning with height
+  const sky = g.createLinearGradient(0, H - B, 0, T);
+  for (const [h, c] of [[0, 'rgba(72,150,230,0.42)'], [12, 'rgba(46,100,200,0.28)'], [50, 'rgba(36,60,150,0.16)'], [85, 'rgba(30,30,90,0.07)'], [100, 'rgba(0,0,0,0)']]) sky.addColorStop(clamp(Math.sqrt(h / pr.hmax), 0, 1), c);
+  g.fillStyle = sky; g.fillRect(L, T, pw, ph);
+  // Earth
+  g.beginPath(); g.moveTo(L - 4, gy(L - 4)); for (let x = L - 4; x <= W; x += 4) g.lineTo(x, gy(x)); g.lineTo(W, H); g.lineTo(L - 4, H); g.closePath();
+  const sea = g.createLinearGradient(0, H - B, 0, H); sea.addColorStop(0, '#0d3a66'); sea.addColorStop(1, '#03101d'); g.fillStyle = sea; g.fill();
+  g.strokeStyle = 'rgba(120,200,255,0.8)'; g.lineWidth = 1.2; g.shadowColor = '#4fb4ff'; g.shadowBlur = 6;
+  g.beginPath(); for (let x = L - 4; x <= W; x += 4) (x === L - 4 ? g.moveTo(x, gy(x)) : g.lineTo(x, gy(x))); g.stroke(); g.shadowBlur = 0;
+  // altitude ticks and things to compare with
+  g.font = '9px JetBrains Mono, monospace'; g.textBaseline = 'middle';
+  let lastY = 1e9;
+  for (const v of [0.1, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 300, 500]) {
+    if (v > pr.hmax) break; const y = yRef(v); if (lastY - y < 13) continue; lastY = y;
+    g.fillStyle = '#5d6b79'; g.textAlign = 'right'; g.fillText(v < 1 ? `${v * 1000}m` : `${v}km`, L - 3, y);
+    g.fillStyle = 'rgba(255,255,255,0.05)'; g.fillRect(L, y, pw, 1);
+  }
+  g.textAlign = 'right'; lastY = 1e9;
+  for (const [h, name] of ALT_REFS) {
+    if (h > pr.hmax * 0.97 || Math.sqrt(h / pr.hmax) * ph < 7) continue;
+    const y = yRef(h); if (lastY - y < 10) continue; lastY = y;
+    const space = h === 100;
+    g.strokeStyle = space ? 'rgba(53,240,160,0.55)' : 'rgba(200,215,230,0.22)'; g.setLineDash(space ? [5, 3] : [2, 3]); g.lineWidth = 1;
+    g.beginPath(); g.moveTo(L, y + 0.5); g.lineTo(L + pw, y + 0.5); g.stroke(); g.setLineDash([]);
+    g.fillStyle = space ? '#35f0a0' : '#7d8a98'; g.fillText(`${name} ${fmtAlt(h).toLowerCase()}`, L + pw - 2, y - 5);
+  }
+  // phases
+  g.textAlign = 'center'; g.fillStyle = '#4a5866'; g.font = '8px JetBrains Mono, monospace';
+  for (const [a, b, sw, name, s0] of pr.seg) {
+    const x0 = L + pw * s0, x1 = L + pw * (s0 + sw);
+    if (s0 > 0) { g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(x0, T, 1, ph); g.fillStyle = '#4a5866'; }
+    if (x1 - x0 > name.length * 4.6) g.fillText(name, (x0 + x1) / 2, H - 5);
+  }
+  // flight paths: flown solid, still to come faint and dashed
+  const path = (pts, col, past) => {
+    g.beginPath(); let on = false;
+    for (const [tt, h] of pts) { if (past ? tt > t : tt < t) continue; const x = xs(tt), y = yOf(h, x); on ? g.lineTo(x, y) : g.moveTo(x, y); on = true; }
+    g.strokeStyle = col; g.lineWidth = past ? 1.8 : 1; g.globalAlpha = past ? 1 : 0.32; g.setLineDash(past ? [] : [3, 3]); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+  };
+  path(pr.boost, '#3fd7ff', false); path(pr.ship, '#ff7b1c', false);
+  path(pr.boost, '#3fd7ff', true); path(pr.ship, '#ff7b1c', true);
+  const xn = xs(t); g.fillStyle = 'rgba(255,255,255,0.18)'; g.fillRect(Math.round(xn), T, 1, ph);
+  // where they are now
+  const dotAt = (kind, col) => {
+    const lost = kind === 'ship' ? F.sLoss != null && t >= F.sLoss : F.bLoss != null && t >= F.bLoss;
+    if (lost || (kind === 'booster' && (F.kind === 'hop' || t < F.k.sep || t > F.k.bLand + 120))) return null;
+    const h = P.h(kind, t), x = xn, y = yOf(h, x);
+    g.fillStyle = col; g.shadowColor = col; g.shadowBlur = 8; g.beginPath(); g.arc(x, y, 3.2, 0, Math.PI * 2); g.fill(); g.shadowBlur = 0;
+    return [x, y, h];
+  };
+  const sb = dotAt('booster', '#3fd7ff'), ss = dotAt('ship', '#ff7b1c');
+  g.font = '600 9.5px JetBrains Mono, monospace'; g.textBaseline = 'middle';
+  for (const [d, col] of [[sb, '#3fd7ff'], [ss, '#ffb27a']]) {
+    if (!d) continue; const lbl = fmtAlt(d[2]), right = d[0] < L + pw - 60;
+    let y = d[1]; if (d === sb && ss && Math.abs(ss[1] - y) < 11) y = ss[1] + (y > ss[1] ? 11 : -11);
+    g.textAlign = right ? 'left' : 'right'; g.fillStyle = 'rgba(2,6,10,0.75)'; const tw = g.measureText(lbl).width;
+    g.fillRect(right ? d[0] + 6 : d[0] - 8 - tw, y - 6, tw + 3, 12); g.fillStyle = col; g.fillText(lbl, right ? d[0] + 7 : d[0] - 7, y);
+  }
+  const lead = ss || sb;
+  $('#altCmp').textContent = lead ? altCompare(lead[2]) : '—';
+}
+
+// top-down Earth: orthographic, looking straight down on the point under the tracked vehicle
+function mapTexture() {
+  if (maps.tex || maps.texTried) return maps.tex;
+  const day = earthUniforms.dayMap.value?.image, night = earthUniforms.nightMap.value?.image;
+  if (!earthUniforms.texReady.value || !day?.width) return null;
+  maps.texTried = true;
+  try {
+    const W = 2048, H = 1024, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(day, 0, 0, W, H); const d = g.getImageData(0, 0, W, H).data;
+    g.clearRect(0, 0, W, H); g.drawImage(night, 0, 0, W, H); const n = g.getImageData(0, 0, W, H).data;
+    maps.tex = { W, H, d, n };
+  } catch (e) { console.warn('map texture unavailable', e); }
+  return maps.tex;
+}
+const _mc = [0, 0, 0], _me = [0, 0, 0], _mn = [0, 0, 0], _ms = [0, 0, 0];
+function drawMap(t) {
+  const cv = $('#mapCanvas'), g = cv.getContext('2d'), r = sizeCanvas(cv), W = cv.width / r, H = cv.height / r, F = state.F, k = F.k, hop = F.kind === 'hop';
+  if (!W) return;
+  // follow the vehicle the camera follows; before launch, the pad
+  const follow = /booster/i.test(cam.mode) && !hop && t >= k.sep && !(F.bLoss != null && t > F.bLoss) ? 'booster' : 'ship';
+  const endT = follow === 'ship' ? F.sLoss ?? F.end : F.bLoss ?? k.bLand;
+  const tc = clamp(t, 0, endT), c = t < 0 ? { lat: F.lat, lon: F.lon } : telemetry(follow, tc);
+  const lat0 = c.lat * DEG, lon0 = c.lon * DEG;
+  ecef(c.lat, c.lon, _mc); _me[0] = -Math.sin(lon0); _me[1] = Math.cos(lon0); _me[2] = 0;
+  _mn[0] = -Math.sin(lat0) * Math.cos(lon0); _mn[1] = -Math.sin(lat0) * Math.sin(lon0); _mn[2] = Math.cos(lat0);
+  const [sl, so] = nToLL(_sp.copy(sunDir).normalize()); ecef(sl, so, _ms);
+  const sC = dot3(_mc, _ms), sE = dot3(_me, _ms), sN = dot3(_mn, _ms);
+  const Rpx = (Math.min(W, H) / 2) * (6371 / MAP_ZOOMS[maps.zoom]) * 0.94, cx = W / 2, cy = H / 2;
+  // Earth, one pixel at a time (at CSS resolution, then scaled up)
+  const bw = Math.ceil(W), bh = Math.ceil(H);
+  if (!maps.base || maps.base.width !== bw || maps.base.height !== bh) { maps.base = document.createElement('canvas'); maps.base.width = bw; maps.base.height = bh; maps.img = maps.base.getContext('2d').createImageData(bw, bh); }
+  const img = maps.img, px = img.data, tex = mapTexture(), sp0 = Math.sin(lat0), cp0 = Math.cos(lat0);
+  // the Earth image only changes when the view shifts by a fraction of a pixel (or the zoom, size or daylight change)
+  const bk = maps.bk, moved = bk && Math.acos(clamp(dot3(_mc, bk.c), -1, 1)) * Rpx;
+  const redo = !bk || moved > 0.4 || bk.zoom !== maps.zoom || bk.w !== bw || bk.h !== bh || bk.tex !== !!tex || Math.abs(bk.sC - sC) + Math.abs(bk.sE - sE) + Math.abs(bk.sN - sN) > 0.004;
+  if (redo) {
+  maps.bk = { c: [..._mc], zoom: maps.zoom, w: bw, h: bh, tex: !!tex, sC, sE, sN };
+  for (let j = 0; j < bh; j++) {
+    const y = (cy - (j + 0.5)) / Rpx;
+    for (let i = 0; i < bw; i++) {
+      const x = (i + 0.5 - cx) / Rpx, r2 = x * x + y * y, o = (j * bw + i) * 4;
+      if (r2 >= 1) { // space, with a thin glow of atmosphere at the limb
+        const rr = Math.sqrt(r2), glow = Math.max(0, 1 - (rr - 1) * Rpx / 7) ** 2 * 0.8;
+        px[o] = 2 + 60 * glow; px[o + 1] = 5 + 130 * glow; px[o + 2] = 9 + 255 * glow; px[o + 3] = 255; continue;
+      }
+      const cc = Math.sqrt(1 - r2), lat = Math.asin(clamp(cc * sp0 + y * cp0, -1, 1)), lon = lon0 + Math.atan2(x, cc * cp0 - y * sp0);
+      const sun = cc * sC + x * sE + y * sN, day = clamp(sun * 6 + 0.5, 0, 1), limb = 0.55 + 0.45 * cc, rim = (1 - cc) ** 3;
+      let R, G, Bc;
+      if (tex) {
+        // bilinear lookup, so zoomed-in views are smooth rather than blocky
+        const u = (((lon / (2 * Math.PI) + 0.5) % 1) + 1) % 1 * tex.W - 0.5, v = clamp((0.5 - lat / Math.PI) * tex.H - 0.5, 0, tex.H - 1.001);
+        const u0 = Math.floor(u), v0 = Math.floor(v), fu = u - u0, fv = v - v0, ua = (u0 + tex.W) % tex.W, ub = (u0 + 1) % tex.W;
+        const q00 = (v0 * tex.W + ua) * 4, q01 = (v0 * tex.W + ub) * 4, q10 = q00 + tex.W * 4, q11 = q01 + tex.W * 4;
+        const w00 = (1 - fu) * (1 - fv), w01 = fu * (1 - fv), w10 = (1 - fu) * fv, w11 = fu * fv;
+        const smp = (a, c) => a[q00 + c] * w00 + a[q01 + c] * w01 + a[q10 + c] * w10 + a[q11 + c] * w11;
+        const lit = (0.12 + 0.88 * day) * limb, city = (1 - day) * 1.3;
+        R = smp(tex.d, 0) * lit + smp(tex.n, 0) * city; G = smp(tex.d, 1) * lit + smp(tex.n, 1) * city * 0.85; Bc = smp(tex.d, 2) * lit + smp(tex.n, 2) * city * 0.5;
+      } else { R = 8 * limb; G = 30 * limb; Bc = 60 * limb * (0.4 + 0.6 * day); }
+      px[o] = R + (80 - R) * rim * 0.6; px[o + 1] = G + (150 - G) * rim * 0.6; px[o + 2] = Bc + (255 - Bc) * rim * 0.6; px[o + 3] = 255;
+    }
+  }
+  maps.base.getContext('2d').putImageData(img, 0, 0);
+  }
+  g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(maps.base, 0, 0, cv.width, cv.height);
+  g.setTransform(r, 0, 0, r, 0, 0);
+  const proj = (p) => { const z = dot3(p, _mc); return z <= 0 ? null : [cx + dot3(p, _me) * Rpx, cy - dot3(p, _mn) * Rpx]; };
+  // graticule
+  g.strokeStyle = 'rgba(120,180,255,0.1)'; g.lineWidth = 1; const tmp = [0, 0, 0];
+  for (let la = -75; la <= 75; la += 15) { g.beginPath(); let on = false; for (let lo = -180; lo <= 180; lo += 3) { const s = proj(ecef(la, lo, tmp)); if (!s) { on = false; continue; } on ? g.lineTo(...s) : g.moveTo(...s); on = true; } g.stroke(); }
+  for (let lo = -180; lo < 180; lo += 15) { g.beginPath(); let on = false; for (let la = -88; la <= 88; la += 3) { const s = proj(ecef(la, lo, tmp)); if (!s) { on = false; continue; } on ? g.lineTo(...s) : g.moveTo(...s); on = true; } g.stroke(); }
+  // ground tracks
+  const ORB = 5400; // about one orbit: earlier laps fade, only the next lap is shown ahead
+  const track = (pts, col, past, old = false) => {
+    g.beginPath(); let on = false, prev = null;
+    for (const [tt, , , p] of pts) {
+      if (old ? tt > t - ORB + 30 : past ? tt > t || tt < t - ORB : tt < t - 30 || tt > t + ORB) { on = false; prev = null; continue; }
+      const s = proj(p); if (!s || (prev && Math.hypot(s[0] - prev[0], s[1] - prev[1]) > W)) { on = false; prev = null; continue; }
+      on ? g.lineTo(...s) : g.moveTo(...s); on = true; prev = s;
+    }
+    g.strokeStyle = col; g.lineWidth = past && !old ? 2 : 1.1; g.globalAlpha = old ? 0.16 : past ? 1 : 0.4; g.setLineDash(past ? [] : [4, 4]); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+  };
+  const T = maps.track;
+  track(T.ship, '#ff7b1c', true, true);
+  track(T.booster, '#3fd7ff', false); track(T.ship, '#ff7b1c', false); track(T.booster, '#3fd7ff', true); track(T.ship, '#ff7b1c', true);
+  const ring = (p, col, rad = 4) => { const s = p && proj(p); if (!s) return; g.strokeStyle = col; g.lineWidth = 1.3; g.beginPath(); g.arc(s[0], s[1], rad, 0, Math.PI * 2); g.stroke(); };
+  ring(T.pad, '#35f0a0', 3.5); ring(T.bLz, '#3fd7ff', 3); ring(T.sLz, '#ffc23d', 4.5);
+  // the vehicles: a little Starship pointing the way it is flying
+  const sym = (kind, col, size) => {
+    const lost = kind === 'ship' ? F.sLoss != null && t >= F.sLoss : F.bLoss != null && t >= F.bLoss;
+    if (kind === 'booster' && (hop || t < k.sep || t > k.bLand + 120)) return; // once down, the landing ring marks it
+    const end = kind === 'ship' ? F.sLoss ?? F.end : F.bLoss ?? k.bLand, tt = clamp(t, 0, end);
+    const a = telemetry(kind, tt), s = proj(ecef(a.lat, a.lon, tmp)); if (!s) return;
+    if (lost) { g.strokeStyle = '#ff3d55'; g.lineWidth = 2; g.beginPath(); g.moveTo(s[0] - 5, s[1] - 5); g.lineTo(s[0] + 5, s[1] + 5); g.moveTo(s[0] + 5, s[1] - 5); g.lineTo(s[0] - 5, s[1] + 5); g.stroke(); return; }
+    const b = telemetry(kind, Math.min(tt + 4, end)), s2 = proj(ecef(b.lat, b.lon, [0, 0, 0]));
+    if (s2 && Math.hypot(s2[0] - s[0], s2[1] - s[1]) > 0.02) maps.head[kind] = Math.atan2(s2[0] - s[0], -(s2[1] - s[1]));
+    g.save(); g.translate(s[0], s[1]); g.rotate(maps.head[kind]);
+    g.shadowColor = col; g.shadowBlur = 10; g.fillStyle = col; g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 0.8;
+    g.beginPath(); // Starship from above: nose, body, flaps (shape of the app icon)
+    [[0, -14], [6, -4], [6, 9], [10, 14], [3, 12], [0, 14], [-3, 12], [-10, 14], [-6, 9], [-6, -4]].forEach(([x, y], i) => (i ? g.lineTo(x * size, y * size) : g.moveTo(x * size, y * size)));
+    g.closePath(); g.fill(); g.shadowBlur = 0; g.stroke(); g.restore();
+  };
+  sym('booster', '#3fd7ff', 0.42); sym('ship', '#ff7b1c', 0.6);
+  const where = `${Math.abs(c.lat).toFixed(1)}°${c.lat >= 0 ? 'N' : 'S'}  ${Math.abs(c.lon).toFixed(1)}°${c.lon >= 0 ? 'E' : 'W'}`;
+  g.font = '9px JetBrains Mono, monospace'; g.textAlign = 'left'; g.textBaseline = 'middle';
+  g.fillStyle = 'rgba(2,6,10,0.7)'; g.fillRect(4, H - 16, g.measureText(where).width + 8, 12); g.fillStyle = '#9fb0c0'; g.fillText(where, 8, H - 10);
+}
+
+function updateMaps(t, now) {
+  const el = $('#mapsPanel');
+  if (!el.offsetParent || now - maps.last < 90) return;
+  maps.last = now;
+  if (maps.F !== state.F) mapsBuild();
+  if (!maps.collapsed.alt) drawProfile(t);
+  if (!maps.collapsed.map) drawMap(t);
+}
+function setMapZoom(d) { maps.zoom = clamp(maps.zoom + d, 0, MAP_ZOOMS.length - 1); $('#mapZoom').textContent = `${MAP_ZOOMS[maps.zoom].toLocaleString('en-US')} KM`; maps.last = 0; }
+$('#mapIn').addEventListener('click', () => setMapZoom(1));
+$('#mapOut').addEventListener('click', () => setMapZoom(-1));
+$('#mapCanvas').addEventListener('wheel', (e) => { e.preventDefault(); setMapZoom(e.deltaY < 0 ? 1 : -1); }, { passive: false });
+document.querySelectorAll('#mapsPanel h3[data-sec]').forEach((h) => {
+  const sec = h.dataset.sec, apply = () => h.parentElement.classList.toggle('collapsed', !!maps.collapsed[sec]);
+  apply();
+  h.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return;
+    maps.collapsed[sec] = !maps.collapsed[sec]; apply(); maps.last = 0;
+    try { localStorage.setItem('sft.maps', JSON.stringify(maps.collapsed)); } catch {}
+  });
+});
+
+/* =========================================================================
    MAIN LOOP
    ========================================================================= */
 const clock = new THREE.Clock();
@@ -67418,6 +67704,7 @@ function frame() {
     for (const lb of Object.values(labels)) placeLabel(lb, w, h);
   }
   updateSound(t, camera.position.length() - EARTH_R);
+  updateMaps(t, performance.now());
   uiAcc += dt; secAcc += dt;
   if (uiAcc > 0.08) { uiAcc = 0; updateUI(); }
   if (secAcc > 1) {
@@ -67440,7 +67727,7 @@ cam.tween.dur = 10;
 frame();
 setTimeout(() => setCamMode('pad'), 900);
 { const d = new Date(); $('#utcClock').textContent = `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}:${pad2(d.getUTCSeconds())}`; }
-window.sft = { state, setTime, setPlaying, setSpeed, setCamMode, setView, selectFlight, telemetry, camera, carriers, bloom, frostMat, sunLight, models, pollLive, rt, live, cam, sound, get controls() { return controls; } }; // console handle
+window.sft = { state, setTime, setPlaying, setSpeed, setCamMode, setView, selectFlight, telemetry, camera, carriers, bloom, frostMat, sunLight, models, pollLive, rt, live, cam, sound, maps, drawMap, drawProfile, get controls() { return controls; } }; // console handle
 
 if (false && location.protocol === 'file:') {
   toast('Opened from <b>file://</b> — browsers block loading <code>starship.glb</code> and some YouTube embeds this way. In this folder run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000</code>.', 'warn', 12000);
