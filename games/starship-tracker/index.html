@@ -43,7 +43,9 @@ button { cursor: pointer; }
 .brand-sub { font-size: 9px; color: var(--dim); letter-spacing: 0.2em; margin-top: 4px; white-space: nowrap; }
 .viewtoggle { display: flex; margin: 0 auto; border: 1px solid var(--line2); border-radius: 2px; overflow: hidden; flex: none; }
 .viewtoggle button { background: transparent; border: 0; border-right: 1px solid var(--line); color: var(--dim); padding: 9px 16px; font-size: 11px; letter-spacing: 0.15em; transition: color .2s, background .2s; white-space: nowrap; }
-.viewtoggle button:last-child { border-right: 0; }
+.viewtoggle button:last-child, .viewtoggle a { border-right: 0; }
+.viewtoggle a { color: var(--dim); padding: 9px 16px; font-size: 11px; letter-spacing: 0.15em; white-space: nowrap; text-decoration: none; border-left: 1px solid var(--line); transition: color .2s; }
+.viewtoggle a:hover { color: var(--txt); }
 .viewtoggle button:hover { color: var(--txt); }
 .viewtoggle button.on { color: #00141c; background: var(--cyan); box-shadow: 0 0 18px var(--cyan-glow); font-weight: 700; }
 .hdr-right { display: flex; align-items: center; gap: 14px; flex: none; }
@@ -203,6 +205,14 @@ option { background: #05080c; color: var(--txt); }
 .tk-fate { font-size: 9px; letter-spacing: .14em; padding: 2px 6px; border: 1px solid var(--line2); white-space: nowrap; color: var(--dim); }
 .tk-fate.ok { color: var(--green); border-color: rgba(53,240,160,.5); } .tk-fate.bad { color: var(--red); border-color: rgba(255,61,85,.55); } .tk-fate.warn { color: var(--amber); border-color: rgba(255,194,61,.55); }
 .tk-fate.go { color: var(--cyan); border-color: rgba(63,215,255,.5); } .tk-fate.live { color: #fff; background: var(--red); border-color: var(--red); animation: btBlink 1.4s steps(2) infinite; }
+.tk-years { display: flex; align-items: flex-end; gap: 6px; height: 110px; padding: 10px 12px 0; margin-bottom: 12px; background: var(--panel); border: 1px solid var(--line); }
+.tk-years button { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; height: 100%; background: none; border: 0; padding: 0; color: var(--dim); font-size: 9px; letter-spacing: .1em; min-width: 0; }
+.tk-years button i { display: block; background: var(--cyan); opacity: .75; min-height: 1px; } .tk-years button i.g { background: #b4566a; }
+.tk-years button em { font-style: normal; color: var(--txt); font-size: 9.5px; margin-bottom: 3px; } .tk-years button span { padding: 4px 0 6px; }
+.tk-years button.on span { color: var(--cyan); } .tk-years button.on i { opacity: 1; box-shadow: 0 0 10px rgba(63,215,255,.4); }
+.tk-rk.ss { background: var(--orange); color: #000; }
+.tk-up { display: inline-block; width: 60px; height: 5px; background: rgba(180,86,106,.6); vertical-align: middle; margin-left: 6px; } .tk-up i { display: block; height: 100%; background: var(--green); }
+.tk-tbl tr.hl td { background: rgba(255,138,42,.10); } .tk-tbl tr.hl td:first-child { box-shadow: inset 2px 0 0 var(--orange); }
 .tk-rk { font-size: 9px; font-weight: 700; letter-spacing: .1em; padding: 2px 5px; background: #e9eef2; color: #0a0f14; } .tk-rk.fh { background: var(--amber); }
 .tk-fhead { display: flex; flex-direction: column; gap: 2px; margin-right: auto; }
 .tk-fhead b { font-family: var(--head); font-size: 16px; letter-spacing: .14em; } .tk-fhead span { font-size: 9.5px; letter-spacing: .14em; color: var(--dim); }
@@ -374,7 +384,7 @@ svg .e.on { fill: var(--orange); stroke: #ffd2a8; filter: drop-shadow(0 0 0.35px
 .seg button.on { color: var(--orange); box-shadow: inset 0 -2px 0 var(--orange); }
 .cp-sep { display: flex; border-left: 1px solid var(--line2); }
 .campresets .cp-sep button.on { color: var(--amber); box-shadow: inset 0 -2px 0 var(--amber); }
-.campresets #guidesBtn.on { color: var(--cyan); box-shadow: inset 0 -2px 0 var(--cyan); }
+.campresets #guidesBtn.on, .campresets #starlinkBtn.on { color: var(--cyan); box-shadow: inset 0 -2px 0 var(--cyan); }
 .iconbtn { background: transparent; border: 1px solid var(--line2); color: var(--dim); height: 31px; padding: 0 9px; display: grid; place-items: center; flex: none; }
 .iconbtn:hover { color: var(--cyan); border-color: var(--cyan); }
 .iconbtn svg { width: 13px; height: 13px; fill: currentColor; }
@@ -479,10 +489,11 @@ svg .e.on { fill: var(--orange); stroke: #ffd2a8; filter: drop-shadow(0 0 0.35px
 @media (max-width: 1360px) { .flight-sel > span { display: none; } .api span { display: none; } }
 @media (max-width: 1280px) { .side { display: none; } .viewtoggle button { padding: 9px 11px; } }
 @media (max-width: 1100px) { .brand-sub { display: none; } .view-split #stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); } .view-split #videoWrap { border-left: 0; border-top: 1px solid var(--line); } .view-split .telem { display: none; } }
-@media (max-width: 1180px) {
+/* title + view buttons + flight picker need ~1,560 px on one line; below that the view buttons get their own row */
+@media (max-width: 1560px) {
   .topbar { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px 12px; }
   .viewtoggle { order: 3; margin: 0; width: 100%; }
-  .viewtoggle button { flex: 1; padding: 8px 4px; font-size: 10px; letter-spacing: .08em; }
+  .viewtoggle button, .viewtoggle a { flex: 1; padding: 8px 4px; font-size: 10px; letter-spacing: .08em; text-align: center; }
   .hdr-right { margin-left: auto; gap: 10px; }
 }
 @media (max-width: 860px) {
@@ -568,6 +579,7 @@ setTimeout(function () {
       <button data-view="split">SPLIT VIEW</button>
       <button data-view="custom">CUSTOM</button>
       <button data-view="fleet" title="Fleet, payloads and Florida Falcon launches (F)">FLEET<span class="fdot" id="falconDot" hidden></span></button>
+      <a href="http://localhost:3100/engines" title="Raptor engine twin and the 33-engine test stand (the Next.js app on port 3100)">ENGINES ↗</a>
     </nav>
     <div class="hdr-right">
       <label class="flight-sel"><span>FLIGHT</span><select id="flightSelect" aria-label="Select flight"></select></label>
@@ -599,6 +611,7 @@ setTimeout(function () {
         <button data-cam="pad">STARBASE PAD</button>
         <span class="cp-sep" id="lightSeg" title="Lighting (L): the real sun for the mission time, or force day or night where you are looking"><button data-light="real">REAL SUN</button><button data-light="day">&#9728; DAY</button><button data-light="night">&#9790; NIGHT</button></span>
         <span class="cp-sep"><button id="guidesBtn" title="Show or hide the guides: flight paths, ground track, landing zones and the grid (H)">GUIDES</button></span>
+        <span class="cp-sep"><button id="starlinkBtn" title="Show every Starlink in orbit, where it really is right now (K)">ALL STARLINKS</button></span>
       </div>
       <div class="rcol">
       <aside class="panel maps" id="mapsPanel">
@@ -637,7 +650,7 @@ setTimeout(function () {
 
     <section id="fleetWrap">
       <div class="tk-top"><span class="ttl">FLEET</span>
-        <nav id="tkTabs" aria-label="Tracker"><button data-tab="fleet" class="on">PROTOTYPES</button><button data-tab="payloads">PAYLOADS</button><button data-tab="falcon">FALCON · FLORIDA</button></nav>
+        <nav id="tkTabs" aria-label="Tracker"><button data-tab="fleet" class="on">PROTOTYPES</button><button data-tab="payloads">PAYLOADS</button><button data-tab="falcon">FALCON · FLORIDA</button><button data-tab="starlink">STARLINK · ALL</button></nav>
       </div>
       <div id="tkBody"></div>
     </section>
@@ -67712,12 +67725,13 @@ function camOffset(mode) {
   if (hop && (mode === 'pad' || mode === 'landing')) // from the north: the orbital towers stand south of the suborbital pads
     return new V3().copy(siteFrame.east).multiplyScalar(-0.35).addScaledVector(siteFrame.north, 0.9).addScaledVector(siteFrame.up, 0.22).normalize().multiplyScalar(1.35 * fit);
   if (mode === 'pad' || mode === 'landing') return new V3().copy(siteFrame.east).multiplyScalar(0.55).addScaledVector(siteFrame.north, -0.85).addScaledVector(siteFrame.up, 0.3).normalize().multiplyScalar(1.55 * fit * near);
+  if (cam.look) return new V3().copy(cam.look).multiplyScalar(320); // a direction asked for, e.g. a Starlink batch
   const d = new V3().copy(siteFrame.up).multiplyScalar(0.7).addScaledVector(shipFrame.up, 0.3).normalize();
   d.applyAxisAngle(new V3(0, 1, 0), 0.5).y += 0.18;
   return d.normalize().multiplyScalar(320);
 }
-function setCamMode(mode) {
-  cam.mode = mode;
+function setCamMode(mode, look = null) {
+  cam.mode = mode; cam.look = look;
   document.querySelectorAll('#camPresets button[data-cam]').forEach((b) => b.classList.toggle('on', b.dataset.cam === (CAM_BUTTON[mode] || mode)));
   cam.tween = { t0: performance.now(), dur: 1500, fromT: controls.target.clone(), fromO: camera.position.clone().sub(controls.target), toO: camOffset(mode) };
   controls.enabled = false;
@@ -68395,21 +68409,32 @@ async function loadRealtime(F) {
     const cacheKey = `sft-gp-${F.intdes}`;
     let data = null;
     try { const c = JSON.parse(localStorage.getItem(cacheKey) || 'null'); if (c && Date.now() - c.ts < 2 * 3600e3) data = c.data; } catch { data = null; }
+    let mirror = null;
     if (!data) {
-      const r = await fetch(`https://celestrak.org/NORAD/elements/gp.php?INTDES=${encodeURIComponent(F.intdes)}&FORMAT=json`);
-      if (!r.ok) throw new Error(r.status === 404 ? 'not catalogued yet' : `HTTP ${r.status}`);
-      data = await r.json();
-      try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data })); } catch { /* storage full */ }
+      try {
+        if (ctBlocked()) throw ctBlockedErr();
+        const r = await fetch(`https://celestrak.org/NORAD/elements/gp.php?INTDES=${encodeURIComponent(F.intdes)}&FORMAT=json`);
+        if (r.status === 403) { try { localStorage.setItem('sft.ctBlocked', Date.now()); } catch {} throw ctBlockedErr(); }
+        if (!r.ok) throw new Error(r.status === 404 ? 'not catalogued yet' : `HTTP ${r.status}`);
+        data = await r.json();
+        try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data })); } catch { /* storage full */ }
+      } catch (e) { // CelesTrak blocked or down: this launch's Starlinks from the whole-constellation elements
+        if (/not catalogued/.test(e.message)) throw e;
+        slAll.sat ??= rt.sat;
+        mirror = slParse((await slElements()).text).filter((o) => o.cospar === F.intdes);
+        if (!mirror.length) throw e;
+      }
     }
     if (rt.key !== F.key) return;
-    rt.recs = data.map((o) => ({ name: o.OBJECT_NAME, satrec: rt.sat.json2satrec(o), pos: new V3(), up: false })).filter((o) => o.satrec);
+    rt.recs = mirror ? mirror.map((o) => ({ name: o.name, satrec: o.satrec, pos: new V3(), up: false }))
+      : data.map((o) => ({ name: o.OBJECT_NAME, satrec: rt.sat.json2satrec(o), pos: new V3(), up: false })).filter((o) => o.satrec);
     rt.ship = rt.recs.find((o) => !/STARLINK/i.test(o.name)) || null;
     const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(rt.recs.length * 3), 3));
     rt.pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xa6f4ff, size: 10, sizeAttenuation: false, map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
     rt.pts.frustumCulled = false; rt.group.add(rt.pts);
     const nSl = rt.recs.filter((o) => /STARLINK/i.test(o.name)).length;
     labels.rt.txt.firstChild.textContent = nSl ? `${nSl} × STARLINK · REAL POSITION NOW` : `${rt.recs.length} OBJECTS · NOW`;
-    rt.src = `CELESTRAK · ${F.intdes} · ${rt.recs.length} OBJECT${rt.recs.length === 1 ? '' : 'S'}${rt.ship ? ` · ${rt.ship.name}` : ''}`;
+    rt.src = `${mirror ? 'CELESTRAK COPY (MIRROR)' : 'CELESTRAK'} · ${F.intdes} · ${rt.recs.length} OBJECT${rt.recs.length === 1 ? '' : 'S'}${rt.ship ? ` · ${rt.ship.name}` : ''}`;
     updateRealtime(true);
   } catch (e) { if (rt.key === F.key) rt.src = `CELESTRAK · ${F.intdes} · ${e.message}`; }
   renderLiveBox();
@@ -68436,6 +68461,240 @@ function updateRealtime(force = false) {
   labels.rtShip.show = !!rt.ship?.up;
   if (rt.ship?.up) { labels.rtShip.pos.copy(rt.ship.pos); labels.rtShip.txt.firstChild.textContent = `${rt.ship.name} · NOW`; }
 }
+
+/* whole Starlink constellation: every Starlink still in orbit, drawn where it really is now (CelesTrak GP
+   elements in OMM CSV — TLEs cannot hold catalogue numbers above 99999 — propagated with SGP4), coloured by
+   shell; the CelesTrak catalogue adds how many were ever launched and how many have re-entered. CelesTrak
+   refreshes elements every 2 h and blocks connections that download more often, so both are cached. */
+const SL_SHELLS = [ // by inclination, degrees
+  { max: 38, color: 0xc58cff, name: '≈30°' },
+  { max: 48, color: 0xeaf6ff, name: '43°' },
+  { max: 60, color: 0x4fd8ff, name: '53°' },
+  { max: 80, color: 0x5dff9b, name: '70°' },
+  { max: 180, color: 0xffb547, name: 'polar 97°' },
+];
+const slAll = { on: false, pts: null, hlPts: null, recs: [], drawn: null, via: '', sat: null, src: '', loading: false, cursor: 0, counts: null, cat: null, hl: null, hlIdx: [], yr: 'all', label: makeLabel('rt', 'STARLINK') };
+labels.slAll = slAll.label; slAll.label.show = false;
+scene.add(slAll.group = new THREE.Group());
+try { if (localStorage.getItem('sft.starlinks') === 'on') slAll.on = true; localStorage.removeItem('sft.slSatcat'); /* older counts-only copy */ } catch {}
+function cachedText(key, maxAge) {
+  try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && (!maxAge || Date.now() - c.ts < maxAge)) return c; } catch {}
+  return null;
+}
+function csvRows(text) {
+  const lines = text.trim().split(/\r?\n/), split = (l) => l.includes('"') ? (l.match(/("([^"]|"")*"|[^,]*)(,|$)/g) || []).map((s) => s.replace(/,$/, '').replace(/^"|"$/g, '').replace(/""/g, '"')) : l.split(',');
+  const head = split(lines[0]);
+  return lines.slice(1).map((l) => { const v = split(l), o = {}; head.forEach((h, i) => { o[h] = v[i]; }); return o; });
+}
+// a 403 means CelesTrak blocked this connection; it lifts after 2 h without downloads, so asking sooner only extends it
+const ctBlockedAt = () => { try { return +localStorage.getItem('sft.ctBlocked') || 0; } catch { return 0; } };
+const ctBlocked = () => Date.now() - ctBlockedAt() < 2 * 3600e3;
+const ctBlockedErr = () => new Error(`CelesTrak has paused downloads from this connection until ${new Date(ctBlockedAt() + 2 * 3600e3).toTimeString().slice(0, 5)}`);
+async function slFetch(url, key, maxAge, staleOk, valid = /^OBJECT_/) {
+  const fresh = cachedText(key, maxAge);
+  if (fresh) return fresh;
+  try {
+    const gated = url.includes('/NORAD/elements/'); // the block covers the element files, not the catalogue
+    if (gated && ctBlocked()) throw ctBlockedErr();
+    const r = await fetch(url, { signal: AbortSignal.timeout(20000) }); // CelesTrak sometimes stops answering instead of refusing
+    if (r.status === 403 && gated) { try { localStorage.setItem('sft.ctBlocked', Date.now()); } catch {} throw ctBlockedErr(); }
+    if (!r.ok) throw new Error(`${gated || url.includes('celestrak') ? 'CelesTrak' : 'mirror'} HTTP ${r.status}`);
+    const text = (await r.text()).replace(/\r/g, '').replace(/[ \t]+$/gm, '');
+    if (!valid.test(text)) throw new Error('the server sent something unexpected');
+    const c = { ts: Date.now(), text };
+    try { localStorage.setItem(key, JSON.stringify(c)); } catch { /* storage full */ }
+    return c;
+  } catch (e) {
+    const old = staleOk && cachedText(key, 0);
+    if (old) return { ...old, stale: e.message };
+    throw e;
+  }
+}
+// CelesTrak's own copy first; while it has this connection blocked, a daily copy of its Starlink TLEs
+const SL_MIRROR = 'https://huggingface.co/datasets/juliensimon/starlink-tle-latest/resolve/main/data/starlink.tle';
+async function slElements() {
+  const fresh = cachedText('sft.slGp', 2 * 3600e3) || cachedText('sft.slTle', 3 * 3600e3);
+  if (fresh) return fresh;
+  let why = '';
+  if (!ctBlocked()) {
+    try { return await slFetch('https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=csv', 'sft.slGp', 2 * 3600e3, false); }
+    catch (e) { why = e instanceof TypeError ? 'could not reach CelesTrak' : e.message; }
+  } else why = ctBlockedErr().message;
+  try { return { ...(await slFetch(SL_MIRROR, 'sft.slTle', 3 * 3600e3, false, /^\S.*\n1 /)), why }; }
+  catch (e) {
+    const old = cachedText('sft.slGp', 0) || cachedText('sft.slTle', 0);
+    if (old) return { ...old, stale: why || e.message };
+    throw new Error(`${why || 'CelesTrak unavailable'} · mirror: ${e instanceof TypeError ? 'unreachable' : e.message}`);
+  }
+}
+// COSPAR launch id ("2019-074") from a TLE's international designator ("19074B")
+const tleCospar = (s) => { const yy = +s.slice(0, 2); return `${yy < 57 ? 2000 + yy : 1900 + yy}-${s.slice(2, 5)}`; };
+function slParse(text) {
+  const sat = slAll.sat;
+  if (/^OBJECT_/.test(text)) {
+    const keepStr = new Set(['OBJECT_NAME', 'OBJECT_ID', 'EPOCH', 'CLASSIFICATION_TYPE']);
+    return csvRows(text).map((o) => {
+      for (const k in o) if (!keepStr.has(k)) o[k] = Number(o[k]);
+      let satrec = null; try { satrec = sat.json2satrec(o); } catch {}
+      return satrec && !satrec.error ? { name: o.OBJECT_NAME, cospar: (o.OBJECT_ID || '').slice(0, 8), satrec, incl: o.INCLINATION } : null;
+    }).filter(Boolean);
+  }
+  const L = text.split(/\r?\n/), out = [];
+  for (let i = 0; i < L.length - 1; i++) {
+    if (!L[i].startsWith('1 ') || !L[i + 1].startsWith('2 ')) continue;
+    let satrec = null; try { satrec = sat.twoline2satrec(L[i], L[i + 1]); } catch {}
+    if (satrec && !satrec.error) out.push({ name: (L[i - 1] || '').replace(/^0 /, '').trim(), cospar: tleCospar(L[i].slice(9, 17).trim()), satrec, incl: parseFloat(L[i + 1].slice(8, 16)) });
+    i++;
+  }
+  return out;
+}
+// the catalogue: every Starlink ever launched, grouped by launch (COSPAR id), with how many are still up
+const SL_SITES = { AFETR: 'FLORIDA', AFWTR: 'VANDENBERG', STARB: 'STARBASE' };
+// CelesTrak's catalogue first; while CelesTrak has this connection blocked, a daily copy of the Space-Track
+// catalogue (Parquet, read with hyparquet). Either way only the few columns used here are kept and cached.
+const SL_CAT_COLS = ['OBJECT_TYPE', 'OBJECT_ID', 'LAUNCH_DATE', 'LAUNCH_SITE', 'DECAY_DATE', 'INCLINATION'];
+const SL_CAT_MIRROR = 'https://huggingface.co/datasets/juliensimon/space-track-satcat/resolve/main/data/satcat.parquet';
+async function slCatalogText() {
+  const fresh = cachedText('sft.slSatcat2', 24 * 3600e3);
+  if (fresh) return fresh;
+  let why = '';
+  if (!ctBlocked()) {
+    try { const c = await slFetch('https://celestrak.org/satcat/records.php?NAME=STARLINK&FORMAT=csv', 'sft.slSatcat2', 24 * 3600e3, false); return { ...c, via: 'CELESTRAK' }; }
+    catch (e) { why = e instanceof TypeError ? 'could not reach CelesTrak' : e.message; }
+  } else why = ctBlockedErr().message;
+  try {
+    const [hp, hc] = await Promise.all([import('https://cdn.jsdelivr.net/npm/hyparquet@1.25.0/+esm'), import('https://cdn.jsdelivr.net/npm/hyparquet-compressors@1.1.1/+esm')]);
+    const r = await fetch(SL_CAT_MIRROR, { signal: AbortSignal.timeout(30000) });
+    if (!r.ok) throw new Error(`mirror HTTP ${r.status}`);
+    const rows = await hp.parquetReadObjects({ file: await r.arrayBuffer(), compressors: hc.compressors, columns: ['object_name', 'intl_designator', 'object_type', 'launch_date', 'launch_site', 'decay_date', 'inclination'] });
+    const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : '');
+    const pay = rows.filter((o) => o.object_type === 'PAY' && /^STARLINK/.test(o.object_name || ''));
+    if (!pay.length) throw new Error('mirror has no Starlinks');
+    return { ts: Date.now(), via: 'SPACE-TRACK COPY (DAILY MIRROR)', why, text: SL_CAT_COLS.join(',') + '\n' + pay.map((o) => ['PAY', o.intl_designator, day(o.launch_date), o.launch_site || '', day(o.decay_date), o.inclination ?? ''].join(',')).join('\n') };
+  } catch (e) {
+    const old = cachedText('sft.slSatcat2', 0);
+    if (old) return { ...old, stale: why || e.message };
+    throw new Error(`${why || 'CelesTrak unavailable'} · mirror: ${e instanceof TypeError ? 'unreachable' : e.message}`);
+  }
+}
+function loadSlCatalog() {
+  if (slAll.cat || slAll.catBusy || Date.now() - (slAll.catFail || 0) < 600e3) return;
+  slAll.catBusy = true;
+  slCatalogText().then((c) => {
+    const pay = csvRows(c.text).filter((o) => o.OBJECT_TYPE === 'PAY' && o.OBJECT_ID);
+    try { localStorage.setItem('sft.slSatcat2', JSON.stringify({ ts: c.ts, via: c.via, text: SL_CAT_COLS.join(',') + '\n' + pay.map((o) => SL_CAT_COLS.map((k) => o[k] || '').join(',')).join('\n') })); } catch {}
+    const byL = new Map();
+    for (const o of pay) {
+      const id = o.OBJECT_ID.slice(0, 8);
+      if (!byL.has(id)) byL.set(id, { id, date: o.LAUNCH_DATE, site: o.LAUNCH_SITE, n: 0, gone: 0, incl: [] });
+      const g = byL.get(id); g.n++; if (o.DECAY_DATE) g.gone++; else if (+o.INCLINATION) g.incl.push(+o.INCLINATION);
+    }
+    const ships = state.flights.filter((F) => F.payload && /Starlink V3/i.test(F.payload.kind) && F.orbital);
+    slAll.cat = [...byL.values()].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id)).map((g, i) => {
+      g.no = i + 1; g.up = g.n - g.gone;
+      g.incl = g.incl.length ? g.incl.sort((a, b) => a - b)[g.incl.length >> 1] : null;
+      g.starship = g.site === 'STARB' || ships.some((F) => F.intdes === g.id || F.net.slice(0, 10) === g.date);
+      return g;
+    });
+    slAll.counts = { launched: pay.length, reentered: pay.filter((o) => o.DECAY_DATE).length, up: pay.filter((o) => !o.DECAY_DATE).length };
+    slAll.catTs = c.ts; slAll.catVia = c.via || 'CELESTRAK'; slAll.catErr = c.stale ? `OLD COPY (${c.stale})` : '';
+  }).catch((e) => { slAll.catFail = Date.now(); slAll.catErr = e instanceof TypeError ? 'could not reach CelesTrak' : e.message; })
+    .finally(() => { slAll.catBusy = false; if (slAll.catFail) slCatFromRecs(); trk.ver++; renderLiveBox(); });
+}
+// without the catalogue (CelesTrak unreachable), list launches from the elements: satellites still in orbit only
+function slCatFromRecs() {
+  if (slAll.cat || !slAll.recs.length) return;
+  const byL = new Map();
+  for (const o of slAll.recs) { if (!byL.has(o.cospar)) byL.set(o.cospar, { id: o.cospar, date: o.cospar.slice(0, 4), site: '', n: 0, gone: 0, incl: [] }); const g = byL.get(o.cospar); g.n++; g.incl.push(o.incl); }
+  slAll.cat = [...byL.values()].sort((a, b) => a.id.localeCompare(b.id)).map((g, i) => ({ ...g, no: i + 1, up: g.n, incl: g.incl.sort((a, b) => a - b)[g.incl.length >> 1], starship: false }));
+  slAll.counts = { launched: slAll.recs.length, up: slAll.recs.length, reentered: 0 };
+  slAll.catErr = `catalogue unreachable (${slAll.catErr || 'CelesTrak'}) · showing satellites still in orbit only`;
+  trk.ver++;
+}
+async function loadStarlinks() {
+  loadSlCatalog();
+  if (slAll.loading || slAll.pts || Date.now() - (slAll.failAt || 0) < 600e3) return; // after a failure, wait 10 min before asking again
+  slAll.loading = true; slAll.src = 'LOADING'; renderLiveBox();
+  try {
+    slAll.sat ??= rt.sat ??= await import('https://cdn.jsdelivr.net/npm/satellite.js@6.0.0/dist/satellite.es.js');
+    const c = await slElements();
+    slAll.recs = slParse(c.text);
+    if (!slAll.recs.length) throw new Error('no usable elements');
+    slAll.drawn = new Map(); for (const o of slAll.recs) slAll.drawn.set(o.cospar, (slAll.drawn.get(o.cospar) || 0) + 1);
+    slAll.via = /^OBJECT_/.test(c.text) ? 'celestrak' : 'mirror';
+    const n = slAll.recs.length, geo = new THREE.BufferGeometry(), col = new Float32Array(n * 3), cc = new THREE.Color();
+    slAll.recs.forEach((o, i) => { cc.setHex((SL_SHELLS.find((s) => o.incl <= s.max) || SL_SHELLS[2]).color); col.set([cc.r, cc.g, cc.b], i * 3); });
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    slAll.pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 4, sizeAttenuation: false, vertexColors: true, map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    slAll.pts.frustumCulled = false; slAll.pts.visible = slAll.on; slAll.group.add(slAll.pts);
+    const hg = new THREE.BufferGeometry(); hg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3 * 64), 3)); hg.setDrawRange(0, 0);
+    slAll.hlPts = new THREE.Points(hg, new THREE.PointsMaterial({ color: 0xff8a2a, size: 11, sizeAttenuation: false, map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    slAll.hlPts.frustumCulled = false; slAll.group.add(slAll.hlPts);
+    slHighlight(slAll.hl);
+    slAll.cursor = 0; for (let k = 0; k < 8; k++) updateStarlinks(); // a full first pass before showing
+    if (slAll.lookPending && cam.mode === 'global' && slAll.hlIdx.length) setCamMode('global', slCentroid());
+    slAll.lookPending = false;
+    const via = /^OBJECT_/.test(c.text) ? 'CELESTRAK' : 'CELESTRAK COPY (DAILY MIRROR)';
+    slAll.src = `${fmtN(n)} IN ORBIT · ${via} · ELEMENTS ${new Date(c.ts).toISOString().slice(11, 16)} UTC${c.stale ? ` (OLD COPY · ${c.stale})` : c.why ? ` · ${c.why}` : ''}`;
+    slAll.label.txt.firstChild.textContent = `${fmtN(n)} STARLINKS · NOW`;
+  } catch (e) { slAll.failAt = Date.now(); slAll.src = e instanceof TypeError ? 'could not reach the element servers' : e.message; }
+  slAll.loading = false; if (slAll.catFail) slCatFromRecs(); renderLiveBox(); trk.ver++;
+}
+// unit vector to the middle of the highlighted batch (they fly in a train, so this faces the camera at them)
+function slCentroid() {
+  const a = slAll.pts.geometry.attributes.position.array, c = new V3();
+  for (const i of slAll.hlIdx) c.x += a[i * 3], c.y += a[i * 3 + 1], c.z += a[i * 3 + 2];
+  return c.lengthSq() ? c.normalize() : null;
+}
+// light up one launch's satellites (orange, larger) and dim the rest
+function slHighlight(id) {
+  slAll.hl = id || null; slAll.hlIdx = [];
+  if (slAll.pts) {
+    if (slAll.hl) slAll.recs.forEach((o, i) => { if (o.cospar === slAll.hl) slAll.hlIdx.push(i); });
+    if (slAll.hlIdx.length * 3 > slAll.hlPts.geometry.attributes.position.array.length)
+      slAll.hlPts.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(slAll.hlIdx.length * 3), 3));
+    slAll.hlPts.geometry.setDrawRange(0, slAll.hlIdx.length);
+    slAll.pts.material.opacity = slAll.hl ? 0.3 : 1;
+    slAll.hlPts.visible = slAll.on && !!slAll.hl;
+  }
+  const g = slAll.cat?.find((x) => x.id === slAll.hl);
+  slAll.label.txt.firstChild.textContent = slAll.hl
+    ? `STARLINK LAUNCH ${slAll.hl}${g ? ` · ${g.date}` : ''} · ${slAll.hlIdx.length} SHOWN`
+    : `${fmtN(slAll.recs.length)} STARLINKS · NOW`;
+  trk.ver++; renderLiveBox();
+}
+// SGP4 for ~11,000 satellites is too much for one frame, so each frame moves the next slice; a full sweep takes about a second
+function updateStarlinks() {
+  if (!slAll.on || !slAll.pts) return;
+  const recs = slAll.recs, n = recs.length, step = Math.ceil(n / 8), arr = slAll.pts.geometry.attributes.position.array;
+  const date = new Date(), gmst = slAll.sat.gstime(date), lead = slAll.hlIdx.length ? slAll.hlIdx[0] : 0;
+  for (let k = 0; k < step; k++) {
+    const i = slAll.cursor, o = recs[i];
+    slAll.cursor = (i + 1) % n;
+    const pv = slAll.sat.propagate(o.satrec, date);
+    if (!pv || !pv.position || typeof pv.position !== 'object') { arr[i * 3] = arr[i * 3 + 1] = arr[i * 3 + 2] = 0; continue; } // decayed / bad elements
+    const gd = slAll.sat.eciToGeodetic(pv.position, gmst);
+    llToVec(gd.latitude / DEG, gd.longitude / DEG, EARTH_R + visAlt(gd.height), _rt);
+    arr[i * 3] = _rt.x; arr[i * 3 + 1] = _rt.y; arr[i * 3 + 2] = _rt.z;
+    if (i === lead) { slAll.label.pos.copy(_rt); slAll.label.small.textContent = ` ${gd.height.toFixed(0)} KM`; }
+  }
+  slAll.pts.geometry.attributes.position.needsUpdate = true;
+  if (slAll.hlIdx.length) {
+    const h = slAll.hlPts.geometry.attributes.position;
+    slAll.hlIdx.forEach((i, j) => { h.array[j * 3] = arr[i * 3]; h.array[j * 3 + 1] = arr[i * 3 + 1]; h.array[j * 3 + 2] = arr[i * 3 + 2]; });
+    h.needsUpdate = true;
+  }
+}
+function setStarlinks(on) {
+  slAll.on = on;
+  $('#starlinkBtn').classList.toggle('on', on);
+  slAll.label.show = on && !!slAll.pts;
+  if (slAll.pts) { slAll.pts.visible = on; slAll.hlPts.visible = on && !!slAll.hl; }
+  if (on) loadStarlinks().then(() => { slAll.label.show = slAll.on && !!slAll.pts; });
+  try { localStorage.setItem('sft.starlinks', on ? 'on' : 'off'); } catch {}
+  renderLiveBox();
+}
 function renderLiveBox() {
   const el = document.getElementById('liveBox'), F = state.F;
   if (!el || !F) return;
@@ -68447,6 +68706,13 @@ function renderLiveBox() {
     lines.push('Ascent and landing positions are modelled — there is no public live telemetry feed.');
   }
   if (rt.src) lines.push(`REAL POSITIONS · ${esc(rt.src)}`);
+  if (slAll.on) {
+    const k = slAll.counts;
+    lines.push(`ALL STARLINKS · ${esc(slAll.src)}${k ? `<br>${fmtN(k.launched)} launched on ${fmtN(slAll.cat.length)} launches · ${fmtN(k.up)} still in orbit · ${fmtN(k.reentered)} re-entered and burned up` : ''}`);
+    lines.push(SL_SHELLS.map((s) => `<span style="color:#${s.color.toString(16).padStart(6, '0')}">●</span> ${s.name}`).join(' &nbsp;') + ` &nbsp;<a href="#" data-sllist>EVERY LAUNCH ›</a>`);
+    if (slAll.hl) { const g = slAll.cat?.find((x) => x.id === slAll.hl);
+      lines.push(`<span style="color:#ff8a2a">●</span> LAUNCH ${esc(slAll.hl)}${g ? ` · ${g.date}` : ''} · ${slAll.pts && !slAll.hlIdx.length && g?.up ? `${g.up} still in orbit, but ${slAll.via === 'mirror' ? 'the backup orbit data does not include satellites this new yet (they return when CelesTrak unblocks)' : 'no orbit data has been published for them yet'}` : `${slAll.hlIdx.length} satellite${slAll.hlIdx.length === 1 ? '' : 's'} shown where they are now`} <a href="#" data-slclear>CLEAR</a>`); }
+  }
   el.innerHTML = lines.length ? `<div class="mline"><b>TRACKING</b><span>${lines.join('<br>')}</span></div>` : '';
 }
 
@@ -68504,6 +68770,7 @@ window.addEventListener('keydown', (e) => {
   else if (/^[1-5]$/.test(e.key)) setSpeed([1, 5, 20, 100, 1000][+e.key - 1]);
   else if (e.key.toLowerCase() === 'm') setSound(!sound.on);
   else if (e.key.toLowerCase() === 'h') setGuides(!guides.on);
+  else if (e.key.toLowerCase() === 'k') setStarlinks(!slAll.on);
   else if (e.key.toLowerCase() === 'l') setLight({ real: 'day', day: 'night', night: 'real' }[light.mode]);
   else if (e.key.toLowerCase() === 'g') setView('globe');
   else if (e.key.toLowerCase() === 'v') setView('video');
@@ -69791,17 +70058,51 @@ function renderFalcon(el, compact) {
     ${list.length ? `<div class="tk-tblwrap"><table class="tk-tbl"><thead><tr><th>DATE (UTC)</th><th></th><th>MISSION</th><th>PAD</th>${compact ? '' : '<th>BOOSTER → LANDING</th>'}<th>STATUS</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p class="tk-empty">No Falcon launches from Florida in ${esc(rangeName())}.</p>`}
     ${detail}`;
 }
+// every Starlink SpaceX has launched, one row per launch, from the CelesTrak satellite catalogue
+function renderStarlinkAll(el, compact) {
+  const cat = slAll.cat, k = slAll.counts;
+  const head = `<div class="tk-bar"><div class="tk-fhead"><b>EVERY STARLINK LAUNCH</b><span>ALL ${cat ? fmtN(cat.length) + ' LAUNCHES' : ''} SINCE MAY 2019 · ${esc(slAll.catVia || 'CELESTRAK')} SATELLITE CATALOGUE${slAll.catTs ? ` · ${new Date(slAll.catTs).toISOString().slice(0, 16).replace('T', ' ')} UTC` : ''}${slAll.catErr ? ` · ${esc(slAll.catErr)}` : ''}</span></div>
+    <button class="btn${slAll.on ? ' accent' : ''}" id="slShowAll" title="Every Starlink in orbit on the 3D globe, where it really is now">${slAll.on ? '● ' : ''}SHOW ALL IN 3D</button></div>`;
+  if (!cat) { el.innerHTML = `${head}<p class="tk-empty">${slAll.catBusy ? 'Loading the Starlink catalogue…' : esc(slAll.catErr || 'Not loaded yet.')}</p>`; return; }
+  const years = {}; cat.forEach((g) => { const y = g.date.slice(0, 4); (years[y] ??= { n: 0, gone: 0, l: 0 }); years[y].n += g.n; years[y].gone += g.gone; years[y].l++; });
+  const ymax = Math.max(...Object.values(years).map((y) => y.n));
+  const bars = `<div class="tk-years">${Object.entries(years).map(([y, v]) => `<button data-slyr="${y}" class="${slAll.yr === y ? 'on' : ''}" title="${y}: ${fmtN(v.n)} satellites on ${v.l} launches · ${fmtN(v.n - v.gone)} still in orbit · ${fmtN(v.gone)} re-entered"><em>${fmtN(v.n)}</em><i style="height:${((v.n - v.gone) / ymax * 70).toFixed(1)}px"></i><i class="g" style="height:${(v.gone / ymax * 70).toFixed(1)}px"></i><span>${y}</span></button>`).join('')}</div>`;
+  const tiles = compact ? '' : `<div class="tk-tiles">
+      <div><b>${fmtN(k.launched)}</b><span>Starlinks launched</span></div>
+      <div><b>${fmtN(k.up)}</b><span>still in orbit (catalogue)</span></div>
+      <div><b>${fmtN(k.reentered)}</b><span>re-entered and burned up</span></div>
+      <div><b>${fmtN(cat.length)}</b><span>launches carrying Starlinks</span></div>
+      <div><b>${slAll.pts ? fmtN(slAll.recs.length) : '—'}</b><span>drawn in 3D now (tracked)</span></div>
+    </div>`;
+  const named = new Map(); // mission names where the Florida Falcon list knows them
+  for (const L of trk.falcon.list || []) if (/Starlink/i.test(L.mission)) named.set(L.net.slice(0, 10), L.mission);
+  for (const F of state.flights) if (F.intdes) named.set(F.intdes, F.short);
+  const rows = cat.filter((g) => slAll.yr === 'all' || g.date.startsWith(slAll.yr)).slice().reverse();
+  let lastY = '';
+  const tr = rows.map((g) => {
+    const y = g.date.slice(0, 4), sep = y !== lastY && slAll.yr === 'all' ? `<tr class="tk-msep"><td colspan="${compact ? 5 : 9}">${y} · ${years[y].l} LAUNCHES · ${fmtN(years[y].n)} SATELLITES</td></tr>` : ''; lastY = y;
+    const name = named.get(g.id) || named.get(g.date) || '';
+    return `${sep}<tr data-sl="${g.id}" class="${slAll.hl === g.id ? 'hl' : ''}" title="${g.up ? 'Highlight these satellites on the globe' : 'All of this launch’s Starlinks have re-entered'}"><td>#${g.no}</td><td>${g.date}</td>
+      <td><span class="tk-rk${g.starship ? ' ss' : ''}">${g.starship ? 'STARSHIP' : 'F9'}</span></td>${compact ? '' : `<td><b>${g.id}</b>${name ? `<small>${esc(name)}</small>` : ''}</td><td>${esc(SL_SITES[g.site] || (g.starship ? 'STARBASE' : g.site || '—'))}</td>`}
+      <td><b>${g.n}</b></td><td>${g.up}<span class="tk-up" title="${g.up} of ${g.n} still in orbit"><i style="width:${(g.up / g.n * 100).toFixed(0)}%"></i></span>${slAll.drawn && g.up && (slAll.drawn.get(g.id) || 0) < g.up ? `<small title="Satellites with orbit data available to draw">${slAll.drawn.get(g.id) || 0} with orbit data</small>` : ''}</td>${compact ? '' : `<td>${g.incl != null ? `${g.incl.toFixed(1)}°` : '—'}</td>`}
+      <td>${g.up ? `<button class="btn" data-sl="${g.id}" data-go="1">SHOW IN 3D</button>` : '<span class="tk-fate bad">ALL RE-ENTERED</span>'}</td></tr>`;
+  }).join('');
+  el.innerHTML = `${head}${tiles}${bars}${slAll.yr !== 'all' ? `<div class="tk-bar"><span class="tk-upd">${slAll.yr} ONLY · <a href="#" data-slyr="${slAll.yr}">SHOW ALL YEARS</a></span></div>` : ''}
+    <div class="tk-tblwrap"><table class="tk-tbl"><thead><tr><th>#</th><th>LAUNCHED</th><th></th>${compact ? '' : '<th>COSPAR ID</th><th>SITE</th>'}<th>SATS</th><th>IN ORBIT</th>${compact ? '' : '<th>INCL.</th>'}<th></th></tr></thead><tbody>${tr}</tbody></table></div>
+    <p class="tk-src">Counts are every catalogued Starlink payload (CelesTrak SATCAT, or a daily copy of the Space-Track catalogue when CelesTrak is unreachable). Positions in 3D are SGP4 from the latest orbital elements: CelesTrak, or a daily copy of them while CelesTrak is rate-limiting this connection. Starlinks from very recent launches appear once they are catalogued; the backup copy of the orbit data leaves out satellites numbered above 69,999 (launched since June 2026), so those show only when CelesTrak itself is reachable.</p>`;
+}
 // countdown / T+ clocks tick without a re-render (keeps the webcast iframe alive)
 function trkTick(root) { const now = Date.now(); root.querySelectorAll('[data-clk]').forEach((s) => { s.textContent = fmtCount((now - +s.dataset.clk) / 1000); }); }
 function trkRender(kind, el, compact) {
   const sx = el.scrollTop;
-  ({ fleet: renderFleet, payloads: renderPayloads, falcon: renderFalcon })[kind](el, compact);
+  ({ fleet: renderFleet, payloads: renderPayloads, falcon: renderFalcon, starlink: renderStarlinkAll })[kind](el, compact);
   el.scrollTop = sx; el.dataset.v = `${trk.ver}:${kind}`;
 }
 // one click handler for the trackers wherever they are drawn (the FLEET view or a custom widget)
 function trkClick(e, rerender) {
-  const b = e.target.closest('button, [data-f], [data-fal], .tk-card');
+  const b = e.target.closest('button, a[data-slyr], [data-f], [data-fal], [data-sl], .tk-card');
   if (!b) return;
+  if (b.tagName === 'A') e.preventDefault();
   const rr = () => { trk.ver++; rerender(); }; // bump the version so every other tracker view redraws too
   if (b.dataset.filter) { trk.filter = b.dataset.filter; trkSave(); return rr(); }
   if (b.dataset.kind) { trk.kinds[b.dataset.kind] = !trk.kinds[b.dataset.kind]; trkSave(); return rr(); }
@@ -69810,6 +70111,15 @@ function trkClick(e, rerender) {
   if (b.dataset.watch) { // replay this Falcon launch on the 3D globe
     if (!(state.falconFlights || []).some((f) => f.key === `fal-${b.dataset.watch}`)) state.falconFlights = (trk.falcon.list || []).map(deriveFalcon);
     selectFlight(`fal-${b.dataset.watch}`); state.live = false; updateLiveBtn(); setView('globe'); setCamMode('pad'); return;
+  }
+  if (b.id === 'slShowAll') { slHighlight(null); setStarlinks(true); setView('globe'); setCamMode('global'); return; }
+  if (b.dataset.slyr) { slAll.yr = slAll.yr === b.dataset.slyr ? 'all' : b.dataset.slyr; return rr(); }
+  if (b.dataset.sl) { // every Starlink still up from this launch, highlighted on the 3D globe where they are now
+    const id = b.dataset.sl;
+    if (slAll.hl === id && !b.dataset.go) { slHighlight(null); return rr(); }
+    slHighlight(id); if (!slAll.on) setStarlinks(true);
+    if (b.dataset.go || e.target.closest('[data-go]')) { setView('globe'); setCamMode('global', slAll.hlIdx.length ? slCentroid() : null); slAll.lookPending = !slAll.pts; }
+    return rr();
   }
   if (b.dataset.frange) { trk.frange = b.dataset.frange; trk.falcon.sel = null; trkSave(); return rr(); }
   if (b.hasAttribute('data-refresh')) { fetchFalcon(true); return rr(); }
@@ -69824,6 +70134,7 @@ function setTrkTab(tab) {
   trk.tab = tab; trkSave();
   document.querySelectorAll('#tkTabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
   if (tab === 'falcon' && !trk.falcon.list && !trk.falcon.busy) fetchFalcon();
+  if (tab === 'starlink') loadStarlinks(); // catalogue + elements (dots stay hidden unless ALL STARLINKS is on)
   trkRender(tab, $('#tkBody'), false);
 }
 $('#tkTabs').addEventListener('click', (e) => { const b = e.target.closest('button[data-tab]'); if (b) setTrkTab(b.dataset.tab); });
@@ -69882,6 +70193,13 @@ function applyGuides() {
 }
 $('#guidesBtn').addEventListener('click', () => setGuides(!guides.on));
 setGuides(guides.on);
+$('#starlinkBtn').addEventListener('click', () => setStarlinks(!slAll.on));
+document.addEventListener('click', (e) => { // links in the TRACKING box
+  const a = e.target.closest('#liveBox a[data-sllist], #liveBox a[data-slclear]'); if (!a) return;
+  e.preventDefault();
+  if (a.hasAttribute('data-slclear')) slHighlight(null); else { setView('fleet'); setTrkTab('starlink'); }
+});
+setStarlinks(slAll.on);
 
 /* =========================================================================
    MAIN LOOP
@@ -69937,6 +70255,7 @@ function frame() {
   for (const e of fxList) e.update(t, time);
   fxLight.intensity = fxLightReq.i; if (fxLightReq.i > 0) fxLight.position.copy(fxLightReq.pos);
   updateRealtime();
+  updateStarlinks();
   if (state.live) pollLive();
   for (const o of oceans) { o.mat.uniforms.uTime.value = time; o.mat.uniforms.uVis.value = 1 - sstep(10, 40, camera.position.distanceTo(o.center)); }
 
@@ -69992,7 +70311,7 @@ cam.tween.dur = 10;
 frame();
 setTimeout(() => setCamMode('pad'), 900);
 { const d = new Date(); $('#utcClock').textContent = `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}:${pad2(d.getUTCSeconds())}`; }
-window.sft = { state, setTime, setPlaying, setSpeed, setCamMode, setView, selectFlight, telemetry, camera, carriers, bloom, frostMat, sunLight, models, pollLive, rt, live, cam, sound, maps, light, setLight, guides, setGuides, custom, drawMap, drawProfile, track: { trk, fetchFalcon, falconFrom, fleetBuild }, get controls() { return controls; } }; // console handle
+window.sft = { state, setTime, setPlaying, setSpeed, setCamMode, setView, selectFlight, telemetry, camera, carriers, bloom, frostMat, sunLight, models, pollLive, rt, live, cam, sound, maps, light, setLight, guides, setGuides, custom, drawMap, drawProfile, track: { trk, fetchFalcon, falconFrom, fleetBuild }, slAll, slHighlight, get controls() { return controls; } }; // console handle
 
 if (false && location.protocol === 'file:') {
   toast('Opened from <b>file://</b> — browsers block loading <code>starship.glb</code> and some YouTube embeds this way. In this folder run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000</code>.', 'warn', 12000);
