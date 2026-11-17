@@ -249,6 +249,17 @@ option { background: #05080c; color: var(--txt); }
     linear-gradient(var(--cyan), var(--cyan)) bottom right / 1px 12px no-repeat; }
 .panel h3 { margin: 0; padding: 9px 12px 7px; font-family: var(--head); font-weight: 600; font-size: 12px; letter-spacing: 0.26em; color: var(--dim); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
 .panel h3 em { font-style: normal; color: var(--cyan); font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; }
+.cutleg { left: 50%; bottom: 14px; transform: translateX(-50%); width: min(420px, calc(100% - 28px)); padding: 9px 12px 10px; font-size: 10.5px; z-index: 3; }
+.cutleg h4 { margin: 0 0 6px; font: 600 11px/1.2 var(--mono); letter-spacing: .18em; color: var(--cyan); display: flex; justify-content: space-between; gap: 10px; }
+.cutleg h4 em { font-style: normal; color: var(--dim); letter-spacing: .06em; font-weight: 400; font-size: 9.5px; }
+.cl-veh { margin: 7px 0 3px; font-size: 9.5px; letter-spacing: .2em; color: var(--dim); }
+.cl-row { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 1px 0; }
+.cl-row i { width: 10px; height: 10px; border-radius: 2px; }
+.cl-row span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cl-row em, .cl-pay em { font-style: normal; color: var(--dim); }
+.cl-row b { font-weight: 600; color: var(--txt); font-variant-numeric: tabular-nums; }
+.cl-pay { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--line); color: var(--txt); }
+.cl-pay b { color: var(--orange); font-weight: 600; }
 .telem { top: 14px; left: 14px; width: 300px; max-height: calc(100% - 28px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--dim2) transparent; }
 .side { top: 62px; right: 14px; width: 286px; max-height: calc(100% - 76px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--dim2) transparent; }
 .rcol { position: absolute; top: 62px; right: 14px; bottom: 40px; width: 286px; display: flex; flex-direction: column; gap: 10px; z-index: 2; pointer-events: none; }
@@ -384,7 +395,7 @@ svg .e.on { fill: var(--orange); stroke: #ffd2a8; filter: drop-shadow(0 0 0.35px
 .seg button.on { color: var(--orange); box-shadow: inset 0 -2px 0 var(--orange); }
 .cp-sep { display: flex; border-left: 1px solid var(--line2); }
 .campresets .cp-sep button.on { color: var(--amber); box-shadow: inset 0 -2px 0 var(--amber); }
-.campresets #guidesBtn.on, .campresets #starlinkBtn.on { color: var(--cyan); box-shadow: inset 0 -2px 0 var(--cyan); }
+.campresets #guidesBtn.on, .campresets #starlinkBtn.on, .campresets #cutBtn.on { color: var(--cyan); box-shadow: inset 0 -2px 0 var(--cyan); }
 .iconbtn { background: transparent; border: 1px solid var(--line2); color: var(--dim); height: 31px; padding: 0 9px; display: grid; place-items: center; flex: none; }
 .iconbtn:hover { color: var(--cyan); border-color: var(--cyan); }
 .iconbtn svg { width: 13px; height: 13px; fill: currentColor; }
@@ -451,9 +462,24 @@ svg .e.on { fill: var(--orange); stroke: #ffd2a8; filter: drop-shadow(0 0 0.35px
 .bt-scope { border-bottom: 1px solid var(--line); padding: 10px 14px 8px; }
 .bt-scope .cap, .bt-logcap { display: flex; justify-content: space-between; font-size: 9px; letter-spacing: .22em; color: var(--dim2); margin-bottom: 6px; }
 .bt-scope .cap b { color: var(--cyan); font-weight: 500; letter-spacing: .08em; }
-#btScope { display: block; width: 100%; height: 86px; }
+#boot::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 115%, rgba(255,123,28,.45), transparent 62%); opacity: var(--ign, 0); }
+.pc-wrap { position: relative; border: 1px solid var(--line); background: #02060b; }
+#btScope { display: block; width: 100%; height: 230px; cursor: pointer; }
+.pc-t, .pc-prop, .pc-call { position: absolute; pointer-events: none; text-shadow: 0 1px 3px #000, 0 0 8px #000; }
+.pc-t { left: 8px; top: 6px; font-size: 15px; font-weight: 700; letter-spacing: .08em; color: var(--txt); }
+.pc-t.hold { color: var(--amber); animation: btBlink 1s steps(2) infinite; }
+.pc-t.go { color: var(--orange); }
+.pc-prop { right: 8px; top: 8px; font-size: 9px; letter-spacing: .14em; color: var(--dim); }
+.pc-call { left: 8px; right: 8px; bottom: 6px; font-size: 9.5px; letter-spacing: .1em; color: var(--cyan); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-call.hold { color: var(--amber); } .pc-call.go { color: var(--orange); }
+.bt-facts { border-bottom: 1px solid var(--line); padding: 9px 14px 10px; }
+.bt-facts .cap { display: flex; justify-content: space-between; align-items: center; font-size: 9px; letter-spacing: .22em; color: var(--dim2); margin-bottom: 5px; }
+#btFactNext { background: none; border: 0; padding: 0; color: var(--dim); font: inherit; letter-spacing: .2em; cursor: pointer; }
+#btFactNext:hover, #btFactNext:focus-visible { color: var(--cyan); outline: none; }
+#btFact { margin: 0; font-size: 10.5px; line-height: 1.55; color: var(--txt); min-height: 4.65em; }
+#btFact::after { content: '▌'; color: var(--cyan); animation: btBlink 1s steps(2) infinite; }
 .bt-logwrap { padding: 10px 14px; min-height: 0; flex: 1; display: flex; flex-direction: column; }
-#btLog { flex: 1; min-height: 120px; max-height: 300px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; font-size: 10px; line-height: 1.65; color: var(--dim); }
+#btLog { flex: 1; min-height: 80px; max-height: 300px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; font-size: 10px; line-height: 1.65; color: var(--dim); }
 #btLog div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #btLog i { font-style: normal; color: var(--dim2); }
 #btLog b { font-weight: 500; color: var(--cyan); }
@@ -472,14 +498,18 @@ svg .e.on { fill: var(--orange); stroke: #ffd2a8; filter: drop-shadow(0 0 0.35px
   .bt-title { font-size: 16px; letter-spacing: .08em; }
   .bt-sub { font-size: 8.5px; letter-spacing: .14em; }
   .bt-row .st { min-width: 0; }
-  .bt-poll { border-right: 0; border-bottom: 1px solid var(--line); overflow: visible; }
+  .bt-poll { border-right: 0; border-top: 1px solid var(--line); overflow: visible; }
+  .bt-side { order: -1; min-height: auto; }
+  .bt-logwrap { flex: none; }
+  .bt-scope .cap span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; margin-right: 8px; }
   .bt-hr { display: none; }
   .bt-row { padding: 5px 12px; grid-template-columns: 38px minmax(0, 1fr) auto; }
   #btLog { max-height: 150px; min-height: 90px; }
+  #btScope { height: 190px; }
   .bt-foot { flex-wrap: wrap; }
   .bt-bar { flex-basis: 100%; order: -1; }
 }
-@media (prefers-reduced-motion: reduce) { .bt-row[data-s="run"] .st { animation: none; } #boot { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .bt-row[data-s="run"] .st, .pc-t.hold, #btFact::after { animation: none; } #boot { transition: none; } }
 
 /* ---------- responsive ---------- */
 .view-split .side, .view-split .legend, .view-split .hud-foot { display: none; }
@@ -538,8 +568,17 @@ svg .e.on { fill: var(--orange); stroke: #ffd2a8; filter: drop-shadow(0 0 0.35px
       <ol class="bt-poll" id="btPoll"><li class="cap"><span>STATION · SUBSYSTEM</span><span>STATUS</span></li></ol>
       <div class="bt-side">
         <div class="bt-scope">
-          <div class="cap"><span>RENDER LOOP · FRAME Δt</span><b id="btScopeV">-- ms</b></div>
-          <canvas id="btScope" aria-label="Frame interval trace"></canvas>
+          <div class="cap"><span>PAD CAM 2 · STARBASE · CLICK TO VENT</span><b id="btScopeV">-- FPS</b></div>
+          <div class="pc-wrap">
+            <canvas id="btScope" aria-label="Pad camera: Starship on the launch mount, propellant loading follows the systems poll"></canvas>
+            <div class="pc-t" id="pcT">T−00:00:40</div>
+            <div class="pc-prop" id="pcProp">PROP LOAD · B 0% · S 0%</div>
+            <div class="pc-call" id="pcCall">LD · go for propellant load</div>
+          </div>
+        </div>
+        <div class="bt-facts">
+          <div class="cap"><span>FLIGHT FACTS</span><button id="btFactNext" type="button">NEXT ▸</button></div>
+          <p id="btFact" aria-live="off"></p>
         </div>
         <div class="bt-logwrap">
           <div class="bt-logcap"><span>EVENT LOG</span><span id="btCount">0 MSG</span></div>
@@ -612,7 +651,9 @@ setTimeout(function () {
         <span class="cp-sep" id="lightSeg" title="Lighting (L): the real sun for the mission time, or force day or night where you are looking"><button data-light="real">REAL SUN</button><button data-light="day">&#9728; DAY</button><button data-light="night">&#9790; NIGHT</button></span>
         <span class="cp-sep"><button id="guidesBtn" title="Show or hide the guides: flight paths, ground track, landing zones and the grid (H)">GUIDES</button></span>
         <span class="cp-sep"><button id="starlinkBtn" title="Show every Starlink in orbit, where it really is right now (K)">ALL STARLINKS</button></span>
+        <span class="cp-sep"><button id="cutBtn" title="See inside the vehicles: tanks and propellant levels, plumbing and the payload (X)">CUTAWAY</button></span>
       </div>
+      <aside class="panel cutleg" id="cutLegend" hidden aria-live="off"></aside>
       <div class="rcol">
       <aside class="panel maps" id="mapsPanel">
         <section class="msec"><h3 data-sec="alt" title="Click to collapse">ALTITUDE <em id="altCmp">—</em></h3><canvas id="altCanvas"></canvas></section>
@@ -64221,7 +64262,8 @@ const boot = (() => {
     set(k, 'run', `${file} · ${Math.round((e.loaded / e.total) * 100)}% of ${(e.total / 1e6).toFixed(1)} MB`);
   };
   const finish = (skipped) => {
-    if (done) return; done = true;
+    if (done) { if (skipped) hide(); return; } // SKIP during the launch cuts straight to the console
+    done = true;
     for (const [k] of STATIONS) {
       if (!rows[k].classList.contains('on')) rows[k].classList.add('on');
       if (!res[k] || !FINAL.includes(res[k].s)) { res[k] = { s: 'stby', detail: `${res[k]?.detail || 'pending'} · continuing in background` }; }
@@ -64232,7 +64274,7 @@ const boot = (() => {
     v.textContent = skipped ? 'POLL SKIPPED · HANDOVER' : deg || stby ? `GO FOR CONSOLE · ${deg ? `${deg} DEGRADED` : ''}${deg && stby ? ' · ' : ''}${stby ? `${stby} STBY` : ''}` : 'ALL STATIONS GO';
     v.className = skipped || deg || stby ? 'deg' : 'go';
     log('FLT', skipped ? 'poll skipped by operator · console handover' : `poll complete · ${n('go')}/${STATIONS.length} GO · console handover`, deg || stby ? 'a' : 'g');
-    setTimeout(() => root.classList.add('done'), skipped || reduce ? 150 : 1100);
+    if (skipped || reduce) setTimeout(hide, 150); else launch();
   };
   function check() {
     if (done || shown < STATIONS.length) return;
@@ -64254,32 +64296,286 @@ const boot = (() => {
     check();
   };
   const ticker = setInterval(() => (done ? clearInterval(ticker) : tick()), 50);
-  // frame-interval scope + clocks, until the console takes over
-  const cv = el('btScope'), g = cv.getContext('2d'), dts = [];
-  let last = performance.now();
-  const scope = (now) => {
-    if (root.classList.contains('done') && done) return;
-    if (now - last < 500) dts.push(now - last); // a hidden tab pauses frames; that gap is not a render stall
-    last = now; if (dts.length > 160) dts.shift();
-    const d = new Date(), w = (cv.width = cv.clientWidth * devicePixelRatio), h = (cv.height = cv.clientHeight * devicePixelRatio), MAXMS = 50;
+  // pad camera: a drawn night shot of the stack on the launch mount. Frost climbs the tanks as stations report, the
+  // count holds at T−10 while a required station is still loading, and the vehicle launches at console handover
+  const cv = el('btScope'), g = cv.getContext('2d'), frameEl = root.querySelector('.bt-frame');
+  const COUNT_MS = 2000, CLIMB_MS = 1900, COUNT0 = 40, HOLD_AT = 10, RATE = 6, WIND = 7;
+  const nmOf = Object.fromEntries(STATIONS.map(([k, , nm]) => [k, nm]));
+  const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  const pc = { prog: 0, count: COUNT0, seq: 0, from: 0, hideAt: 0, last: performance.now(), dts: [], parts: [], hud: {} };
+  const stars = Array.from({ length: 90 }, () => [Math.random(), Math.random() ** 1.6 * 0.7, Math.random() * 6.28, 0.6 + Math.random()]);
+  const sprite = (r, gg, b) => {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, `rgba(${r},${gg},${b},1)`); gr.addColorStop(0.45, `rgba(${r},${gg},${b},.5)`); gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return c;
+  };
+  const SPR = { vap: sprite(225, 236, 248), smoke: sprite(150, 155, 162), fire: sprite(255, 160, 80) };
+  const spawn = (kind, x, y, vx, vy, r, grow, life, a) => {
+    pc.parts.push({ kind, x, y, vx, vy, r, grow, life, max: life, a, heat: kind === 'smoke' ? 1 : 0 });
+    if (pc.parts.length > 650) pc.parts.shift();
+  };
+  const rnd = (a, b) => a + Math.random() * (b - a), side = () => (Math.random() < 0.5 ? -1 : 1);
+  let geo = null; // last frame's layout, for click-to-vent
+  const vent = (n) => {
+    if (!geo || reduce) return;
+    const { cx, r, by, sb } = geo;
+    for (let i = 0; i < n; i++) {
+      const s = side();
+      spawn('vap', cx + s * r, by - geo.k * 69, s * rnd(15, 45), rnd(-14, 6), geo.k * 1.5, rnd(6, 12), rnd(2, 3.5), 0.5);
+      if (i % 2) spawn('vap', cx + r, sb - geo.k * 30, rnd(10, 35), rnd(-10, 4), geo.k * 1.2, rnd(5, 10), rnd(2, 3), 0.4);
+    }
+  };
+  cv.addEventListener('click', () => vent(28));
+
+  const hud = (id, text, cls = '') => {
+    const h = pc.hud[id] || (pc.hud[id] = { e: el(id) });
+    if (h.t !== text) h.e.textContent = h.t = text;
+    if (h.c !== cls) h.e.className = `${h.e.className.split(' ')[0]}${cls ? ` ${cls}` : ''}`, (h.c = cls);
+  };
+  const hide = () => {
+    if (pc.hideAt) return;
+    pc.hideAt = performance.now(); root.classList.add('done'); frameEl.style.transform = ''; root.style.setProperty('--ign', '0');
+  };
+  const launch = () => { pc.seq = performance.now(); pc.from = Math.max(pc.count, 5); setTimeout(hide, COUNT_MS + CLIMB_MS); };
+
+  const draw = (now, st) => {
+    const dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+    if (!W || !H) return;
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const gy = H * 0.88, k = (H * 0.76) / 146, cx = W * 0.56, r = 4.5 * k;
+    const shake = reduce ? 0 : st.rumble * 2.4;
+    if (shake) g.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    // sky, stars, Gulf horizon, tidal flats
+    const sky = g.createLinearGradient(0, 0, 0, gy);
+    sky.addColorStop(0, '#01040a'); sky.addColorStop(0.72, '#061220'); sky.addColorStop(1, '#0f2636');
+    g.fillStyle = sky; g.fillRect(-6, -6, W + 12, gy + 6);
+    g.fillStyle = '#fff';
+    for (const [sx, sy, ph, sz] of stars) { g.globalAlpha = 0.25 + 0.3 * (1 + Math.sin(now / 650 * sz + ph)) * 0.5 * (1 - 0.8 * st.ign); g.fillRect(sx * W, sy * H, sz, sz); }
+    g.globalAlpha = 1;
+    const hz = gy - H * 0.035;
+    g.fillStyle = '#081b29'; g.fillRect(W * 0.66, hz, W * 0.34 + 6, gy - hz);
+    g.fillStyle = 'rgba(160,210,240,.35)';
+    for (let i = 0; i < 16; i++) {
+      const span = W * 0.34, x = W * 0.66 + ((i * 97.3 + now * 0.006 * (1 + (i % 3))) % span), y = hz + 2 + (i % 5) * (gy - hz - 3) / 5;
+      g.globalAlpha = 0.25 + 0.35 * Math.abs(Math.sin(now / 400 + i)); g.fillRect(x, y, 3 + (i % 4) * 2, 1);
+    }
+    g.globalAlpha = 1;
+    const gr = g.createLinearGradient(0, gy, 0, H);
+    gr.addColorStop(0, '#0c161e'); gr.addColorStop(1, '#03070b');
+    g.fillStyle = gr; g.fillRect(-6, gy, W + 12, H - gy + 6);
+    g.fillStyle = '#0a1219'; g.beginPath(); g.moveTo(-6, gy); g.quadraticCurveTo(W * 0.18, gy - H * 0.05, W * 0.4, gy); g.fill();
+
+    // floodlight beams onto the stack
+    g.globalCompositeOperation = 'lighter';
+    for (const [lx, tx] of [[cx - 44 * k, cx - 2 * k], [cx + 46 * k, cx + 3 * k]]) {
+      const beam = g.createLinearGradient(lx, gy, tx, gy - 80 * k);
+      beam.addColorStop(0, 'rgba(170,205,255,.16)'); beam.addColorStop(1, 'rgba(170,205,255,0)');
+      g.fillStyle = beam; g.beginPath(); g.moveTo(lx - 1.5, gy - 1); g.lineTo(tx - 9 * k, gy - 95 * k); g.lineTo(tx + 9 * k, gy - 95 * k); g.lineTo(lx + 1.5, gy - 1); g.fill();
+      g.fillStyle = 'rgba(220,235,255,.9)'; g.fillRect(lx - 1.5, gy - 2.5, 3, 2);
+    }
+    g.globalCompositeOperation = 'source-over';
+
+    // tower: lattice, lightning mast, aviation lights
+    const tw = 9 * k, tx = cx - 22 * k, x0 = tx - tw / 2, x1 = tx + tw / 2, top = gy - 146 * k;
+    g.fillStyle = '#0b141c'; g.fillRect(x0, top, tw, gy - top);
+    g.strokeStyle = '#3a5163'; g.lineWidth = 1; g.beginPath();
+    g.moveTo(x0, gy); g.lineTo(x0, top); g.moveTo(x1, gy); g.lineTo(x1, top);
+    for (let y = gy; y > top + 1; y -= tw) { const y2 = Math.max(top, y - tw); g.moveTo(x0, y); g.lineTo(x1, y2); g.moveTo(x1, y); g.lineTo(x0, y2); g.moveTo(x0, y2); g.lineTo(x1, y2); }
+    g.moveTo(tx, top); g.lineTo(tx, top - 9 * k); g.globalAlpha = 0.75; g.stroke(); g.globalAlpha = 1;
+    const blink = Math.floor(now / 850) % 2 ? 1 : 0.2;
+    for (const y of [top - 9 * k, gy - 75 * k]) {
+      const halo = g.createRadialGradient(tx, y, 0, tx, y, 6);
+      halo.addColorStop(0, `rgba(255,60,50,${blink})`); halo.addColorStop(1, 'rgba(255,60,50,0)');
+      g.fillStyle = halo; g.fillRect(tx - 6, y - 6, 12, 12);
+    }
+    // chopsticks, opened out of the way for launch
+    const yc = gy - 98 * k;
+    g.fillStyle = '#24323e';
+    for (const [len, dy, a] of [[17 * k, 0, -0.06], [10 * k, 2.2 * k, 0.05]]) {
+      g.save(); g.translate(x1, yc + dy); g.rotate(a);
+      g.fillRect(0, -1.2 * k, len, 2.4 * k); g.fillStyle = '#4a6375'; g.fillRect(0, -1.2 * k, len, 0.5); g.fillStyle = '#24323e';
+      g.restore();
+    }
+    // launch mount and deluge plate
+    const ym = gy - 20 * k;
+    g.fillStyle = '#18222b';
+    g.fillRect(cx - 13 * k, ym, 26 * k, 3.2 * k);
+    for (const lx of [-12, -7, 6, 11]) g.fillRect(cx + lx * k, ym, 1.6 * k, gy - ym);
+    g.fillStyle = '#2b3946'; g.fillRect(cx - 9 * k, gy - 1.5, 18 * k, 1.5);
+
+    // vehicle
+    const by = ym - st.dy, sb = by - 71 * k, sTop = sb - 52 * k;
+    geo = { cx, r, by, sb, k };
+    const steel = g.createLinearGradient(cx - r, 0, cx + r, 0);
+    steel.addColorStop(0, '#2b333b'); steel.addColorStop(0.35, '#8e99a4'); steel.addColorStop(0.6, '#bcc5cd'); steel.addColorStop(1, '#46505a');
+    const frost = g.createLinearGradient(cx - r, 0, cx + r, 0);
+    frost.addColorStop(0, '#6f7a85'); frost.addColorStop(0.45, '#d9e3eb'); frost.addColorStop(0.7, '#eef4f9'); frost.addColorStop(1, '#8a95a0');
+    const frostBand = (xa, xb, yBot, yTop, ph) => {
+      if (yBot - yTop < 0.5) return;
+      g.fillStyle = frost; g.beginPath(); g.moveTo(xa, yBot);
+      for (let x = xa; x <= xb + 0.01; x += (xb - xa) / 8) g.lineTo(x, yTop + Math.sin(x * 1.7 + ph + now / 900) * 0.5 * k);
+      g.lineTo(xb, yBot); g.closePath(); g.globalAlpha = 0.93; g.fill(); g.globalAlpha = 1;
+    };
+    // booster
+    g.fillStyle = steel; g.fillRect(cx - r, sb, 2 * r, 71 * k);
+    // two tanks with a bare-steel band at the common dome; both fill together
+    frostBand(cx - r, cx + r, by - 7 * k, by - 7 * k - st.B * 38 * k, 0);
+    frostBand(cx - r, cx + r, by - 47.5 * k, by - 47.5 * k - st.B * 18.5 * k, 1);
+    g.fillStyle = 'rgba(0,0,0,.14)';
+    for (let y = by - 4.5 * k; y > sb + 2 * k; y -= 4.5 * k) g.fillRect(cx - r, y, 2 * r, 0.6);
+    g.fillStyle = '#31373d'; g.fillRect(cx - r, by - 3.5 * k, 2 * r, 3.5 * k);
+    g.fillStyle = '#14191e'; g.fillRect(cx - r, sb, 2 * r, 2.6 * k);
+    g.fillStyle = '#4a5560'; for (let x = cx - r + 0.8 * k; x < cx + r - 0.6 * k; x += 2.2 * k) g.fillRect(x, sb + 0.6 * k, 0.9 * k, 1.4 * k);
+    g.fillStyle = '#3a434c'; g.fillRect(cx - r - 3 * k, sb + 4 * k, 3 * k, 4 * k); g.fillRect(cx + r, sb + 4 * k, 3 * k, 4 * k);
+    // ship: tiles on the windward (left) half, frost only shows on bare steel
+    const shipPath = () => {
+      g.beginPath(); g.moveTo(cx - r, sb); g.lineTo(cx - r, sb - 34 * k);
+      g.bezierCurveTo(cx - r, sb - 45 * k, cx - r * 0.5, sTop, cx, sTop);
+      g.bezierCurveTo(cx + r * 0.5, sTop, cx + r, sb - 45 * k, cx + r, sb - 34 * k); g.lineTo(cx + r, sb); g.closePath();
+    };
+    shipPath(); g.fillStyle = steel; g.fill();
+    g.save(); shipPath(); g.clip();
+    g.fillStyle = '#13171c'; g.fillRect(cx - r - 1, sTop - 1, r * 0.95 + 1, 53 * k);
+    frostBand(cx - r * 0.05, cx + r, sb - 3 * k, sb - 3 * k - st.S * 30 * k, 2);
+    g.restore();
+    g.fillStyle = '#1a1f25';
+    for (const s of [-1, 1]) {
+      const e = cx + s * r, e2 = cx + s * r * 0.82;
+      g.beginPath(); g.moveTo(e, sb - 1.5 * k); g.lineTo(e + s * 3.4 * k, sb - 3 * k); g.lineTo(e + s * 3.4 * k, sb - 11 * k); g.lineTo(e, sb - 13 * k); g.fill();
+      g.beginPath(); g.moveTo(e2, sb - 37 * k); g.lineTo(e2 + s * 2.3 * k, sb - 38.5 * k); g.lineTo(e2 + s * 1.6 * k, sb - 44 * k); g.lineTo(e2 - s * 0.6 * k, sb - 45 * k); g.fill();
+    }
+    // ship quick-disconnect arm, swings away when the count resumes
+    const qd = (cx - r) - x1, ret = st.qd;
+    if (qd > 0) { g.fillStyle = '#22303b'; g.fillRect(x1, ym - 71 * k - 6 * k, qd * (1 - 0.8 * ret), 2 * k); }
+
+    // engines: underside glow on the steel, flame, ground splash
+    if (st.ign > 0) {
+      g.globalCompositeOperation = 'lighter';
+      const fl = 0.88 + Math.random() * 0.24, i = st.ign;
+      const wash = g.createLinearGradient(0, by, 0, by - 45 * k);
+      wash.addColorStop(0, `rgba(255,140,50,${0.55 * i})`); wash.addColorStop(1, 'rgba(255,140,50,0)');
+      g.fillStyle = wash; g.fillRect(cx - r, by - 45 * k, 2 * r, 45 * k);
+      const L = Math.max(3 * k, Math.min((8 + 34 * i) * k * fl * (1 + Math.min(st.tl, 2) * 0.5), gy - by));
+      const flame = g.createLinearGradient(0, by, 0, by + L);
+      flame.addColorStop(0, `rgba(255,252,235,${i})`); flame.addColorStop(0.3, `rgba(255,214,130,${0.9 * i})`); flame.addColorStop(0.75, `rgba(255,123,28,${0.6 * i})`); flame.addColorStop(1, 'rgba(255,90,20,0)');
+      g.fillStyle = flame; g.beginPath(); g.moveTo(cx - r * 0.92, by); g.lineTo(cx + r * 0.92, by);
+      g.quadraticCurveTo(cx + r * 1.5, by + L * 0.55, cx, by + L); g.quadraticCurveTo(cx - r * 1.5, by + L * 0.55, cx - r * 0.92, by); g.fill();
+      const gx = gy - 2, glow = g.createRadialGradient(cx, gx, 0, cx, gx, 70 * k);
+      glow.addColorStop(0, `rgba(255,150,60,${0.7 * i * fl * st.near})`); glow.addColorStop(1, 'rgba(255,120,40,0)');
+      g.fillStyle = glow; g.fillRect(cx - 70 * k, gx - 70 * k, 140 * k, 80 * k);
+      g.globalCompositeOperation = 'source-over';
+    }
+
+    // vapour and exhaust clouds
+    for (const p of pc.parts) {
+      const age = p.max - p.life, a = p.a * Math.min(1, age / 0.25) * sstep(0, 0.6, p.life);
+      if (a <= 0.003) continue;
+      g.globalAlpha = a * (p.kind === 'smoke' ? 1 - 0.7 * p.heat : 1);
+      g.drawImage(SPR[p.kind], p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+      if (p.heat > 0.05) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = a * p.heat * 0.8; g.drawImage(SPR.fire, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2); g.globalCompositeOperation = 'source-over'; }
+    }
+    g.globalAlpha = 1;
+    if (st.ign > 0) { g.fillStyle = `rgba(255,120,40,${0.07 * st.ign * st.near})`; g.fillRect(-6, -6, W + 12, H + 12); }
+    return { gy, k, cx, r, by };
+  };
+
+  const loop = (now) => {
+    if (pc.hideAt && now - pc.hideAt > 800) { frameEl.style.transform = ''; return; }
+    const raw = now - pc.last, dt = Math.min(0.1, Math.max(0, raw) / 1000);
+    if (raw > 0 && raw < 500) { pc.dts.push(raw); if (pc.dts.length > 40) pc.dts.shift(); } // a hidden tab pauses frames; skip that gap
+    pc.last = now;
+    const d = new Date();
     el('btUtc').textContent = `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}:${pad2(d.getUTCSeconds())}`;
     el('btEl').textContent = ((now - t0) / 1000).toFixed(3).padStart(6, '0');
-    g.clearRect(0, 0, w, h);
-    g.strokeStyle = 'rgba(120,190,235,0.12)'; g.lineWidth = 1; g.setLineDash([3 * devicePixelRatio, 4 * devicePixelRatio]);
-    for (const ms of [16.7, 33.3]) { const y = h - (ms / MAXMS) * h; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
-    g.setLineDash([]);
-    g.fillStyle = 'rgba(120,190,235,0.35)'; g.font = `${9 * devicePixelRatio}px 'JetBrains Mono', monospace`;
-    g.fillText('60 Hz', 4 * devicePixelRatio, h - (16.7 / MAXMS) * h - 3 * devicePixelRatio); g.fillText('30 Hz', 4 * devicePixelRatio, h - (33.3 / MAXMS) * h - 3 * devicePixelRatio);
-    g.beginPath();
-    dts.forEach((v, i) => { const x = (i / 159) * w, y = h - (Math.min(v, MAXMS) / MAXMS) * h; i ? g.lineTo(x, y) : g.moveTo(x, y); });
-    g.strokeStyle = '#3fd7ff'; g.lineWidth = 1.4 * devicePixelRatio; g.shadowColor = 'rgba(63,215,255,0.6)'; g.shadowBlur = 6; g.stroke(); g.shadowBlur = 0;
-    const recent = dts.slice(-30), avg = recent.reduce((a, b) => a + b, 0) / (recent.length || 1);
-    el('btScopeV').textContent = `${avg.toFixed(1)} ms · PEAK ${Math.max(0, ...dts).toFixed(0)} ms`;
-    requestAnimationFrame(scope);
+    const avg = pc.dts.reduce((a, b) => a + b, 0) / (pc.dts.length || 1);
+    hud('btScopeV', pc.dts.length ? `${Math.round(1000 / avg)} FPS · ${avg.toFixed(1)} ms` : '-- FPS');
+
+    // propellant load follows the share of stations that have reported a verdict
+    const fin = STATIONS.filter(([k]) => res[k] && FINAL.includes(res[k].s)).length / STATIONS.length;
+    pc.prog += ((done ? 1 : fin * 0.94) - pc.prog) * Math.min(1, dt * 1.6);
+    if (!pc.seq) pc.count = Math.max(HOLD_AT, COUNT0 - ((now - t0) / 1000) * RATE);
+    else pc.count = Math.max(0, pc.from * (1 - (now - pc.seq) / COUNT_MS));
+    const tl = pc.seq ? (now - pc.seq - COUNT_MS) / 1000 : -1;
+    const ign = pc.seq ? sstep(3, 0.4, pc.count) : 0;
+    const st = {
+      B: sstep(0.04, 0.8, pc.prog), S: sstep(0.3, 1, pc.prog), ign, tl,
+      dy: tl > 0 ? 0.19 * cv.clientHeight * tl * tl : 0,
+      qd: pc.seq ? sstep(0, 500, now - pc.seq) : 0,
+      near: 1 - sstep(0.6, 2.2, tl),
+      rumble: ign * (1 - sstep(0.9, 1.9, tl)),
+    };
+    const hold = !pc.seq && pc.count <= HOLD_AT;
+    const wait = hold ? [...REQUIRED, 'net'].find((k) => !res[k] || !FINAL.includes(res[k].s)) : null;
+    hud('pcT', tl >= 0 ? `T+00:00:${pad2(Math.floor(tl))}` : `T−00:00:${pad2(Math.ceil(pc.count))}${hold ? ' · HOLD' : ''}`, hold ? 'hold' : pc.seq ? 'go' : '');
+    hud('pcProp', `PROP LOAD · B ${Math.round(st.B * 100)}% · S ${Math.round(st.S * 100)}%`);
+    const [cc, ct] = pc.seq
+      ? tl >= 1.1 ? ['go', 'FD · climbing out · handing over to console'] : tl >= 0 ? ['go', 'LIFTOFF'] : pc.count <= 3 ? ['go', 'LD · ignition · 33 Raptors spooling up'] : ['go', 'FD · all stations go · GO for launch']
+      : hold ? ['hold', `HOLD HOLD HOLD · awaiting ${cs[wait] || ''} · ${nmOf[wait] || 'final poll'}`]
+      : pc.prog > 0.8 ? ['', 'LD · ship engine chill underway'] : pc.prog > 0.6 ? ['', 'LD · booster engine chill underway']
+      : pc.prog > 0.35 ? ['', 'LD · ship propellant load underway'] : pc.prog > 0.1 ? ['', 'LD · booster propellant load underway'] : ['', 'LD · GO for propellant load'];
+    hud('pcCall', ct, cc);
+    root.style.setProperty('--ign', (ign * st.near * 0.9).toFixed(3));
+    if (!reduce) frameEl.style.transform = st.rumble > 0.02 ? `translate(${((Math.random() - 0.5) * 1.6 * st.rumble).toFixed(2)}px, ${((Math.random() - 0.5) * 1.6 * st.rumble).toFixed(2)}px)` : '';
+
+    // emit and move vapour/smoke
+    if (geo && !reduce) {
+      const { cx, r, by, sb, k } = geo, em = (rate) => Math.random() < rate * dt;
+      if (tl < 0) {
+        if (st.B > 0.15 && em(6 * st.B)) { const s = side(); spawn('vap', cx + s * r, by - 69 * k, s * rnd(6, 16), rnd(-6, 2), k * 1.2, rnd(4, 8), rnd(2.5, 4), 0.32); }
+        if (st.S > 0.15 && em(3 * st.S)) spawn('vap', cx + r, sb - 30 * k, rnd(6, 14), rnd(-5, 2), k, rnd(3, 6), rnd(2, 3.5), 0.28);
+        if (pc.prog > 0.6) for (let n = 0; n < 2; n++) if (em(8)) spawn('vap', cx + rnd(-r, r), by + k, side() * rnd(10, 30), rnd(6, 16), k * 1.5, rnd(6, 10), rnd(2.5, 3.5), 0.26);
+      }
+      if (ign > 0.2) {
+        const n = Math.floor(110 * ign * st.near * dt + Math.random());
+        for (let i = 0; i < n; i++) spawn('smoke', cx + rnd(-6, 6) * k, geo.gy - rnd(0, 2) * k, side() * rnd(40, 170), rnd(-22, -2), rnd(2, 4) * k, rnd(7, 15), rnd(1.2, 2.4), 0.42);
+        if (tl > 0) { const tail = Math.min(geo.gy, by + 30 * k); if (em(30)) spawn('smoke', cx + rnd(-r, r), tail, rnd(-14, 14), rnd(-6, 8), 2.5 * k, rnd(6, 11), rnd(1, 1.8), 0.35); }
+      }
+      for (const p of pc.parts) {
+        p.life -= dt; p.x += (p.vx + WIND) * dt; p.y += p.vy * dt; p.r += p.grow * dt;
+        const drag = p.kind === 'smoke' ? 1.1 : 0.5; p.vx *= 1 - drag * dt; p.vy = p.vy * (1 - drag * dt) - (p.kind === 'smoke' ? 5 : 0) * dt;
+        if (p.heat) p.heat = Math.max(0, p.heat - dt * 0.9);
+      }
+      pc.parts = pc.parts.filter((p) => p.life > 0);
+    }
+    const lay = draw(now, st);
+    if (lay) geo = { ...geo, gy: lay.gy };
+    requestAnimationFrame(loop);
   };
-  requestAnimationFrame(scope);
+  requestAnimationFrame(loop);
+
+  // flight facts: rotating trivia while the stations report (click NEXT to advance)
+  const FACTS = [
+    'Super Heavy lights 33 Raptor engines at once, the most ever flown on a single rocket stage.',
+    'The white band climbing the tanks is frost: super-chilled oxygen and methane freeze moisture out of the humid Gulf air onto the steel.',
+    'The tower’s catch arms are nicknamed the chopsticks. They first caught a returning Super Heavy on Flight 5, 13 October 2024.',
+    'Raptor is a full-flow staged-combustion engine: all of the methane and all of the oxygen pass through a turbine before reaching the main chamber.',
+    'Methane was chosen partly because it can be made on Mars from atmospheric CO₂ and water ice.',
+    'Starship is built from stainless steel rather than carbon fibre: it gets stronger at cryogenic temperatures and tolerates re-entry heat.',
+    'The ship’s windward side wears thousands of hexagonal heat-shield tiles. The leeward side is bare steel.',
+    'Hot staging: the ship lights its engines while still attached, venting exhaust through the slotted ring on top of the booster.',
+    'The diamonds in a rocket plume are Mach diamonds: standing shock waves where the exhaust re-balances with the surrounding air. See them modelled under ENGINES ↗.',
+    'Fully stacked, Starship stands over 120 m tall, higher than the Statue of Liberty on its pedestal (93 m).',
+    'Starbase became an incorporated Texas city in May 2025.',
+    'Raptor 3 integrates most of the plumbing that earlier versions carried outside the engine, so it no longer needs a heat shield around it.',
+    'This screen is live: every station on the left is a real load step, and the countdown holds if a required one is still running.',
+  ];
+  let fi = Math.floor(Math.random() * FACTS.length), fTimer = 0, typer = 0;
+  const factEl = el('btFact'), factCap = root.querySelector('.bt-facts .cap span');
+  const showFact = (step) => {
+    if (pc.hideAt) return;
+    fi = (fi + step + FACTS.length) % FACTS.length;
+    const txt = FACTS[fi]; factCap.textContent = `FLIGHT FACTS · ${fi + 1}/${FACTS.length}`;
+    clearInterval(typer); clearTimeout(fTimer);
+    if (reduce) factEl.textContent = txt;
+    else { let n = 0; factEl.textContent = ''; typer = setInterval(() => { n += 2; factEl.textContent = txt.slice(0, n); if (n >= txt.length) clearInterval(typer); }, 14); }
+    fTimer = setTimeout(() => showFact(1), 6500);
+  };
+  showFact(0);
+  el('btFactNext').addEventListener('click', () => showFact(1));
   el('btSkip').addEventListener('click', () => finish(true));
-  addEventListener('keydown', (e) => { if (e.key === 'Escape' && !done) finish(true); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && !pc.hideAt) finish(true); });
 
   // stations that can be checked right away
   window.__sftAlive = true;
@@ -65012,6 +65308,7 @@ function sunDirAt(ms, out) {
 const canvas = $('#globe');
 const globeWrap = $('#globeWrap');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.localClippingEnabled = true; // the cutaway view clips each hull through its axis
 { // GPU station: the real renderer behind the context (ANGLE strings trimmed to the device name)
   const gl = renderer.getContext(), dbg = gl.getExtension('WEBGL_debug_renderer_info'), cap = renderer.capabilities;
   const raw = String(dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
@@ -65977,6 +66274,7 @@ function installStack(root, source) {
   debris.pivot.clear(); debris.key = null;
   if (parts.hsr) { const c = parts.hsr.clone(true); c.position.y -= 69.9; c.visible = true; debris.pivot.add(c); }
   applyVariant();
+  models.cutDirty = true; // interiors are (re)built on the next frame, once the cutaway code has loaded
   const el = $('#modelStatus');
   el.textContent = source === 'glb' ? 'starship.glb ✓ (BLENDER)' : 'PROCEDURAL FALLBACK';
   el.classList.toggle('warn', source !== 'glb');
@@ -67485,7 +67783,7 @@ function installFalcon(root) {
     return { g, m, legs: ap.map((x) => x[0]), fins: ap.map((x) => x[1]) };
   });
   const ship = take('ASDS_Droneship'); ship.position.set(0, 0, 0); prep(ship); fm.asds.add(ship);
-  fm.ready = true;
+  fm.ready = true; fm.cutDirty = true;
   if (state.F) applyVariant();
 }
 new GLTFLoader().load('falcon.glb', (g) => { try { installFalcon(g.scene); } catch (e) { console.warn('falcon.glb', e); } }, undefined, () => {});
@@ -67535,6 +67833,18 @@ function satMesh(big) {
 function prepSats(F) {
   satPool.forEach((o) => o.removeFromParent()); satPool.length = 0;
   const rnd = seeded(F.netMs / 1000 + 3);
+  // a Starlink stack is released all at once, then the flat satellites drift apart at a few cm/s
+  const sl = falconStarlinks(F);
+  if (sl && F.sats?.length) {
+    const pitch = Math.min(0.42, 8.4 / sl.n);
+    for (let i = 0; i < sl.n; i++) {
+      const holder = new THREE.Group(); holder.scale.setScalar(S); holder.visible = false; scene.add(holder);
+      boxAt(holder, satBusMat, 3.6, pitch * 0.8, 2.25, 0, 0, 0); boxAt(holder, satCellMat, 3.45, 0.03, 2.15, 0, pitch * 0.4 + 0.015, 0);
+      holder.userData = { t: F.sats[0].t, base: 0.9 + (i + 0.4) * pitch, dir: new V3(rnd() - 0.5, 0.25 + rnd() * 0.5, rnd() - 0.5).normalize(), speed: 0.03 + 0.05 * rnd() + i * 0.003, spin: new V3(rnd(), rnd(), rnd()).normalize(), spinRate: rnd() * 0.012 };
+      satPool.push(holder);
+    }
+    return;
+  }
   for (const st of F.sats || []) {
     const holder = new THREE.Group(); holder.scale.setScalar(S); holder.visible = false; scene.add(holder);
     holder.add(satMesh(st.big));
@@ -67621,7 +67931,7 @@ function updateFalcon(t, time) {
     o.visible = cs.visible && ts > 0 && ts < 1800;
     if (!o.visible) return;
     _sd2.copy(u.dir).applyQuaternion(qS);
-    o.position.copy(cs.position).addScaledVector(_a, (S2_TOP_M + 2) * S).addScaledVector(_sd2, u.speed * ts * S);
+    o.position.copy(cs.position).addScaledVector(_a, (S2_TOP_M + (u.base ?? 2)) * S).addScaledVector(_sd2, u.speed * ts * S);
     o.quaternion.copy(qS).multiply(_iq.setFromAxisAngle(u.spin, u.spinRate * ts));
   });
   // the station, when this Dragon is on its way to it: closing from a few kilometres to the port
@@ -67678,6 +67988,335 @@ function updateFalcon(t, time) {
   labels.ship.txt.firstChild.textContent = s2Gone ? (F.craft || 'DRAGON').toUpperCase() : F.ship;
   labels.ship.small.textContent = labels.ship.show ? ` ${sh.toFixed(0)} KM` : '';
   labels.booster.small.textContent = t >= k.sep - 1 ? ` ${bh.toFixed(bh < 10 ? 1 : 0)} KM` : ' STACK';
+}
+
+/* =========================================================================
+   CUTAWAY (X) — see inside each vehicle: propellant tanks and their live levels, domes, feed lines, pressurant
+   bottles, header tanks and the payload (Starlinks in Starship's bay and under Falcon's fairing, seats in Dragon).
+   Each vehicle's hull is clipped by a plane through its own axis that turns with the camera, so the near half is
+   always the open one. Tank lengths split the barrel by propellant volume (LOX 1141 kg/m³, CH4 422, RP-1 810 at
+   mixture ratios of 3.6 and 2.36); levels drain through each stage's burns.
+   ========================================================================= */
+const CUT = { on: false, sets: {}, ver: 0 };
+const PROP = { lox: 0x58b4ff, ch4: 0xff9a3c, rp1: 0xe8b840 };
+const PROP_NAME = { lox: 'LOX', ch4: 'CH4', rp1: 'RP-1' };
+const cutPipeMat = new THREE.MeshStandardMaterial({ color: 0xa9b2bc, metalness: 0.9, roughness: 0.32 });
+const cutCopvMat = new THREE.MeshStandardMaterial({ color: 0x1b1c20, metalness: 0.3, roughness: 0.45 });
+const cutRackMat = new THREE.MeshStandardMaterial({ color: 0x3a4048, metalness: 0.8, roughness: 0.4 });
+const cutSeatMat = new THREE.MeshStandardMaterial({ color: 0x1d2024, metalness: 0.2, roughness: 0.6 });
+const cutSuitMat = new THREE.MeshStandardMaterial({ color: 0xe9eaec, metalness: 0, roughness: 0.7 });
+const cutScreenMat = new THREE.MeshStandardMaterial({ color: 0x0a1a24, emissive: 0x2a9fd0, emissiveIntensity: 0.9, roughness: 0.3 });
+const cutBagMat = new THREE.MeshStandardMaterial({ color: 0xd8d2c0, metalness: 0, roughness: 0.85 });
+
+// one vehicle's interior: everything in vehicle metres (y up the axis), tanks and domes clipped by the vehicle's plane
+function cutKit(plane, R) {
+  const g = new THREE.Group(); g.name = 'Cutaway_Interior'; g.visible = false;
+  const clip = (m) => { m.clippingPlanes = [plane]; m.clipShadows = true; return m; };
+  const tanks = [];
+  const domeMat = clip(new THREE.MeshStandardMaterial({ color: 0x8d969f, metalness: 0.85, roughness: 0.35, side: THREE.DoubleSide }));
+  const kit = {
+    g, tanks,
+    tank(fluid, y0, y1, r = R * 0.985) {
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1, 56, 1, true).translate(0, 0.5, 0),
+        clip(new THREE.MeshStandardMaterial({ color: PROP[fluid], emissive: PROP[fluid], emissiveIntensity: 0.22, roughness: 0.25, metalness: 0.1, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false })));
+      const top = new THREE.Mesh(new THREE.CircleGeometry(r, 56).rotateX(-Math.PI / 2),
+        clip(new THREE.MeshBasicMaterial({ color: PROP[fluid], transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false })));
+      body.position.y = y0; g.add(body, top);
+      const tk = { fluid, y0, y1, body, top, level: 1 }; tanks.push(tk); return tk;
+    },
+    // ellipsoidal bulkhead at height y, bulging up (h > 0) or down (h < 0)
+    dome(y, h, r = R * 0.99) {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(r, 56, 10, 0, Math.PI * 2, 0, Math.PI / 2), domeMat);
+      m.scale.set(1, h / r, 1); m.position.y = y; g.add(m); return m;
+    },
+    pipe(r, y0, y1, x = 0, z = 0) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, y1 - y0, 20), cutPipeMat); m.position.set(x, (y0 + y1) / 2, z); g.add(m); return m; },
+    copvs(n, y, ring, r, len) {
+      for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + 0.3, m = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 6, 14), cutCopvMat); m.position.set(Math.cos(a) * ring, y, Math.sin(a) * ring); g.add(m); }
+    },
+    sphere(fluid, y, r) {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16), clip(new THREE.MeshStandardMaterial({ color: PROP[fluid], emissive: PROP[fluid], emissiveIntensity: 0.25, roughness: 0.3, transparent: true, opacity: 0.75, side: THREE.DoubleSide })));
+      m.position.y = y; g.add(m); return m;
+    },
+  };
+  return kit;
+}
+function setTankLevel(tk, level) {
+  tk.level = level;
+  const h = Math.max(0.02, (tk.y1 - tk.y0) * level);
+  tk.body.scale.y = h; tk.top.position.y = tk.y0 + h;
+}
+// propellant left in a stage: piecewise linear through its burns, flat between them
+function drainCurve(pairs) {
+  const pts = []; for (const [t, v] of pairs) if (t != null && Number.isFinite(t) && t < 1e8 && (!pts.length || t > pts[pts.length - 1][0])) pts.push([t, v]);
+  return (t) => {
+    if (!pts.length || t <= pts[0][0]) return pts[0]?.[1] ?? 1;
+    for (let i = 1; i < pts.length; i++) if (t < pts[i][0]) { const [a, va] = pts[i - 1], [b, vb] = pts[i]; return va + (vb - va) * ((t - a) / (b - a)); }
+    return pts[pts.length - 1][1];
+  };
+}
+
+// a stack of flat-packed satellites (bus + folded array), instanced; returns { group, setCount(n) }
+function satStack(max, w, d, y0, pitchFn, z = 0, rails = null) {
+  const group = new THREE.Group(); group.name = 'Cutaway_Satellites';
+  const bus = new THREE.InstancedMesh(unitBox, satBusMat, max), cells = new THREE.InstancedMesh(unitBox, satCellMat, max);
+  group.add(bus, cells);
+  const railMeshes = (rails || []).map(([x, zz, r]) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1, 10).translate(0, 0.5, 0), cutRackMat); m.position.set(x, y0 - 0.2, z + zz); group.add(m); return m; });
+  const mx = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new V3(), s = new V3();
+  let shown = -1, total = -1;
+  return {
+    group,
+    // n satellites in the stack, of `of` loaded at launch (the slots of deployed ones stay empty at the bottom)
+    set(n, of) {
+      n = clamp(Math.round(n), 0, max); of = clamp(Math.round(of), n, max);
+      if (n === shown && of === total) return; shown = n; total = of;
+      const pitch = pitchFn(of), th = pitch * 0.8, first = of - n;
+      for (let i = 0; i < n; i++) {
+        const y = y0 + (first + i) * pitch + th / 2;
+        bus.setMatrixAt(i, mx.compose(p.set(0, y, z), q, s.set(w, th, d)));
+        cells.setMatrixAt(i, mx.compose(p.set(0, y + th / 2 + 0.015, z), q, s.set(w * 0.96, 0.03, d * 0.96)));
+      }
+      bus.count = cells.count = n; bus.instanceMatrix.needsUpdate = cells.instanceMatrix.needsUpdate = true;
+      bus.computeBoundingSphere(); cells.computeBoundingSphere();
+      railMeshes.forEach((m) => (m.scale.y = Math.max(0.01, of * pitch + 0.4)));
+      group.visible = of > 0;
+    },
+  };
+}
+
+// --- per-vehicle interiors (dimensions match build_starship.py / build_falcon.py)
+function interiorSuperHeavy(plane) {
+  const k = cutKit(plane, 4.5);
+  k.dome(4.5, -1.4);                       // aft dome over the engine bay
+  k.tank('lox', 4.5, 40.9);                // LOX: the lower tank
+  k.dome(40.9, -1.6);                      // common dome
+  k.tank('ch4', 40.9, 68.3);               // methane on top
+  k.dome(68.3, 1.2);                       // forward dome under the hot-stage ring
+  k.pipe(0.55, 3.2, 40.9);                 // methane downcomer, straight down through the LOX tank to the engines
+  k.pipe(0.9, 3.0, 3.6);                   // where it meets the engine manifold
+  return k;
+}
+function interiorStarship(plane) {
+  const k = cutKit(plane, 4.5);
+  k.dome(3.6, -1.1);
+  k.tank('lox', 3.6, 15.2);
+  k.dome(15.2, -1.2);
+  k.tank('ch4', 15.2, 24.0);
+  k.dome(24.0, 0.9);                       // forward dome = floor of the payload bay
+  k.headLox = k.sphere('lox', 48.2, 1.15); // LOX header tank in the tip of the nose
+  k.headCh4 = k.sphere('ch4', 46.2, 1.35); // methane header just below it
+  k.pipe(0.16, 15.2, 47.4, 1.35, 1.65);    // header feed lines run down the windward wall, clear of the payload rack
+  k.pipe(0.16, 24.0, 45.2, -1.35, 1.65);
+  // payload: Starlinks stacked in the dispenser rack, sliding out through the slot door on the leeward side
+  k.stack = satStack(40, 3.9, 2.6, 24.7, (n) => Math.min(0.75, 20 / Math.max(1, n)), -0.85, [[-2.15, -1.2, 0.07], [2.15, -1.2, 0.07], [-2.15, 1.2, 0.07], [2.15, 1.2, 0.07]]);
+  k.g.add(k.stack.group);
+  return k;
+}
+function interiorFalconCore(plane, side) {
+  const k = cutKit(plane, 1.83);
+  k.dome(3.0, -0.6);                       // thrust structure dome above the octaweb
+  k.tank('rp1', 3.0, 17.7);                // RP-1 below
+  k.dome(17.7, -0.7);                      // common dome
+  k.tank('lox', 17.7, 42.3);               // LOX on top
+  k.dome(42.3, side ? 0.6 : 0.5);
+  k.pipe(0.22, 2.3, 17.7);                 // LOX transfer tube through the middle of the RP-1 tank
+  k.copvs(3, 40.6, 1.05, 0.26, 0.8);       // helium bottles submerged in the LOX
+  return k;
+}
+function interiorFalconS2(plane) {
+  const k = cutKit(plane, 1.83);
+  k.dome(6.4, -0.6);
+  k.tank('rp1', 6.4, 9.5);
+  k.dome(9.5, -0.6);
+  k.tank('lox', 9.5, 14.7);
+  k.dome(14.7, 0.4);
+  k.pipe(0.15, 4.5, 9.5);
+  k.copvs(3, 13.3, 1.05, 0.24, 0.7);
+  return k;
+}
+// Dragon's cabin, in the capsule's own frame (trunk base at y = 0, heat shield at 4.3 m)
+function interiorDragon(crewN, cargo) {
+  const g = new THREE.Group(); g.name = 'Cutaway_Dragon'; g.visible = false;
+  const box = (m, sx, sy, sz, x, y, z, rx = 0) => { const o = new THREE.Mesh(unitBox, m); o.scale.set(sx, sy, sz); o.position.set(x, y, z); o.rotation.x = rx; g.add(o); return o; };
+  if (cargo) {
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) box(cutBagMat, 0.75, 0.55, 0.6, -0.8 + i * 0.8, 4.95 + j * 0.6, -0.3 + (i % 2) * 0.25);
+    box(cutRackMat, 2.5, 0.06, 1.2, 0, 4.66, 0);
+  } else {
+    // four seats in a row, crew on their backs facing the nose; the display panel hangs above them
+    [-1.05, -0.35, 0.35, 1.05].forEach((x, i) => {
+      box(cutSeatMat, 0.55, 0.08, 0.95, x, 4.95, 0.15, 0.12);
+      box(cutSeatMat, 0.55, 0.08, 0.6, x, 5.25, -0.55, -0.7);
+      if (i < crewN) {
+        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.75, 6, 12), cutSuitMat); body.rotation.x = Math.PI / 2 + 0.12; body.position.set(x, 5.13, 0.1); g.add(body);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), cutSuitMat); head.position.set(x, 5.15, 0.68); g.add(head);
+      }
+    });
+    box(cutRackMat, 2.1, 0.05, 0.55, 0, 6.55, 0.25, 0.5);
+    [-0.6, 0, 0.6].forEach((x) => box(cutScreenMat, 0.55, 0.02, 0.38, x, 6.52, 0.25, 0.5));
+  }
+  for (let i = 0; i < 4; i++) { // SuperDraco pairs in the side wall
+    const a = (i / 4) * Math.PI * 2 + 0.4, o = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.15, 0.55, 12), cutCopvMat);
+    o.position.set(Math.cos(a) * 1.45, 5.9, Math.sin(a) * 1.45); g.add(o);
+  }
+  return g;
+}
+
+// hull clipping: while the cutaway is on, each hull mesh wears a copy of its material that carries the vehicle's plane
+const _cutKeep = (m) => m && (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial || m.isMeshLambertMaterial || m.isMeshPhongMaterial) && m.blending !== THREE.AdditiveBlending;
+function cutSet(key, root, interiors, skip = []) {
+  const old = CUT.sets[key];
+  if (old) { applyCutMaterials(old, false); old.interiors.forEach((i) => i.g?.removeFromParent?.()); }
+  const set = { key, root, interiors, skip: new Set([...skip, ...interiors.map((i) => i.g)]), plane: interiors[0]?.plane, clones: new Map(), ours: new WeakSet(), active: false, flight: null };
+  CUT.sets[key] = set; CUT.ver++;
+  if (CUT.on) applyCutMaterials(set, true);
+  return set;
+}
+function applyCutMaterials(set, on) {
+  if (set.active === on) return; set.active = on;
+  const walk = (o) => {
+    if (set.skip.has(o)) return;
+    if (o.isMesh && !o.isInstancedMesh) {
+      if (on) {
+        const swap = (m) => {
+          if (!_cutKeep(m)) return m;
+          if (!set.clones.has(m)) { const c = m.clone(); c.clippingPlanes = [set.plane]; c.clipShadows = true; c.side = THREE.DoubleSide; set.clones.set(m, c); set.ours.add(c); }
+          return set.clones.get(m);
+        };
+        o.userData.cutMat0 = o.material; o.material = Array.isArray(o.material) ? o.material.map(swap) : swap(o.material);
+      } else if (o.userData.cutMat0) {
+        const cur = Array.isArray(o.material) ? o.material[0] : o.material;
+        if (set.ours.has(cur)) o.material = o.userData.cutMat0; // left alone if something else (applyVariant) has re-skinned it since
+        delete o.userData.cutMat0;
+      }
+    }
+    o.children.forEach(walk);
+  };
+  walk(set.root);
+}
+// build (or rebuild after a model reload) the interiors of whatever vehicle models exist
+function buildCutaways(which) {
+  if (which === 'starship' && models.booster) {
+    const plane = new THREE.Plane(), k = interiorSuperHeavy(plane); k.plane = plane; models.booster.add(k.g);
+    cutSet('booster', models.booster, [k]);
+  }
+  if (which === 'starship' && models.ship) {
+    const plane = new THREE.Plane(), k = interiorStarship(plane); k.plane = plane; models.ship.add(k.g);
+    cutSet('ship', models.ship, [k]);
+  }
+  if (which === 'falcon' && fm.ready) {
+    { const plane = new THREE.Plane(), k = interiorFalconCore(plane, false); k.plane = plane; fm.s1.add(k.g); cutSet('s1', fm.s1, [k]); }
+    { const plane = new THREE.Plane(), k = interiorFalconS2(plane); k.plane = plane; fm.s2.add(k.g);
+      // the Starlink stack on the payload adapter: flat V2 Mini-class satellites with a tension rod at each corner
+      k.stack = satStack(40, 3.6, 2.25, S2_TOP_M + 0.9, (n) => Math.min(0.42, 8.4 / Math.max(1, n)), 0, [[-1.95, -1.2, 0.05], [1.95, -1.2, 0.05], [-1.95, 1.2, 0.05], [1.95, 1.2, 0.05]]);
+      k.stack.group.visible = false; fm.s2.add(k.stack.group);
+      const dragon = { g: null, plane, key: '' };
+      cutSet('s2', fm.s2, [k, dragon], [fm.payload, k.stack.group]);
+      CUT.sets.s2.dragon = dragon; }
+    fm.sides.forEach((sd, i) => { const plane = new THREE.Plane(), k = interiorFalconCore(plane, true); k.plane = plane; sd.m.add(k.g); cutSet(`side${i}`, sd.m, [k]); });
+  }
+}
+
+// Starlinks launched by this Falcon: from the catalogue when it has loaded (launch date, Florida), else a typical stack
+function falconStarlinks(F) {
+  if (!/Starlink/i.test(F?.name || '')) return null;
+  const day = (F.net || '').slice(0, 10), g = (slAll.cat || []).find((c) => c.date === day && (c.site === 'AFETR' || !c.site) && !c.starship);
+  return g ? { n: g.n, known: true, id: g.id } : { n: 24, known: false };
+}
+
+const _cuO = new V3(), _cuA = new V3(), _cuT = new V3();
+function updateCutaway(t) {
+  const F = state.F; if (!F) return;
+  const k = F.k, on = CUT.on;
+  if (models.cutDirty) { models.cutDirty = false; buildCutaways('starship'); }
+  if (fm.cutDirty) { fm.cutDirty = false; buildCutaways('falcon'); }
+  for (const set of Object.values(CUT.sets)) {
+    if (on && set.flight !== F.key) { applyCutMaterials(set, false); set.flight = F.key; } // a new flight re-skins the hulls (applyVariant)
+    applyCutMaterials(set, on); set.interiors.forEach((i) => { if (i.g) i.g.visible = on; });
+  }
+  const S_ = CUT.sets;
+  // levels
+  if (F.kind !== 'falcon') {
+    const bk = S_.booster?.interiors[0], sk = S_.ship?.interiors[0];
+    const bl = drainCurve([[0, 1], [k.meco, 0.11], [k.bbStart, 0.11], [k.bbEnd, 0.05], [k.bBurn, 0.05], [k.bLand, 0.012]])(t);
+    const sl = drainCurve([[k.sep, 1], [k.seco, 0.09]])(t), hl = drainCurve([[k.flip - 5, 1], [k.sLand, 0.25]])(t);
+    bk?.tanks.forEach((tk) => setTankLevel(tk, bl));
+    sk?.tanks.forEach((tk) => setTankLevel(tk, sl));
+    if (sk) { sk.headLox.scale.setScalar(Math.cbrt(hl)); sk.headCh4.scale.setScalar(Math.cbrt(hl)); }
+    if (sk?.stack) {
+      const pl = F.payload, n = pl ? pl.n : 0;
+      const gone = pl ? Array.from({ length: n }, (_, i) => pl.t0 + ((i + 0.5) * (pl.t1 - pl.t0)) / n).filter((ti) => t >= ti).length : 0;
+      sk.stack.set(n - gone, n);
+    }
+    CUT.info = { kind: 'starship', bl, sl, hl, pl: F.payload };
+  } else if (fm.ready) {
+    const fh = F.vehicle === 'fh';
+    const c = drainCurve(F.bOut === 'expended' ? [[0, 1], [k.meco, 0.02]] : [[0, 1], [k.meco, 0.1], [k.bbStart, 0.1], [k.bbEnd, 0.06], [k.entry1, 0.06], [k.entry1End, 0.045], [k.bBurn, 0.045], [k.bLand, 0.01]])(t);
+    const x = fh ? drainCurve([[0, 1], [k.beco, 0.1], [k.xBB, 0.1], [k.xBBEnd, 0.055], [k.xEntry, 0.055], [k.xEntryEnd, 0.04], [k.xBurn, 0.04], [k.xLand, 0.01]])(t) : 0;
+    const s2 = drainCurve([[k.ses1, 1], [k.seco, 0.12], [k.ses2, 0.12], [k.seco2, 0.03]])(t);
+    S_.s1?.interiors[0].tanks.forEach((tk) => setTankLevel(tk, c));
+    S_.s2?.interiors[0].tanks.forEach((tk) => setTankLevel(tk, s2));
+    [S_.side0, S_.side1].forEach((s) => s?.interiors[0].tanks.forEach((tk) => setTankLevel(tk, x)));
+    // payload: a Starlink stack replaces the generic satellite; Dragon gets its cabin
+    const st = falconStarlinks(F), s2k = S_.s2?.interiors[0], depT = F.sats?.[0]?.t ?? k.dep ?? Infinity;
+    if (st && F.sats?.length && satPool.length !== st.n) prepSats(F); // the catalogue's real count arrived
+    if (s2k?.stack) {
+      s2k.stack.set(st && t < depT ? st.n : 0, st ? st.n : 0);
+      s2k.stack.group.visible = !!st && t < depT && (on || (k.fairing != null && t > k.fairing));
+    }
+    if (st) fm.payload.visible = false;
+    else if (on && !F.dragon && k.fairing != null && t <= k.fairing) fm.payload.visible = true;
+    const cargo = !F.crew?.length && !/Crew|Axiom|Ax-|Polaris|Fram/i.test(F.name);
+    const dg = S_.s2?.dragon, dkey = F.dragon ? `${F.crew?.length || 0}-${cargo}` : '';
+    if (dg && dg.key !== dkey) {
+      dg.g?.removeFromParent(); S_.s2.skip.delete(dg.g); dg.g = null; dg.key = dkey;
+      if (F.dragon && fm.dragon) { dg.g = interiorDragon(F.crew?.length || 4, cargo); fm.dragon.add(dg.g); S_.s2.skip.add(dg.g); }
+    }
+    if (dg?.g) dg.g.visible = on;
+    CUT.info = { kind: 'falcon', fh, c, x, s2, st, dragon: F.dragon, crew: F.crew || [], cargo, depT, t };
+  }
+}
+// called just before rendering: aim each visible vehicle's cut at the camera
+function aimCutaway() {
+  if (!CUT.on) return;
+  for (const set of Object.values(CUT.sets)) {
+    const r = set.root; if (!r.parent) continue;
+    r.updateWorldMatrix(true, false);
+    const e = r.matrixWorld.elements;
+    _cuO.set(e[12], e[13], e[14]); _cuA.set(e[4], e[5], e[6]).normalize();
+    _cuT.subVectors(camera.position, _cuO); _cuT.addScaledVector(_cuA, -_cuT.dot(_cuA));
+    if (_cuT.lengthSq() < 1e-14) _cuT.set(e[0], e[1], e[2]);
+    _cuT.normalize().negate();
+    set.plane.setFromNormalAndCoplanarPoint(_cuT, _cuO);
+  }
+}
+function renderCutLegend() {
+  const el = $('#cutLegend'); if (!el) return;
+  el.hidden = !CUT.on; if (!CUT.on || !CUT.info) return;
+  const i = CUT.info, pct = (v) => `${Math.round(v * 100)}%`;
+  const row = (fluid, where, v) => `<div class="cl-row"><i style="background:#${PROP[fluid].toString(16).padStart(6, '0')}"></i><span>${PROP_NAME[fluid]} <em>${where}</em></span><b>${pct(v)}</b></div>`;
+  let h = '<h4>CUTAWAY <em>X to close · drag to look in from any side</em></h4>';
+  if (i.kind === 'starship') {
+    const pl = i.pl, F = state.F, left = pl ? Math.max(0, pl.n - (F.payload ? Array.from({ length: pl.n }, (_, j) => pl.t0 + ((j + 0.5) * (pl.t1 - pl.t0)) / pl.n).filter((ti) => state.t >= ti).length : 0)) : 0;
+    h += `<div class="cl-veh">SUPER HEAVY · ${esc(F.booster || '')}</div>${row('ch4', 'upper tank', i.bl)}${row('lox', 'lower tank · CH4 downcomer runs through it', i.bl)}`;
+    h += `<div class="cl-veh">STARSHIP · ${esc(F.ship || '')}</div>${row('ch4', 'upper tank', i.sl)}${row('lox', 'lower tank', i.sl)}${row('lox', 'header tanks in the nose · landing propellant', i.hl)}`;
+    h += `<div class="cl-pay">${pl ? `PAYLOAD BAY · <b>${left}/${pl.n}</b> ${esc(pl.kind)}${pl.n === 1 ? '' : 's'} aboard${pl.note ? ` <em>${esc(pl.note)}</em>` : ''}` : 'PAYLOAD BAY · <b>empty</b> <em>no payload flew on this flight</em>'}</div>`;
+  } else if (i.kind === 'falcon') {
+    const F = state.F;
+    h += `<div class="cl-veh">${i.fh ? 'CENTER CORE' : 'FIRST STAGE'} · ${esc(F.booster || '')}</div>${row('lox', 'upper tank · He bottles inside', i.c)}${row('rp1', 'lower tank · LOX tube runs through it', i.c)}`;
+    if (i.fh) h += `<div class="cl-veh">SIDE BOOSTERS · ${esc((F.sides || []).join(' · '))}</div>${row('lox', 'upper tanks', i.x)}${row('rp1', 'lower tanks', i.x)}`;
+    h += `<div class="cl-veh">SECOND STAGE</div>${row('lox', 'upper tank', i.s2)}${row('rp1', 'lower tank', i.s2)}`;
+    h += `<div class="cl-pay">${i.st ? `FAIRING · <b>${state.t < i.depT ? i.st.n : 0}</b> Starlinks stacked${i.st.known ? ` <em>${i.st.n} catalogued for ${esc(i.st.id)}</em>` : ' <em>typical stack · count not loaded (open the STARLINK tab for the real number)</em>'}`
+      : i.dragon ? `DRAGON · ${i.cargo ? '<b>cargo</b> in the pressurised cabin' : `<b>${i.crew.length || 'crew'}</b> ${i.crew.length ? `aboard: ${esc(i.crew.map((c) => (Array.isArray(c) ? c[0] : c.name || c)).join(', '))}` : ''}`}`
+      : `FAIRING · <b>${esc(F.fpay?.name || 'payload')}</b>${F.fpay?.orbit && !/^(N\/A|Unknown)$/i.test(F.fpay.orbit) ? ` <em>to ${esc(F.fpay.orbit)}</em>` : ''}`}</div>`;
+  }
+  if (el.dataset.h !== h) { el.innerHTML = h; el.dataset.h = h; }
+}
+function setCutaway(on) {
+  CUT.on = on;
+  $('#cutBtn').classList.toggle('on', on);
+  if (on && cam.mode === 'global') setCamMode('ship');
+  if (on && state.F?.kind === 'falcon' && /Starlink/i.test(state.F.name)) loadSlCatalog();
+  if (state.F) updateCutaway(state.t);
+  renderCutLegend();
 }
 
 /* =========================================================================
@@ -68771,6 +69410,7 @@ window.addEventListener('keydown', (e) => {
   else if (e.key.toLowerCase() === 'm') setSound(!sound.on);
   else if (e.key.toLowerCase() === 'h') setGuides(!guides.on);
   else if (e.key.toLowerCase() === 'k') setStarlinks(!slAll.on);
+  else if (e.key.toLowerCase() === 'x') setCutaway(!CUT.on);
   else if (e.key.toLowerCase() === 'l') setLight({ real: 'day', day: 'night', night: 'real' }[light.mode]);
   else if (e.key.toLowerCase() === 'g') setView('globe');
   else if (e.key.toLowerCase() === 'v') setView('video');
@@ -70194,6 +70834,7 @@ function applyGuides() {
 $('#guidesBtn').addEventListener('click', () => setGuides(!guides.on));
 setGuides(guides.on);
 $('#starlinkBtn').addEventListener('click', () => setStarlinks(!slAll.on));
+$('#cutBtn').addEventListener('click', () => setCutaway(!CUT.on));
 document.addEventListener('click', (e) => { // links in the TRACKING box
   const a = e.target.closest('#liveBox a[data-sllist], #liveBox a[data-slclear]'); if (!a) return;
   e.preventDefault();
@@ -70230,6 +70871,7 @@ function frame() {
     }
   }
   updateVehicles(t, time);
+  updateCutaway(t); renderCutLegend();
   updateRcs(t, time);
   applyGuides();
   if (paths.trail) paths.trail.mat.opacity = 1 - sstep(paths.trail.fadeT + 60, paths.trail.fadeT + 900, t);
@@ -70275,6 +70917,7 @@ function frame() {
     fadeMats.ground.forEach((m) => (m.opacity = 0.22 * sstep(0.8, 4, alt)));
     atmosMat.uniforms.uStrength.value = sstep(1.2, 6, alt);
     skyDome.position.copy(camera.position); skyU.uUp.value.copy(camera.position).normalize(); skyU.uStr.value = 1 - sstep(0.6, 2.6, alt);
+    aimCutaway();
     composer.render();
     const w = globeWrap.clientWidth, h = globeWrap.clientHeight;
     const near = camera.position.distanceTo(controls.target) < 6;
@@ -70311,7 +70954,7 @@ cam.tween.dur = 10;
 frame();
 setTimeout(() => setCamMode('pad'), 900);
 { const d = new Date(); $('#utcClock').textContent = `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}:${pad2(d.getUTCSeconds())}`; }
-window.sft = { state, setTime, setPlaying, setSpeed, setCamMode, setView, selectFlight, telemetry, camera, carriers, bloom, frostMat, sunLight, models, pollLive, rt, live, cam, sound, maps, light, setLight, guides, setGuides, custom, drawMap, drawProfile, track: { trk, fetchFalcon, falconFrom, fleetBuild }, slAll, slHighlight, get controls() { return controls; } }; // console handle
+window.sft = { state, setTime, setPlaying, setSpeed, setCamMode, setView, selectFlight, telemetry, camera, carriers, bloom, frostMat, sunLight, models, pollLive, rt, live, cam, sound, maps, light, setLight, guides, setGuides, custom, drawMap, drawProfile, track: { trk, fetchFalcon, falconFrom, fleetBuild }, slAll, slHighlight, CUT, setCutaway, fm, get controls() { return controls; } }; // console handle
 
 if (false && location.protocol === 'file:') {
   toast('Opened from <b>file://</b> — browsers block loading <code>starship.glb</code> and some YouTube embeds this way. In this folder run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000</code>.', 'warn', 12000);
