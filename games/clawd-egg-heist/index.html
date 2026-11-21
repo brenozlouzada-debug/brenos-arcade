@@ -162,6 +162,33 @@ canvas{display:block;touch-action:none}
 #hudButtons button::before{display:grid;place-items:center;width:22px;height:22px;border-radius:8px;background:rgba(255,255,255,.08);font-size:14px}
 #hudButtons button:hover{transform:translateX(3px);border-color:rgba(255,138,91,.7)}
 #hudButtons kbd{margin-left:auto;font-size:10.5px;opacity:1;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.1);color:var(--muted);box-shadow:inset 0 -1px 0 rgba(0,0,0,.3)}
+#btnSocial::before{content:'👥'}
+#social{position:fixed;inset:0;background:rgba(10,8,6,.55);display:grid;place-items:center;pointer-events:auto;padding:16px}
+#social[hidden]{display:none}
+.sbox{width:min(520px,100%)}
+#socialNote{flex:1;font-size:12px;color:var(--muted)}
+#social section{margin-top:12px}
+#social h4{margin:0 0 6px;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#FFB08C}
+#social .srow{display:flex;gap:8px}
+#social input{flex:1;min-width:0;width:100%;box-sizing:border-box;font:inherit;font-size:14px;padding:8px 11px;border-radius:10px;border:1px solid var(--edge);background:rgba(0,0,0,.3);color:var(--ink)}
+#social input:focus{outline:2px solid var(--accent);outline-offset:1px}
+#socialSearch{margin:8px 0}
+#social button{font:inherit;font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:9px;border:1px solid var(--edge);background:rgba(255,255,255,.07);color:var(--ink);cursor:pointer}
+#social button.go{border:0;color:#2A1608;background:linear-gradient(180deg,#FFD978,#FF9F43)}
+#social button.done{opacity:.6;cursor:default}
+#social .stabs{display:flex;gap:6px}
+#social .stabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#social .person{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.07)}
+#social .person>div:first-child{min-width:0}
+#social .person b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#social .person small{font-size:11.5px;color:var(--muted)}
+#social .person>div:last-child{display:flex;gap:6px;flex-shrink:0}
+#social p{color:var(--muted);font-size:13px;margin:10px 4px}
+#invitePop{position:absolute;top:120px;left:50%;transform:translateX(-50%);pointer-events:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;border-color:rgba(124,245,168,.6);max-width:calc(100% - 32px)}
+#invitePop[hidden]{display:none}
+#invitePop div{display:flex;gap:6px}
+#invitePop button{font:inherit;font-weight:700;padding:6px 12px;border-radius:9px;cursor:pointer;border:1px solid var(--edge);background:rgba(255,255,255,.08);color:var(--ink)}
+#inviteJoin{border:0!important;color:#06240F!important;background:linear-gradient(180deg,#9CFFC0,#3DDC84)!important}
 #btnWardrobe::before{content:'👕'}#btnIndex::before{content:'📖'}#btnLock::before{content:'🔒'}#btnSlow::before{content:'🐢'}#btnGfx::before{content:'✨'}#btnSound::before{content:'🔊'}
 #btnLock.on,#btnSlow.on{border-color:rgba(124,245,168,.75);color:var(--good);background:linear-gradient(160deg,rgba(40,80,58,.72),rgba(16,30,24,.74))}
 #bat,#dash{border-radius:14px;padding:8px 14px;font-weight:700;display:flex;align-items:center;gap:8px}
@@ -244,9 +271,18 @@ canvas{display:block;touch-action:none}
   <div id="board" class="panel"></div>
   <div id="bat" class="panel ready">F / click · Bat ready</div>
   <div id="dash" class="panel ready">SHIFT · Scuttle Dash ready</div>
-  <div id="help">WASD move · Shift dash · F / click bat · G graphics · Space jump · E grab / place / buy · X sell · K wardrobe · I index · L lock base · N slow mode · drag or Z/C look · R base · M mute · ` dev</div>
-  <div id="hudButtons"><button id="btnWardrobe">Wardrobe<kbd>K</kbd></button><button id="btnIndex">Index<kbd>I</kbd></button><button id="btnLock">Lock base<kbd>L</kbd></button><button id="btnSlow">Slow mode off<kbd>N</kbd></button><button id="btnGfx">Graphics high<kbd>G</kbd></button><button id="btnSound">Sound on<kbd>M</kbd></button></div>
+  <div id="help">WASD move · Shift dash · F / click bat · G graphics · Space jump · E grab / place / buy · X sell · K wardrobe · I index · O friends · L lock base · N slow mode · drag or Z/C look · R base · M mute · ` dev</div>
+  <div id="hudButtons"><button id="btnWardrobe">Wardrobe<kbd>K</kbd></button><button id="btnIndex">Index<kbd>I</kbd></button><button id="btnSocial">Friends<kbd>O</kbd></button><button id="btnLock">Lock base<kbd>L</kbd></button><button id="btnSlow">Slow mode off<kbd>N</kbd></button><button id="btnGfx">Graphics high<kbd>G</kbd></button><button id="btnSound">Sound on<kbd>M</kbd></button></div>
   <div id="admin" class="panel" hidden><div class="ahead"><b>ADMIN ABUSE</b><span>OWNER ONLY</span><button class="close" aria-label="Close admin panel">✕</button></div><div id="adminStatus"></div><div id="adminReach"></div><section class="msg"><h4>📢 Message to everyone 🌍</h4><div><input id="adminMsg" maxlength="140" placeholder="Type an announcement…" autocomplete="off"><button id="adminSend">Send</button></div></section><div id="adminBody"></div></div>
+  <div id="invitePop" class="panel" hidden role="alert"><b id="inviteText"></b><div><button id="inviteJoin">Join party</button><button id="inviteNo">Not now</button></div></div>
+  <div id="social" hidden><div class="wbox panel sbox">
+    <div class="whead"><b>Friends</b><span id="socialNote"></span><button class="close" aria-label="Close friends">✕</button></div>
+    <section><h4>Your name</h4><div class="srow"><input id="nickInput" maxlength="20" autocomplete="off" aria-label="Your player name"><button id="nickSave" class="go">Save name</button></div></section>
+    <section id="socialRequestsWrap" hidden><h4>Friend requests</h4><div id="socialRequests"></div></section>
+    <section id="socialPartyWrap" hidden><h4>Your party</h4><div id="socialParty"></div></section>
+    <section><div class="stabs"><button data-tab="friends">My friends</button><button data-tab="search">Find players</button></div>
+      <input id="socialSearch" placeholder="Search by name…" autocomplete="off" aria-label="Search players"><div id="socialList"></div></section>
+  </div></div>
   <div id="index" hidden><div class="wbox panel">
     <div class="whead"><b>Pet Index</b><div id="indexSummary"></div><button class="close" aria-label="Close index">✕</button></div>
     <div id="indexTabs"></div>
@@ -67046,7 +67082,7 @@ const escHtml = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&
 function updateBoard(dt) {   // live leaderboard: who is progressing fastest
   if ((boardT -= dt) > 0) return; boardT = .5;
   const rows = [{ name: 'You (Clawd)', speed: state.speed, color: '#E8875F', me: true },
-    ...net.peers.filter(p => !p.isMe).map(p => ({ name: '🟢 ' + (net.names[p.by] || 'Player'), speed: +p.presence?.speed || 0, color: '#7CF5A8' })),
+    ...net.peers.filter(p => !p.isMe).map(p => ({ name: (social.friends[p.by] ? '💚 ' : '🟢 ') + peerName(p), speed: +p.presence?.speed || 0, color: '#7CF5A8' })),
     ...rivals.map(r => ({ name: r.def.name, speed: r.s.speed, color: '#' + new THREE.Color(r.def.shell).getHexString(), task: r.task }))].sort((a, b) => b.speed - a.speed);
   boardEl().innerHTML = '<div class="label">Leaderboard · speed</div>' + rows.map((x, i) =>
     `<div class="row${x.me ? ' me' : ''}"><span>${i + 1}. <i style="background:${x.color}"></i>${escHtml(x.name)}</span><b>${fmtSpeed(x.speed)}</b></div>`).join('');
@@ -67284,6 +67320,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyF') swing();
   if (e.code === 'KeyK') toggleWardrobe();
   if (e.code === 'KeyI') toggleIndex();
+  if (e.code === 'KeyO') toggleSocial();
   if (e.code === 'Backslash' && e.shiftKey) toggleAdmin();   // secret admin panel
   if (e.code === 'KeyL') lockBase();
   if (e.code === 'KeyN') toggleSlow();
@@ -68334,32 +68371,230 @@ async function renderOnline() {
   const list = $('onlineList'); list.textContent = '';
   for (const p of [...net.peers].sort((a, b) => (+b.presence?.speed || 0) - (+a.presence?.speed || 0))) {
     const row = document.createElement('div'), nm = document.createElement('b'), sp = document.createElement('span');
-    nm.textContent = (net.names[p.by] || 'Player') + (p.isMe ? ' (you)' : '') + (p.guest ? ' · guest' : '');
+    nm.textContent = (p.isMe ? social.nick || net.names[p.by] || 'You' : peerName(p)) + (p.isMe ? ' (you)' : '') + (social.friends[p.by] ? ' · friend' : '') + (p.guest ? ' · guest' : '');
     sp.textContent = `⚡ ${fmtSpeed(+p.presence?.speed || 0)}`;
     row.append(nm, sp); list.append(row);
   }
 }
 async function initNet() {
   renderOnline();
-  if (!net.hosted) return;
+  if (!net.hosted) { loadSocial(); return; }
   const [room, user] = await Promise.all([claude.use('room'), claude.use('user')]);
   net.user = user; net.owner = user ? await user.isOwner() : false;
+  social.me = user ? await user.id() : null; loadSocial();
+  if (social.me) net.names[social.me] = (await user.profiles([social.me]))[social.me]?.name || '';
   if (!room) { renderOnline(); return; }
   net.room = room;
   room.on('abuse', async msg => { if (!msg.sameTab && msg.kind === 'viewer') runAction(msg.data, (await nameOf(msg.by)) || 'Admin'); });
   room.on('announce', async msg => { if (msg.sameTab || msg.kind !== 'viewer') return; const text = cleanText(msg.data?.text); if (text) announce(text, await nameOf(msg.by)); });
   room.onPeers(ch => {
-    net.peers = ch.peers.filter(p => p.kind === 'viewer'); renderOnline();
+    net.peers = ch.peers.filter(p => p.kind === 'viewer'); renderOnline(); onLobbyPeers();
     if (net.owner && ch.joined.some(p => !p.isMe) && (weather.cur || weather.luck > 1 || weather.chaosT > 0))   // catch newcomers up
       room.emit('abuse', { a: 'sync', w: weather.cur?.id ?? null, t: weather.t, luckT: weather.luckT, chaosT: weather.chaosT }).catch(() => {});
   });
-  room.onConnection(c => { net.connected = c; renderOnline(); });
+  room.onConnection(c => { net.connected = c; renderOnline(); if (c) publishSocial(); });
+  publishSocial();
 }
 function updateNet(dt) {   // share your speed and where you are, a few times a minute
   if (!net.room || (net.presenceT -= dt) > 0) return; net.presenceT = 3;
   const bi = biomeAt(player.pos.x);
   net.room.presence({ speed: state.speed, biome: bi < 0 ? 'base' : BIOMES[bi].id }).catch(() => {});
 }
+
+// ------------------------------------------------------------ social: your name, finding players, friends and parties
+// Everything travels as room presence, which every player can set (shared data can only be written by
+// Contributors and up, so presence keeps it working for Viewers too). Your friends and the players you have
+// met are remembered in this browser.
+const social = { me: null, nick: '', friends: {}, seen: {}, req: {}, ignore: {}, party: null, partyRoom: null, partyCode: null, ghosts: new Map(), sendT: 0, tab: 'friends' };
+const cleanNick = t => cleanText(t).replace(/\s+/g, ' ').slice(0, 20);
+const socialKey = () => 'clawdSocial:' + (social.me || 'local');
+function loadSocial() {
+  try { Object.assign(social, JSON.parse(localStorage.getItem(socialKey())) || {}); } catch (e) {}
+  social.party = social.partyRoom = null;
+}
+function saveSocial() {
+  const { nick, friends, seen, req, ignore } = social;
+  try { localStorage.setItem(socialKey(), JSON.stringify({ nick, friends, seen, req, ignore })); } catch (e) {}
+}
+// What other players see for someone: the name they chose, else their Claude name
+const peerName = p => cleanNick(p?.presence?.nick) || net.names[p?.by] || social.friends[p?.by]?.name || social.seen[p?.by]?.name || 'Player';
+const lobbyPeer = id => net.peers.find(p => p.by === id && !p.isMe);
+function remember(p) {   // keep a short list of everyone you've played alongside, for search
+  if (!p.by || p.isMe) return;
+  const was = social.seen[p.by] || {};
+  social.seen[p.by] = { name: peerName(p), seen: Date.now(), speed: +p.presence?.speed || was.speed || 0 };
+  const ids = Object.keys(social.seen); if (ids.length > 200) delete social.seen[ids.sort((a, b) => social.seen[a].seen - social.seen[b].seen)[0]];
+}
+function publishSocial() {   // your lobby presence: name, pending requests, friends you confirm, a party invite
+  if (!net.room) return;
+  const ids = o => Object.keys(o).slice(0, 40);
+  const invite = social.partyCode && social.invites ? { code: social.partyCode, to: social.invites.slice(0, 20) } : null;
+  net.room.presence({ nick: social.nick || null, req: ids(social.req), ok: ids(social.friends), invite, party: social.partyCode || null }).catch(() => {});
+}
+function onLobbyPeers() {   // friend requests, accepts and invites, read from everyone's presence
+  const me = social.me; if (!me) return;
+  let changed = false;
+  for (const p of net.peers) {
+    if (!p.by || p.isMe) continue;
+    remember(p);
+    const ok = Array.isArray(p.presence?.ok) && p.presence.ok.includes(me);
+    if (ok && social.req[p.by]) { delete social.req[p.by]; social.friends[p.by] = { name: peerName(p), since: Date.now() }; toast(`${peerName(p)} accepted your friend request!`); SFX.mutate(); changed = true; }
+    if (social.friends[p.by] && social.friends[p.by].name !== peerName(p)) { social.friends[p.by].name = peerName(p); changed = true; }
+    const inv = p.presence?.invite;
+    if (social.friends[p.by] && inv && Array.isArray(inv.to) && inv.to.includes(me) && /^[a-z0-9]{6,16}$/.test(inv.code) && inv.code !== social.partyCode && !social.seenInvite?.[inv.code]) {
+      (social.seenInvite ||= {})[inv.code] = true; showInvite(p, inv.code);
+    }
+  }
+  if (changed) { saveSocial(); publishSocial(); }
+  if (!$('social').hidden) renderSocial();
+}
+const incoming = () => net.peers.filter(p => p.by && !p.isMe && !social.friends[p.by] && !social.ignore[p.by] && Array.isArray(p.presence?.req) && p.presence.req.includes(social.me));
+function addFriend(id) { if (social.friends[id] || !id) return; social.req[id] = Date.now(); saveSocial(); publishSocial(); toast('Friend request sent'); renderSocial(); }
+function acceptFriend(id) {
+  const p = lobbyPeer(id); social.friends[id] = { name: p ? peerName(p) : 'Player', since: Date.now() }; delete social.req[id]; delete social.ignore[id];
+  saveSocial(); publishSocial(); toast(`You and ${social.friends[id].name} are now friends!`); SFX.mutate(); renderSocial();
+}
+function declineFriend(id) { social.ignore[id] = true; saveSocial(); renderSocial(); }
+function removeFriend(id) { delete social.friends[id]; delete social.req[id]; saveSocial(); publishSocial(); renderSocial(); }
+function setNick(v) {
+  social.nick = cleanNick(v); saveSocial(); publishSocial();
+  social.partyRoom?.presence({ nick: social.nick || null }).catch(() => {});
+  toast(social.nick ? `Your name is now ${social.nick}` : 'Name reset to your Claude name'); renderOnline(); renderSocial();
+}
+
+// ---- parties: friends who join one see each other's crabs in their world
+async function joinParty(code) {
+  if (!net.room) return toast('Parties work in the shared online game');
+  if (social.partyCode === code) return;
+  await leaveParty(true);
+  try { social.partyRoom = await net.room.join('party-' + code); } catch (e) { return toast('Could not join that party right now'); }
+  social.partyCode = code; social.invites = social.invites || [];
+  social.partyRoom.onPeers(ch => {
+    for (const p of ch.left) dropGhost(p.peer);
+    for (const p of ch.joined) if (!p.isMe) toast(`${peerName(p)} joined your party`);
+    if (!$('social').hidden) renderSocial();
+  });
+  publishSocial(); sendPartyState(true);
+  toast('You joined the party! Your friends will appear in your world'); renderSocial();
+}
+async function startParty(inviteId) {
+  if (!social.partyCode) await joinParty(Math.random().toString(36).slice(2, 12).replace(/[^a-z0-9]/g, 'x').padEnd(8, 'x'));
+  if (!social.partyCode) return;
+  social.invites = [...new Set([...(social.invites || []), inviteId])];
+  publishSocial(); toast(`Invite sent to ${social.friends[inviteId]?.name || 'your friend'}`); renderSocial();
+}
+async function leaveParty(quiet = false) {
+  if (!social.partyRoom) return;
+  try { await social.partyRoom.leave(); } catch (e) {}
+  social.partyRoom = null; social.partyCode = null; social.invites = [];
+  for (const id of [...social.ghosts.keys()]) dropGhost(id);
+  publishSocial(); if (!quiet) toast('You left the party'); renderSocial();
+}
+function sendPartyState(now = false) {   // where your crab is, ten times a second
+  if (!social.partyRoom || (!now && (social.sendT -= 1 / 60) > 0)) return; social.sendT = .1;
+  const P = player.pos;
+  social.partyRoom.presence({ x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), f: +player.facing.toFixed(2), skin: state.cosmetics.skin, nick: social.nick || null, carry: !!state.carry }).catch(() => {});
+}
+// Party members' crabs ("ghosts"): built from their skin, eased toward their latest position, legs scuttling
+function dropGhost(peer) { const g = social.ghosts.get(peer); if (!g) return; scene.remove(g.c.root); social.ghosts.delete(peer); }
+function updateParty(dt) {
+  sendPartyState();
+  if (!social.partyRoom) return;
+  const live = new Set();
+  for (const p of social.partyRoom.peers()) {
+    if (p.isMe || p.kind !== 'viewer' || !Number.isFinite(+p.presence?.x)) continue;
+    live.add(p.peer);
+    let g = social.ghosts.get(p.peer);
+    const skin = SKIN[p.presence.skin] && !SKIN[p.presence.skin].rival ? p.presence.skin : 'classic';
+    if (!g || g.skin !== skin) {
+      if (g) dropGhost(p.peer);
+      const c = buildCrab(skin), label = makeLabel('', '', { scale: 3.2 }); label.position.y = 2.6; c.root.add(label);
+      c.root.position.set(+p.presence.x, +p.presence.y || 0, +p.presence.z); scene.add(c.root);
+      g = { c, label, skin, name: '', phase: 0 }; social.ghosts.set(p.peer, g);
+    }
+    const name = peerName(p); if (name !== g.name) { g.name = name; g.label.userData.draw(name, social.friends[p.by] ? 'Friend' : 'Party', '#8CF5A8'); }
+    const r = g.c.root, tx = clamp(+p.presence.x, BASE_START - 60, WORLD_END + 10), tz = clamp(+p.presence.z, -HUB_W - 10, HUB_W + 10), ty = clamp(+p.presence.y || 0, 0, 40);
+    const k = 1 - Math.exp(-10 * dt), d = Math.hypot(tx - r.position.x, tz - r.position.z);
+    if (d > 40) r.position.set(tx, ty, tz); else { r.position.x += (tx - r.position.x) * k; r.position.z += (tz - r.position.z) * k; r.position.y += (ty - r.position.y) * k; }
+    r.rotation.y = lerpAngle(r.rotation.y, +p.presence.f || 0, k);
+    const moving = d > .05; if (moving) g.phase += dt * 14;
+    g.c.legs.forEach((lg, i) => { lg.rotation.x += ((moving ? Math.sin(g.phase + (i % 2) * Math.PI) * .75 : 0) - lg.rotation.x) * Math.min(1, dt * 20); });
+  }
+  for (const id of [...social.ghosts.keys()]) if (!live.has(id)) dropGhost(id);
+}
+
+// ---- invite pop-up and the Friends panel
+let invitePeer = null;
+function showInvite(p, code) {
+  invitePeer = { name: peerName(p), code };
+  $('inviteText').textContent = `${invitePeer.name} invited you to play together!`;
+  $('invitePop').hidden = false; SFX.fanfare(1);
+  clearTimeout(showInvite.t); showInvite.t = setTimeout(() => { $('invitePop').hidden = true; }, 30000);
+}
+$('inviteJoin').addEventListener('click', () => { $('invitePop').hidden = true; if (invitePeer) joinParty(invitePeer.code); });
+$('inviteNo').addEventListener('click', () => { $('invitePop').hidden = true; });
+function personRow(id, name, sub, buttons) {   // built with textContent: names are other people's text
+  const row = document.createElement('div'); row.className = 'person';
+  const who = document.createElement('div'), b = document.createElement('b'), s = document.createElement('small');
+  b.textContent = name; s.textContent = sub; who.append(b, s);
+  const acts = document.createElement('div');
+  for (const [label, fn, cls] of buttons) { const bt = document.createElement('button'); bt.textContent = label; if (cls) bt.className = cls; bt.addEventListener('click', fn); acts.append(bt); }
+  row.append(who, acts); return row;
+}
+function statusOf(id) {
+  const p = lobbyPeer(id);
+  return p ? `🟢 Online · ⚡ ${fmtSpeed(+p.presence?.speed || 0)}${p.presence?.party ? ' · in a party' : ''}` : `Last seen ${social.seen[id] ? new Date(social.seen[id].seen).toLocaleDateString() : 'a while ago'}`;
+}
+function renderSocial() {
+  if ($('social').hidden) return;
+  $('nickInput').placeholder = net.names[social.me] || 'Your name';
+  if (document.activeElement !== $('nickInput')) $('nickInput').value = social.nick;
+  $('socialNote').textContent = !net.room ? 'Friends and parties work in the shared online game. This copy is offline.'
+    : !social.me ? 'Sign in to Claude to add friends.' : `${net.peers.length} playing now. Only people you share the game with can join.`;
+  const req = incoming(), reqBox = $('socialRequests'); reqBox.textContent = '';
+  for (const p of req) reqBox.append(personRow(p.by, peerName(p), 'Wants to be your friend', [['Accept', () => acceptFriend(p.by), 'go'], ['Decline', () => declineFriend(p.by)]]));
+  $('socialRequestsWrap').hidden = !req.length;
+  const party = $('socialParty'); party.textContent = '';
+  if (social.partyRoom) {
+    for (const p of social.partyRoom.peers().filter(p => p.kind === 'viewer')) party.append(personRow(p.by, peerName(p) + (p.isMe ? ' (you)' : ''), p.isMe ? 'Party member' : 'Playing with you', []));
+    party.append(personRow(null, 'Party', 'Members see each other in their world', [['Leave party', () => leaveParty()]]));
+  }
+  $('socialPartyWrap').hidden = !social.partyRoom;
+  const list = $('socialList'); list.textContent = '';
+  const q = $('socialSearch').value.trim().toLowerCase();
+  if (social.tab === 'friends') {
+    const ids = Object.keys(social.friends).sort((a, b) => !!lobbyPeer(b) - !!lobbyPeer(a));
+    for (const id of ids) {
+      const f = social.friends[id], online = lobbyPeer(id);
+      if (q && !f.name.toLowerCase().includes(q)) continue;
+      list.append(personRow(id, f.name, statusOf(id), [
+        ...(online ? [online.presence?.party && online.presence.party === social.partyCode ? ['In your party', () => {}, 'done'] : [social.invites?.includes(id) ? 'Invited' : 'Invite to play', () => startParty(id), 'go']] : []),
+        ...(online?.presence?.party && online.presence.party !== social.partyCode && /^[a-z0-9]{6,16}$/.test(online.presence.party) && Array.isArray(online.presence.invite?.to) && online.presence.invite.to.includes(social.me) ? [['Join', () => joinParty(online.presence.party), 'go']] : []),
+        ['Remove', () => removeFriend(id)],
+      ]));
+    }
+    if (!list.children.length) list.append(Object.assign(document.createElement('p'), { textContent: q ? 'No friends match that name.' : 'No friends yet. Search for players to add them.' }));
+  } else {   // search: everyone online now plus everyone you've played alongside
+    const ids = [...new Set([...net.peers.filter(p => p.by && !p.isMe).map(p => p.by), ...Object.keys(social.seen)])];
+    const rows = ids.map(id => ({ id, name: lobbyPeer(id) ? peerName(lobbyPeer(id)) : social.seen[id]?.name || 'Player' }))
+      .filter(r => !q || r.name.toLowerCase().includes(q)).sort((a, b) => !!lobbyPeer(b.id) - !!lobbyPeer(a.id) || a.name.localeCompare(b.name)).slice(0, 50);
+    for (const r of rows) {
+      const btn = social.friends[r.id] ? ['Friends ✓', () => {}, 'done'] : social.req[r.id] ? ['Requested', () => {}, 'done']
+        : incoming().some(p => p.by === r.id) ? ['Accept', () => acceptFriend(r.id), 'go'] : ['Add friend', () => addFriend(r.id), 'go'];
+      list.append(personRow(r.id, r.name, statusOf(r.id), social.me ? [btn] : []));
+    }
+    if (!rows.length) list.append(Object.assign(document.createElement('p'), { textContent: q ? 'Nobody by that name has played yet.' : 'Nobody else is online right now.' }));
+  }
+  document.querySelectorAll('#social .stabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === social.tab));
+}
+function toggleSocial(open = $('social').hidden) { $('social').hidden = !open; if (open) renderSocial(); }
+$('btnSocial').addEventListener('click', e => { toggleSocial(); e.currentTarget.blur(); });
+$('social').addEventListener('click', e => { if (e.target.id === 'social' || e.target.classList.contains('close')) toggleSocial(false); });
+document.querySelectorAll('#social .stabs button').forEach(b => b.addEventListener('click', () => { social.tab = b.dataset.tab; renderSocial(); }));
+for (const id of ['nickInput', 'socialSearch']) { $(id).addEventListener('keydown', e => e.stopPropagation()); $(id).addEventListener('keyup', e => e.stopPropagation()); }
+$('socialSearch').addEventListener('input', () => renderSocial());
+$('nickSave').addEventListener('click', () => setNick($('nickInput').value));
+$('nickInput').addEventListener('keydown', e => { if (e.key === 'Enter') setNick($('nickInput').value); });
 
 function updateEnvironment(dt) {
   const bi = biomeAt(player.pos.x), env = bi < 0 ? BASE_ENV : BIOMES[bi], k = 1 - Math.exp(-2.5 * dt);
@@ -68466,7 +68701,7 @@ const clawd = buildClawd(); setClawdBat();
 updateTreadmills(); updateGates(0);
 syncPedestalCount(); pedViews.forEach((_, i) => { if (i < pedestalCount()) refreshPedestal(i); });
 syncHeld();
-window.game = { initNet, net, runAction, announce, renderOnline, weather, startWeather, endWeather, mutateTick, admin, toggleAdmin, ADMIN, buildPet, toggleIndex, petThumb, recordIndex, toggleSlow, walkSpeed, chaseSpeed, state: () => state, player, gates, treadmills, nests, worldEggs, pedViews, interact, sell: () => sell(), refreshPedestal, petIncome, guardians, guardianOf, rivals, swing, startHunt, flingRival, snipDance, lockBase, toBase, equip, clawd, guardianStat, carryStat, threat, dash, moveSpeed, simulateHatches, BIOMES, EGGS, PETS, eggRefresh, cycle, showWarning };
+window.game = { social, joinParty, startParty, leaveParty, acceptFriend, addFriend, setNick, toggleSocial, renderSocial, initNet, net, runAction, announce, renderOnline, weather, startWeather, endWeather, mutateTick, admin, toggleAdmin, ADMIN, buildPet, toggleIndex, petThumb, recordIndex, toggleSlow, walkSpeed, chaseSpeed, state: () => state, player, gates, treadmills, nests, worldEggs, pedViews, interact, sell: () => sell(), refreshPedestal, petIncome, guardians, guardianOf, rivals, swing, startHunt, flingRival, snipDance, lockBase, toBase, equip, clawd, guardianStat, carryStat, threat, dash, moveSpeed, simulateHatches, BIOMES, EGGS, PETS, eggRefresh, cycle, showWarning };
 window.simulateHatches = simulateHatches;
 setInterval(save, 3000);
 addEventListener('beforeunload', save);
@@ -68487,7 +68722,7 @@ function tick(dt) {
   sheenMats.forEach(({ m, base }, i) => { m.emissiveIntensity = base * (1 + .5 * Math.sin(elapsed * 3 + i)); });
   plotWalls.visible = player.shieldT > 0; if (plotWalls.visible) plotWalls.children[0].material.opacity = .18 + .08 * Math.sin(elapsed * 4);
   updateInteraction(elapsed);
-  updateNests(dt); updatePedestals(dt, elapsed); updateWeather(dt); updateAdminHud(); updateNet(dt);
+  updateNests(dt); updatePedestals(dt, elapsed); updateWeather(dt); updateAdminHud(); updateNet(dt); updateParty(dt);
   state.coins += incomeTotal * dt;
   updateTreadmills(); updateGates(elapsed); updateEnvironment(dt); updateParticles(dt); updateWaves(dt);
   rainbowMats.forEach(m => m.color.setHSL((elapsed * .15) % 1, .8, .6));
